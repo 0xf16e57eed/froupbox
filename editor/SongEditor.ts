@@ -46,7 +46,7 @@ import { SpectrumEditor, SpectrumEditorPrompt } from "./SpectrumEditor";
 import { CustomThemePrompt } from "./CustomThemePrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeClicklessStages } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangePhaserClicklessStages } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -963,24 +963,11 @@ export class SongEditor {
         span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("phaserStages") }, div(" Stages:")), 
         div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._phaserStagesInputBox),
     ), this._phaserStagesDropdown, this._phaserStagesSlider.container);
-    private readonly _clicklessStagesBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
-    private readonly _clicklessStagesRow: HTMLElement = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("clicklessStages") }, "‣ Clickless:"), this._clicklessStagesBox);
-    private readonly _phaserStagesDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._clicklessStagesRow);
+    private readonly _phaserClicklessStagesBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
+    private readonly _phaserClicklessStagesRow: HTMLElement = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("phaserClicklessStages") }, "‣ Clickless:"), this._phaserClicklessStagesBox);
+    private readonly _phaserStagesDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._phaserClicklessStagesRow);
     private readonly _phaserDisperseBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
     private readonly _phaserDisperseRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", style: "margin-left:10px;", onclick: () => this._openPrompt("phaserDisperse") }, "Disperse:"), this._phaserDisperseBox);
-
-    /*
-    private readonly _panSlider: Slider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.panMax, value: Config.panCenter, step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePan(this.doc, oldValue, newValue), true);
-    private readonly _panDropdown: HTMLButtonElement = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(DropdownID.Pan) }, "▼");
-    private readonly _panSliderInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "panSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
-    private readonly _panSliderRow: HTMLDivElement = div({ class: "selectRow" }, div({},
-        span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("pan") }, "Pan: "),
-        div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._panSliderInputBox),
-    ), this._panDropdown, this._panSlider.container);
-    private readonly _panDelaySlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["pan delay"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePanDelay(this.doc, oldValue, newValue), false);
-    private readonly _panDelayRow: HTMLElement = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("panDelay") }, "‣ Delay:"), this._panDelaySlider.container);
-    private readonly _panDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._panDelayRow);
-    */
 
     private readonly _pitchedPresetSelect: HTMLSelectElement = buildPresetOptions(false, "pitchPresetSelect");
     private readonly _drumPresetSelect: HTMLSelectElement = buildPresetOptions(true, "drumPresetSelect");
@@ -1887,7 +1874,7 @@ export class SongEditor {
         this._invertWaveBox.addEventListener("input", () => { this.doc.record(new ChangeInvertWave(this.doc, this._invertWaveBox.checked)) });
         
         this._phaserStagesInputBox.addEventListener("input", () => { this.doc.record(new ChangePhaserStages(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].detune, Math.min(Config.phaserMaxStages, Math.max(Config.phaserMinStages, Math.round(+this._phaserStagesInputBox.value))))) });
-        this._clicklessStagesBox.addEventListener("input", () => { this.doc.record(new ChangeClicklessStages(this.doc, this._clicklessStagesBox.checked)) });
+        this._phaserClicklessStagesBox.addEventListener("input", () => { this.doc.record(new ChangePhaserClicklessStages(this.doc, this._phaserClicklessStagesBox.checked)) });
         this._phaserDisperseBox.addEventListener("input", () => { this.doc.record(new ChangePhaserDisperse(this.doc, this._phaserDisperseBox.checked)) });
 
         this._promptContainer.addEventListener("click", (event) => {
@@ -1945,8 +1932,8 @@ export class SongEditor {
     }
 
     private _toggleDropdownMenu(dropdown: DropdownID, submenu: number = 0): void {
-        let target: HTMLButtonElement = this._vibratoDropdown;
-        let group: HTMLElement = this._vibratoDropdownGroup;
+        let target: HTMLElement;
+        let group: HTMLElement;
         let shouldOpen: boolean = false;
         switch (dropdown) {
             case DropdownID.Envelope:
@@ -4001,7 +3988,7 @@ export class SongEditor {
         this._detuneSlider.updateValue(instrument.detune - Config.detuneCenter);
         this._twoNoteArpBox.checked = instrument.fastTwoNoteArp ? true : false;
         this._clicklessTransitionBox.checked = instrument.clicklessTransition ? true : false;
-        this._clicklessStagesBox.checked = instrument.clicklessStages ? true : false;
+        this._phaserClicklessStagesBox.checked = instrument.phaserClicklessStages ? true : false;
         this._aliasingBox.checked = instrument.aliases ? true : false;
         this._invertWaveBox.checked = instrument.invertWave ? true : false;
         this._addEnvelopeButton.disabled = (instrument.envelopeCount >= Config.maxEnvelopeCount);

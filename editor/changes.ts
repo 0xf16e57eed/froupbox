@@ -2840,15 +2840,15 @@ export class ChangePhaserStages extends ChangeInstrumentSlider {
     }
 }
 
-export class ChangeClicklessStages extends Change {
+export class ChangePhaserClicklessStages extends Change {
     constructor(doc: SongDocument, newValue: boolean) {
         super();
         const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
-        const oldValue = instrument.clicklessStages;
+        const oldValue = instrument.phaserClicklessStages;
 
         doc.notifier.changed();
         if (oldValue != newValue) {
-            instrument.clicklessStages = newValue;
+            instrument.phaserClicklessStages = newValue;
             instrument.preset = instrument.type;
             this._didSomething();
         }

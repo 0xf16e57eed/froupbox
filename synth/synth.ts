@@ -1714,7 +1714,7 @@ export class Instrument {
     public phaserFreq: number = 0;
     public phaserFeedback: number = 0;
     public phaserStages: number = 2;
-    public clicklessStages: boolean = false;
+    public phaserClicklessStages: boolean = false;
     public phaserDisperse: boolean = false;
     
     public invertWave: boolean = false;
@@ -1850,7 +1850,7 @@ export class Instrument {
         this.phaserFreq	= 0;
         this.phaserFeedback = 0;
         this.phaserStages = 2;
-        this.clicklessStages = false;
+        this.phaserClicklessStages = false;
         this.phaserDisperse = false;
 
         this.invertWave = false;
@@ -2187,7 +2187,7 @@ export class Instrument {
             instrumentObject["phaserFreq"] =  Math.round(100 *this.phaserFreq/(Config.phaserFreqRange - 1));
             instrumentObject["phaserFeedback"] =  Math.round(100 *this.phaserFeedback/(Config.phaserFeedbackRange - 1));
             instrumentObject["phaserStages2"] = this.phaserStages;
-            instrumentObject["clicklessStages"] = this.clicklessStages;
+            instrumentObject["phaserClicklessStages"] = this.phaserClicklessStages;
             instrumentObject["phaserDisperse"] = this.phaserDisperse;
         }
         if (effectsIncludeDistortion(this.effects)) {
@@ -2980,11 +2980,11 @@ export class Instrument {
                 this.clicklessTransition = false;
             }
 
-            if (instrumentObject["clicklessStages"] != undefined) {
-                this.clicklessStages = instrumentObject["clicklessStages"];
+            if (instrumentObject["phaserClicklessStages"] != undefined) {
+                this.phaserClicklessStages = instrumentObject["phaserClicklessStages"];
             }
             else {
-                this.clicklessStages = false;
+                this.phaserClicklessStages = false;
             }
 
             if (instrumentObject["aliases"] != undefined) {
@@ -3889,7 +3889,7 @@ export class Song {
                     buffer.push(base64IntToCharCode[instrument.phaserStages >> 6]);
                     buffer.push(base64IntToCharCode[instrument.phaserStages & 0x3f]);
                     buffer.push(base64IntToCharCode[instrument.phaserMix]);
-                    buffer.push(base64IntToCharCode[+instrument.clicklessStages]);
+                    buffer.push(base64IntToCharCode[+instrument.phaserClicklessStages]);
                     buffer.push(base64IntToCharCode[+instrument.phaserDisperse]);
                 }
 
@@ -5699,7 +5699,7 @@ export class Song {
                         }
                         instrument.phaserMix = clamp(0, Config.phaserMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
 
-                        instrument.clicklessStages = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
+                        instrument.phaserClicklessStages = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
                         instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
                     }
                     if(effectsIncludeInvertWave(instrument.effects)) {
@@ -8820,7 +8820,7 @@ class InstrumentState {
     public phaserBreakCoefDelta: number = 0.0;
     public phaserStages: number = 0;
     public phaserStagesDelta: number = 0;
-    public clicklessStages: boolean = false;
+    public phaserClicklessStages: boolean = false;
     public phaserDisperse: boolean = false;
 
     public readonly spectrumWave: SpectrumWaveState = new SpectrumWaveState();
@@ -9561,7 +9561,7 @@ class InstrumentState {
             this.phaserStages = phaserStagesStart;
             this.phaserStagesDelta = (phaserStagesEnd - phaserStagesStart) / roundedSamplesPerTick;
             
-            this.clicklessStages = instrument.clicklessStages;
+            this.phaserClicklessStages = instrument.phaserClicklessStages;
             this.phaserDisperse = instrument.phaserDisperse;
         }
 
@@ -14617,7 +14617,7 @@ export class Synth {
                         phaserBreakCoef += phaserBreakCoefDelta;
                         phaserMix += phaserMixDelta;
                         phaserStages += phaserStagesDelta;
-                        if (!instrumentState.clicklessStages)
+                        if (!instrumentState.phaserClicklessStages)
                           phaserStagesInt = Math.floor(phaserStages);
                     `
             }
