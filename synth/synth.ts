@@ -252,7 +252,7 @@ const enum SongTagCode {
     //	                    = CharCode.K,
     pan = CharCode.L, // added between 8 and 9, DEPRECATED
     customChipWave = CharCode.M, // added in JummBox URL version 1(?) for customChipWave
-    songTitle = CharCode.N, // added in JummBox URL version 1(?) for songTitle
+    songDetails = CharCode.N, // added in JummBox URL version 1(?) for songTitle
     limiterSettings = CharCode.O, // added in JummBox URL version 3(?) for limiterSettings
     operatorAmplitudes = CharCode.P, // added in BeepBox URL version 6
     operatorFrequencies = CharCode.Q, // added in BeepBox URL version 6
@@ -3291,12 +3291,14 @@ export class Song {
     private static readonly _oldestSlarmoosBoxVersion: number = 1;
     private static readonly _latestSlarmoosBoxVersion: number = 5;
     private static readonly _oldestFroupBoxVersion: number = 1;
-    private static readonly _latestFroupBoxVersion: number = 1;
+    private static readonly _latestFroupBoxVersion: number = 2;
     // One-character variant detection at the start of URL to distinguish variants such as JummBox, Or Goldbox. "j" and "g" respectively
     //also "u" is ultrabox lol
     private static readonly _variant = 0x66; //"f" ~ froupbox
 
     public title: string;
+    public author: string;
+    public description: string;
     public scale: number;
     public scaleCustom: boolean[] = [];
     public key: number;
@@ -3580,6 +3582,8 @@ export class Song {
 
         //This is the tab's display name
         this.title = "Untitled";
+        this.author = "";
+        this.description = "";
         document.title = this.title + " - " + EditorConfig.versionDisplayName;
         if (andResetChannels) {
             this.pitchChannelCount = 5; //Slarmoo's Box: 3
@@ -3629,13 +3633,29 @@ export class Song {
         buffer.push(base64IntToCharCode[Song._latestFroupBoxVersion]);
 
         // Length of the song name string
-        buffer.push(SongTagCode.songTitle);
+        buffer.push(SongTagCode.songDetails);
         var encodedSongTitle: string = encodeURIComponent(this.title);
         buffer.push(base64IntToCharCode[encodedSongTitle.length >> 6], base64IntToCharCode[encodedSongTitle.length & 0x3f]);
 
         // Actual encoded string follows
         for (let i: number = 0; i < encodedSongTitle.length; i++) {
             buffer.push(encodedSongTitle.charCodeAt(i));
+        }
+
+        // Length of the song author string
+        var encodedAuthorTitle: string = encodeURIComponent(this.author);
+        buffer.push(base64IntToCharCode[encodedAuthorTitle.length >> 6], base64IntToCharCode[encodedAuthorTitle.length & 0x3f]);
+
+        for (let i: number = 0; i < encodedAuthorTitle.length; i++) {
+            buffer.push(encodedAuthorTitle.charCodeAt(i));
+        }
+
+        // Length of the song description string
+        var encodedDescriptionTitle: string = encodeURIComponent(this.description);
+        buffer.push(base64IntToCharCode[encodedDescriptionTitle.length >> 6], base64IntToCharCode[encodedDescriptionTitle.length & 0x3f]);
+
+        for (let i: number = 0; i < encodedDescriptionTitle.length; i++) {
+            buffer.push(encodedDescriptionTitle.charCodeAt(i));
         }
 
         buffer.push(SongTagCode.channelCount, base64IntToCharCode[this.pitchChannelCount], base64IntToCharCode[this.noiseChannelCount], base64IntToCharCode[this.modChannelCount]);
@@ -4564,13 +4584,27 @@ export class Song {
         let useSlowerArpSpeed: boolean = false;
         let useFastTwoNoteArp: boolean = false;
         while (charIndex < compressed.length) switch (command = compressed.charCodeAt(charIndex++)) {
-            case SongTagCode.songTitle: {
+            case SongTagCode.songDetails: {
                 // Length of song name string
                 var songNameLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                 this.title = decodeURIComponent(compressed.substring(charIndex, charIndex + songNameLength));
                 document.title = this.title + " - " + EditorConfig.versionDisplayName;
 
                 charIndex += songNameLength;
+
+                if (fromFroupBox && !beforeTwo) {
+                    // Length of song author string
+                    var songAuthorLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                    this.author = decodeURIComponent(compressed.substring(charIndex, charIndex + songAuthorLength));
+
+                    charIndex += songAuthorLength;
+
+                    // Length of song description string
+                    var songDescriptionLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                    this.description = decodeURIComponent(compressed.substring(charIndex, charIndex + songDescriptionLength));
+
+                    charIndex += songDescriptionLength;
+                }
             } break;
             case SongTagCode.channelCount: {
                 this.pitchChannelCount = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
@@ -7024,6 +7058,8 @@ export class Song {
             "name": this.title,
             "format": Song._format,
             "version": Song._latestFroupBoxVersion,
+            "author": this.author,
+            "description": this.description,
             "scale": Config.scales[this.scale].name,
             "customScale": this.scaleCustom,
             "key": Config.keys[this.key].name,
@@ -7090,6 +7126,14 @@ export class Song {
             this.title = jsonObject["name"];
         }
 
+        if (jsonObject["author"] != undefined) {
+            this.author = jsonObject["author"];
+        }
+
+        if (jsonObject["description"] != undefined) {
+            this.description = jsonObject["description"];
+        }
+        
         if (jsonObject["customSamples"] != undefined) {
             const customSamples: string[] = jsonObject["customSamples"];
             if (EditorConfig.customSamples == null || EditorConfig.customSamples.join(", ") != customSamples.join(", ")) {

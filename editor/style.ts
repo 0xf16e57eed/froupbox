@@ -567,6 +567,26 @@ html {
 	-webkit-mask-position: center;
 }
 
+.beepboxEditor .details-button {
+	width: var(--button-size);
+}
+.beepboxEditor .details-button::before {
+	content: "";
+	position: absolute;
+	width: var(--button-size);
+	height: var(--button-size);
+	left: 0;
+	top: 0;
+	pointer-events: none;
+	background: var(--primary-text);
+	mask-image: var(--internal-add-symbol);
+	mask-repeat: no-repeat;
+	mask-position: center;
+	-webkit-mask-image: var(--internal-add-symbol);
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+}
+
 .beepboxEditor .delete-envelope {
 	width: var(--button-size);
 	flex-shrink: 0;

@@ -56,6 +56,7 @@ export class ExportPrompt implements Prompt {
     private readonly _formatSelect: HTMLSelectElement = select({ style: "width: 100%;" },
         option({ value: "wav" }, "Export to .wav file."),
         option({ value: "mp3" }, "Export to .mp3 file."),
+        option({ value: "mp3" }, "Export to .mp3 file at 48000Hz."),
         //option({ value: "ogg" }, "Export to .ogg file."),
         option({ value: "midi" }, "Export to .mid file."),
         option({ value: "json" }, "Export to .json file."),
@@ -157,24 +158,16 @@ export class ExportPrompt implements Prompt {
         this._loopDropDown.addEventListener("blur", ExportPrompt._validateNumber);
         this._exportButton.addEventListener("click", this._export);
         this._cancelButton.addEventListener("click", this._close);
-        this._enableOutro.addEventListener("click", () => { (this._computedSamplesLabel.firstChild as Text).textContent = ExportPrompt.samplesToTime(this._doc, this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
-        this._enableIntro.addEventListener("click", () => { (this._computedSamplesLabel.firstChild as Text).textContent = ExportPrompt.samplesToTime(this._doc, this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
-        this._loopDropDown.addEventListener("change", () => { (this._computedSamplesLabel.firstChild as Text).textContent = ExportPrompt.samplesToTime(this._doc, this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
+        this._enableOutro.addEventListener("click", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
+        this._enableIntro.addEventListener("click", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
+        this._loopDropDown.addEventListener("change", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
         this._formatSelect.addEventListener("change", () => { if (this._formatSelect.value == "json") { this._removeWhitespaceDiv.style.display = "block"; } else { this._removeWhitespaceDiv.style.display = "none"; } });
         this.container.addEventListener("keydown", this._whenKeyPressed);
 
         this._fileName.value = _doc.song.title;
         ExportPrompt._validateFileName(null, this._fileName);
 
-        (this._computedSamplesLabel.firstChild as Text).textContent = ExportPrompt.samplesToTime(this._doc, this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1));
-    }
-
-    // Could probably be moved to doc or synth. Fine here for now until needed by something else.
-    public static samplesToTime(_doc: SongDocument, samples: number): string {
-        const rawSeconds: number = Math.round(samples / _doc.synth.samplesPerSecond);
-        const seconds: number = rawSeconds % 60;
-        const minutes: number = Math.floor(rawSeconds / 60);
-        return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+        (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1));
     }
 
     private _close = (): void => {
@@ -241,6 +234,10 @@ export class ExportPrompt implements Prompt {
                 this.outputStarted = true;
                 this._exportTo("mp3");
                 break;
+            case "mp3 48000Hz":
+                this.outputStarted = true;
+                this._exportTo("mp3 48000Hz");
+                break;
             case "midi":
                 this.outputStarted = true;
                 this._exportToMidi();
@@ -297,6 +294,9 @@ export class ExportPrompt implements Prompt {
             else if (this.thenExportTo == "mp3") {
                 this._exportToMp3Finish();
             }
+            else if (this.thenExportTo == "mp3 48000Hz") {
+                this._exportToMp3Finish();
+            }
             else {
                 throw new Error("Unrecognized file export type chosen!");
             }
@@ -319,6 +319,9 @@ export class ExportPrompt implements Prompt {
         }
         else if (type == "mp3") {
             this.synth.samplesPerSecond = 44100; // Use consumer CD standard sample rate for .mp3 export.
+        }
+        else if (type == "mp3 48000Hz") {
+            this.synth.samplesPerSecond = 48000; // For users wanting aliasing consistency between song audio and .mp3 export.
         }
         else {
             throw new Error("Unrecognized file export type chosen!");
