@@ -54,6 +54,7 @@ import { VisualLoopControlsPrompt } from "./VisualLoopControlsPrompt";
 import { SampleLoadingStatusPrompt } from "./SampleLoadingStatusPrompt";
 import { AddSamplesPrompt } from "./AddSamplesPrompt";
 import { ShortenerConfigPrompt } from "./ShortenerConfigPrompt";
+import { SongDetailsPrompt } from "./SongDetailsPrompt";
 
 const { button, div, input, select, span, optgroup, option, canvas } = HTML;
 
@@ -1247,8 +1248,11 @@ export class SongEditor {
         div({ style: "margin-top:5px; display:flex; justify-content:center;" }, [this._customWavePresetDrop, this._customWaveZoom]),
     ]);
 
-    private readonly _songTitleInputBox: InputBox = new InputBox(input({ style: "font-weight:bold; border:none; width: 98%; background-color:${ColorConfig.editorBackground}; color:${ColorConfig.primaryText}; text-align:center", maxlength: "30", type: "text", value: EditorConfig.versionDisplayName }), this.doc, (oldValue: string, newValue: string) => new ChangeSongTitle(this.doc, oldValue, newValue));
+    private readonly _songTitleInputBox: InputBox = new InputBox(input(
+        { style: "font-weight:bold; width: 80%; border:none; flex: 1; background-color:${ColorConfig.editorBackground}; color:${ColorConfig.primaryText}; text-align:center", 
+            maxlength: "30", type: "text" }), this.doc, (oldValue: string, newValue: string) => new ChangeSongTitle(this.doc, oldValue, newValue));
 
+    private readonly _songDetailsButton: HTMLButtonElement = button({class:"details-button"});
 
     private readonly _feedbackAmplitudeSlider: Slider = new Slider(input({ type: "range", min: "0", max: Config.operatorAmplitudeMax, value: "0", step: "1", title: "Feedback Amplitude" }), this.doc, (oldValue: number, newValue: number) => new ChangeFeedbackAmplitude(this.doc, oldValue, newValue), false);
     private readonly _feedbackRow2: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("feedbackVolume") }, "Fdback Vol:"), this._feedbackAmplitudeSlider.container);
@@ -1486,13 +1490,14 @@ export class SongEditor {
             this._sampleLoadingStatusContainer,
         ),
     );
+
     private readonly _instrumentSettingsArea: HTMLDivElement = div({ class: "instrument-settings-area" },
         this._instrumentSettingsGroup,
         this._modulatorGroup);
     public readonly _settingsArea: HTMLDivElement = div({ class: "settings-area noSelection" },
         div({ class: "version-area" },
             div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` },
-                this._songTitleInputBox.input,
+                this._songTitleInputBox.input, this._songDetailsButton
             ),
         ),
         div({ class: "play-pause-area" },
@@ -1877,6 +1882,8 @@ export class SongEditor {
         this._phaserClicklessStagesBox.addEventListener("input", () => { this.doc.record(new ChangePhaserClicklessStages(this.doc, this._phaserClicklessStagesBox.checked)) });
         this._phaserDisperseBox.addEventListener("input", () => { this.doc.record(new ChangePhaserDisperse(this.doc, this._phaserDisperseBox.checked)) });
 
+        this._songDetailsButton.addEventListener("click", this._openDetails);
+
         this._promptContainer.addEventListener("click", (event) => {
             if (this.doc.prefs.closePromptByClickoff === true) {
                 if (this.prompt != null && this.prompt.gotMouseUp === true) return;
@@ -1902,6 +1909,10 @@ export class SongEditor {
             layoutOption.disabled = true;
             layoutOption.setAttribute("hidden", "");
         }
+    }
+
+    private _openDetails = (): void => {
+        this._openPrompt("songDetails");
     }
 
     private _whenSampleLoadingStatusClicked = (): void => {
@@ -2393,6 +2404,9 @@ export class SongEditor {
                     break;
                 case "drumsetSettings":
                     this.prompt = new SpectrumEditorPrompt(this.doc, this, true);
+                    break;
+                case "songDetails":
+                    this.prompt = new SongDetailsPrompt(this.doc);
                     break;
                 default:
                     this.prompt = new TipPrompt(this.doc, promptName);
