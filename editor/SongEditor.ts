@@ -1249,10 +1249,10 @@ export class SongEditor {
     ]);
 
     private readonly _songTitleInputBox: InputBox = new InputBox(input(
-        { style: "font-weight:bold; width: 80%; border:none; flex: 1; background-color:${ColorConfig.editorBackground}; color:${ColorConfig.primaryText}; text-align:center", 
+        { style: "font-weight:bold; width: 81%; border:none; flex: 8; background-color:${ColorConfig.editorBackground}; color:${ColorConfig.primaryText}; text-align:center;", 
             maxlength: "30", type: "text" }), this.doc, (oldValue: string, newValue: string) => new ChangeSongTitle(this.doc, oldValue, newValue));
 
-    private readonly _songDetailsButton: HTMLButtonElement = button({class:"details-button"});
+    private readonly _songDetailsButton: HTMLButtonElement = button({class:"details-button", style: "padding:8px"});
 
     private readonly _feedbackAmplitudeSlider: Slider = new Slider(input({ type: "range", min: "0", max: Config.operatorAmplitudeMax, value: "0", step: "1", title: "Feedback Amplitude" }), this.doc, (oldValue: number, newValue: number) => new ChangeFeedbackAmplitude(this.doc, oldValue, newValue), false);
     private readonly _feedbackRow2: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("feedbackVolume") }, "Fdback Vol:"), this._feedbackAmplitudeSlider.container);
