@@ -714,6 +714,18 @@ export class TipPrompt implements Prompt {
 					p(`Makes the phaser act as a disperser.`),
 				);
 			} break;
+			case "slideSpeedSlider": {
+				message = div(
+					h2("Slide Speed"),
+					p("This slider controls how fast/slow the slide transition is."),
+				);
+			} break;
+			case "strumSpeedSlider": {
+				message = div(
+					h2("Strum Speed"),
+					p("This setting affects how fast your chord will strum."),
+				);
+			} break;
 			case "upperNoteLimit": {
 				message = div(
 					h2("Upper Note Limit"),

@@ -1645,6 +1645,7 @@ export class Instrument {
     public fadeOut: number = Config.fadeOutNeutral;
     public envelopeCount: number = 0;
     public transition: number = Config.transitions.dictionary["normal"].index;
+    public slideTicks: number = 3;
     public pitchShift: number = 0;
     public detune: number = 0;
     public vibrato: number = 0;
@@ -1662,6 +1663,7 @@ export class Instrument {
     public unisonSign: number = 1.0;
     public effects: number = 0;
     public chord: number = 1;
+    public strumParts: number = 1;
     public volume: number = 0;
     public pan: number = Config.panCenter;
     public panDelay: number = 0;
@@ -2131,12 +2133,14 @@ export class Instrument {
         if (effectsIncludeTransition(this.effects)) {
             instrumentObject["transition"] = Config.transitions[this.transition].name;
             instrumentObject["clicklessTransition"] = this.clicklessTransition;
+            if (Config.transitions[this.transition].slides == true) instrumentObject["slideTicks"] = this.slideTicks;
         }
         if (effectsIncludeChord(this.effects)) {
             instrumentObject["chord"] = this.getChord().name;
             instrumentObject["fastTwoNoteArp"] = this.fastTwoNoteArp;
             instrumentObject["arpeggioSpeed"] = this.arpeggioSpeed;
             instrumentObject["monoChordTone"] = this.monoChordTone;
+            if (Config.chords[this.chord].strumParts > 0) instrumentObject["strumParts"] = this.strumParts;
         }
         if (effectsIncludePitchShift(this.effects)) {
             instrumentObject["pitchShiftSemitones"] = this.pitchShift;
@@ -2449,6 +2453,10 @@ export class Instrument {
             }
         }
 
+        if (instrumentObject["slideTicks"] != undefined) {
+            this.slideTicks = instrumentObject["slideTicks"];
+        }
+
         // Overrides legacy settings in transition above.
         if (instrumentObject["fadeInSeconds"] != undefined) {
             this.fadeIn = Synth.secondsToFadeInSetting(+instrumentObject["fadeInSeconds"]);
@@ -2478,6 +2486,10 @@ export class Instrument {
                     this.chord = Config.chords.dictionary["simultaneous"].index;
                 }
             }
+        }
+
+        if (instrumentObject["strumParts"] != undefined) {
+            this.strumParts = instrumentObject["strumParts"];
         }
 
         this.unison = Config.unisons.dictionary["none"].index; // default value.
@@ -3291,7 +3303,7 @@ export class Song {
     private static readonly _oldestSlarmoosBoxVersion: number = 1;
     private static readonly _latestSlarmoosBoxVersion: number = 5;
     private static readonly _oldestFroupBoxVersion: number = 1;
-    private static readonly _latestFroupBoxVersion: number = 2;
+    private static readonly _latestFroupBoxVersion: number = 3;
     // One-character variant detection at the start of URL to distinguish variants such as JummBox, Or Goldbox. "j" and "g" respectively
     //also "u" is ultrabox lol
     private static readonly _variant = 0x66; //"f" ~ froupbox
@@ -3838,16 +3850,18 @@ export class Song {
                 }
                 if (effectsIncludeTransition(instrument.effects)) {
                     buffer.push(base64IntToCharCode[instrument.transition]);
+                    if (Config.transitions[instrument.transition].slides == true) buffer.push(base64IntToCharCode[instrument.slideTicks]);
                 }
                 if (effectsIncludeChord(instrument.effects)) {
                     buffer.push(base64IntToCharCode[instrument.chord]);
                     // Custom arpeggio speed... only if the instrument arpeggiates.
-                    if (instrument.chord == Config.chords.dictionary["arpeggio"].index) {
+                    if (Config.chords[instrument.chord].arpeggiates == true) {
                         buffer.push(base64IntToCharCode[instrument.arpeggioSpeed]);
                         buffer.push(base64IntToCharCode[+instrument.fastTwoNoteArp]); // Two note arp setting piggybacks on this
-                    }
-                    if (instrument.chord == Config.chords.dictionary["monophonic"].index) {
+                    } else if (instrument.chord == Config.chords.dictionary["monophonic"].index) {
                         buffer.push(base64IntToCharCode[instrument.monoChordTone]); //which note is selected
+                    } else if (Config.chords[instrument.chord].strumParts > 0) {
+                        buffer.push(base64IntToCharCode[instrument.strumParts]);
                     }
                 }
                 if (effectsIncludePitchShift(instrument.effects)) {
@@ -5620,16 +5634,20 @@ export class Song {
                     }
                     if (effectsIncludeTransition(instrument.effects)) {
                         instrument.transition = clamp(0, Config.transitions.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        if ((fromFroupBox && !beforeThree)) {
+                            if (Config.transitions[instrument.transition].slides == true) instrument.slideTicks = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                        }
                     }
                     if (effectsIncludeChord(instrument.effects)) {
                         instrument.chord = clamp(0, Config.chords.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         // Custom arpeggio speed... only in JB, and only if the instrument arpeggiates.
-                        if (instrument.chord == Config.chords.dictionary["arpeggio"].index && (fromJummBox || fromGoldBox || fromUltraBox || fromSlarmoosBox || fromFroupBox)) {
+                        if (Config.chords[instrument.chord].arpeggiates == true && (fromJummBox||fromGoldBox||fromUltraBox || fromFroupBox)) {
                             instrument.arpeggioSpeed = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                             instrument.fastTwoNoteArp = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)]) ? true : false;
-                        }
-                        if (instrument.chord == Config.chords.dictionary["monophonic"].index && ((fromSlarmoosBox && !beforeFive) || fromFroupBox)) {
+                        } else if (instrument.chord == Config.chords.dictionary["monophonic"].index && ((fromSlarmoosBox && !beforeFive) || fromFroupBox)) {
                             instrument.monoChordTone = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                        } else if (Config.chords[instrument.chord].strumParts > 0 && (fromFroupBox && !beforeThree)) {
+                            instrument.strumParts = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                         }
                     }
                     if (effectsIncludePitchShift(instrument.effects)) {
@@ -8095,7 +8113,7 @@ class EnvelopeComputer {
                 const noteEndTick: number = tone.noteEndPart * Config.ticksPerPart;
                 const noteLengthTicks: number = noteEndTick - noteStartTick;
                 const maximumSlideTicks: number = noteLengthTicks * 0.5;
-                const slideTicks: number = Math.min(maximumSlideTicks, transition.slideTicks);
+                const slideTicks: number = Math.min(maximumSlideTicks, instrument.slideTicks);
                 if (tone.prevNote != null && !tone.forceContinueAtStart) {
                     if (tickTimeStartReal - noteStartTick < slideTicks) {
                         prevSlideStart = true;
@@ -11963,6 +11981,7 @@ export class Synth {
                     const partsPerBar: Number = Config.partsPerBeat * song.beatsPerBar;
                     const transition: Transition = instrument.getTransition();
                     const chord: Chord = instrument.getChord();
+                    const useStrumSpeed: boolean = chord.strumParts > 0;
                     let forceContinueAtStart: boolean = false;
                     let forceContinueAtEnd: boolean = false;
                     let tonesInPrevNote: number = 0;
@@ -12087,7 +12106,8 @@ export class Synth {
                                 noteEndPart = Math.min(Config.partsPerBeat * this.song!.beatsPerBar, noteEndPart + strumOffsetParts);
                             }
                             if ((!transition.continues && !forceContinueAtStart) || prevNoteForThisTone == null) {
-                                strumOffsetParts += chord.strumParts;
+                                // if (useStrumSpeed) strumOffsetParts += Config.strumSpeedScale[instrument.strumParts];
+                                if (useStrumSpeed) strumOffsetParts += instrument.strumParts;
                             }
 
                             const atNoteStart: boolean = (Config.ticksPerPart * noteStartPart == currentTick);
