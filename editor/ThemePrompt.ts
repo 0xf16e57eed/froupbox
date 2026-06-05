@@ -68,7 +68,6 @@ export class ThemePrompt implements Prompt {
 			option({ value: "slarmoosbox" }, "Slarmoo's Box"),
 			option({ value: "voxonium" }, "Voxonium"),
 			option({ value: "axobox"}, "AxoBox"),
-			option({ value: "lemmbox dark"}, "LemmBox"),
 			option({ value: "pastenbox" }, "PastenBox"),
 		),
 		optgroup({ label: "Misc" },
