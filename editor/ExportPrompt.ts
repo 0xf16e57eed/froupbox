@@ -169,6 +169,14 @@ export class ExportPrompt implements Prompt {
         (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1));
     }
 
+    // Could probably be moved to doc or synth. Fine here for now until needed by something else.
+    public static samplesToTime(_doc: SongDocument, samples: number): string {
+        const rawSeconds: number = Math.round(samples / _doc.synth.samplesPerSecond);
+        const seconds: number = rawSeconds % 60;
+        const minutes: number = Math.floor(rawSeconds / 60);
+        return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+
     private _close = (): void => {
         if (this.synth != null)
             this.synth.renderingSong = false;
