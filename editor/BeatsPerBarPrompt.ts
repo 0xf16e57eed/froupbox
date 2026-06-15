@@ -5,7 +5,6 @@ import { HTML } from "imperative-html/dist/esm/elements-strict";
 import { SongDocument } from "./SongDocument";
 import { Prompt } from "./Prompt";
 import { ChangeBeatsPerBar } from "./changes";
-import { ExportPrompt } from "./ExportPrompt";
 
 const { button, div, span, h2, input, br, select, option } = HTML;
 
@@ -63,7 +62,7 @@ export class BeatsPerBarPrompt implements Prompt {
         this.container.addEventListener("keydown", this._whenKeyPressed);
         this._beatsStepper.addEventListener("input", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._predictFutureLength(); });
         this._conversionStrategySelect.addEventListener("change", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._predictFutureLength(); });
-        (this._computedSamplesLabel.firstChild as Text).textContent = ExportPrompt.samplesToTime(this._doc, this._doc.synth.getTotalSamples(true, true, 0));
+        (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(true, true, 0));
     }
 
     private _close = (): void => {
@@ -106,7 +105,7 @@ export class BeatsPerBarPrompt implements Prompt {
         const futureDoc: SongDocument = new SongDocument();
         futureDoc.synth.song?.fromBase64String(this._doc.synth.song?.toBase64String() ? this._doc.synth.song?.toBase64String() : "");
         new ChangeBeatsPerBar(futureDoc, BeatsPerBarPrompt._validate(this._beatsStepper), this._conversionStrategySelect.value);
-        return ExportPrompt.samplesToTime(futureDoc, futureDoc.synth.getTotalSamples(true, true, 0));
+        return this._doc.samplesToTime(futureDoc.synth.getTotalSamples(true, true, 0));
     }
 
     private _saveChanges = (): void => {
