@@ -5744,7 +5744,7 @@ export class Song {
                           );
                         }
                         instrument.phaserMix = clamp(0, Config.phaserMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                        if (beforeFour) {
+                        if (newFormat && beforeFour) {
                             charIndex++ // skipping over old character for clickless stages
                         }
                         instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
