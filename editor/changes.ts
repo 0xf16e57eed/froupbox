@@ -2861,20 +2861,6 @@ export class ChangePhaserStages extends ChangeInstrumentSlider {
     }
 }
 
-export class ChangePhaserClicklessStages extends Change {
-    constructor(doc: SongDocument, newValue: boolean) {
-        super();
-        const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
-        const oldValue = instrument.phaserClicklessStages;
-
-        doc.notifier.changed();
-        if (oldValue != newValue) {
-            instrument.phaserClicklessStages = newValue;
-            instrument.preset = instrument.type;
-            this._didSomething();
-        }
-    }
-}
 export class ChangePhaserLegacyMode extends Change {
     constructor(doc: SongDocument, newValue: boolean) {
         super();

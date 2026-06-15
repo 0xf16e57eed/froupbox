@@ -1716,7 +1716,6 @@ export class Instrument {
     public phaserFreq: number = 0;
     public phaserFeedback: number = 0;
     public phaserStages: number = 2;
-    public phaserClicklessStages: boolean = false;
     public phaserDisperse: boolean = false;
     public phaserLegacyMode: boolean = false;
     
@@ -1853,7 +1852,6 @@ export class Instrument {
         this.phaserFreq	= 0;
         this.phaserFeedback = 0;
         this.phaserStages = 2;
-        this.phaserClicklessStages = false;
         this.phaserDisperse = false;
 
         this.invertWave = false;
@@ -2192,7 +2190,6 @@ export class Instrument {
             instrumentObject["phaserFreq"] =  Math.round(100 *this.phaserFreq/(Config.phaserFreqRange - 1));
             instrumentObject["phaserFeedback"] =  Math.round(100 *this.phaserFeedback/(Config.phaserFeedbackRange - 1));
             instrumentObject["phaserStages2"] = this.phaserStages;
-            instrumentObject["phaserClicklessStages"] = this.phaserClicklessStages;
             instrumentObject["phaserDisperse"] = this.phaserDisperse;
             instrumentObject["phaserLegacyMode"] = this.phaserLegacyMode;
         }
@@ -2994,13 +2991,6 @@ export class Instrument {
                 this.clicklessTransition = false;
             }
 
-            if (instrumentObject["phaserClicklessStages"] != undefined) {
-                this.phaserClicklessStages = instrumentObject["phaserClicklessStages"];
-            }
-            else {
-                this.phaserClicklessStages = false;
-            }
-
             if (instrumentObject["aliases"] != undefined) {
                 this.aliases = instrumentObject["aliases"];
             }
@@ -3305,7 +3295,7 @@ export class Song {
     private static readonly _oldestSlarmoosBoxVersion: number = 1;
     private static readonly _latestSlarmoosBoxVersion: number = 5;
     private static readonly _oldestFroupBoxVersion: number = 1;
-    private static readonly _latestFroupBoxVersion: number = 3;
+    private static readonly _latestFroupBoxVersion: number = 4;
     // One-character variant detection at the start of URL to distinguish variants such as JummBox, Or Goldbox. "j" and "g" respectively
     //also "u" is ultrabox lol
     private static readonly _variant = 0x66; //"f" ~ froupbox
@@ -3927,7 +3917,6 @@ export class Song {
                     buffer.push(base64IntToCharCode[instrument.phaserStages >> 6]);
                     buffer.push(base64IntToCharCode[instrument.phaserStages & 0x3f]);
                     buffer.push(base64IntToCharCode[instrument.phaserMix]);
-                    buffer.push(base64IntToCharCode[+instrument.phaserClicklessStages]);
                     buffer.push(base64IntToCharCode[+instrument.phaserDisperse]);
                 }
 
@@ -5755,10 +5744,11 @@ export class Song {
                           );
                         }
                         instrument.phaserMix = clamp(0, Config.phaserMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-
-                        instrument.phaserClicklessStages = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
+                        if (beforeFour) {
+                            charIndex++ // skipping over old character for clickless stages
+                        }
                         instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
-                        instrument.phaserLegacyMode = !newFormat || (phaserFlags & 1) === 1
+                        instrument.phaserLegacyMode = !newFormat || (phaserFlags & 1) === 1;
                     }
                     if(effectsIncludeInvertWave(instrument.effects)) {
                         instrument.invertWave = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] ? true : false;
@@ -8881,7 +8871,6 @@ class InstrumentState {
     public phaser: rustDspTypes.PhaserInstance | undefined;
     public phaserStages: number = 0;
     public phaserStagesDelta: number = 0;
-    public phaserClicklessStages: boolean = false;
 
     public readonly spectrumWave: SpectrumWaveState = new SpectrumWaveState();
     public readonly harmonicsWave: HarmonicsWaveState = new HarmonicsWaveState();
