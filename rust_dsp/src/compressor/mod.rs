@@ -7,13 +7,11 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     SamplePair,
-    compressor::{
-        comp::{Compressor, CompressorParams},
-        filters::{Crossover, CrossoverCoefficients, to_w0},
-    },
+    compressor::comp::{Compressor, CompressorParams},
+    filters::{Crossover, CrossoverCoefficients, to_w0},
+    util,
 };
 mod comp;
-mod filters;
 
 #[wasm_bindgen]
 #[derive(Default, Clone, Copy, Debug)]
@@ -32,7 +30,6 @@ struct CompressorInstanceParams {
     pub mid_gain: f32,
     pub hi_gain: f32,
 }
-#[wasm_bindgen]
 impl CompressorInstanceParams {
     fn comp_params(&self, sample_rate: f32) -> CompressorParams {
         let mut params = CompressorParams::new(sample_rate);
@@ -59,24 +56,6 @@ struct CompressorInstance {
     hi: Compressor,
 
     buffer: Box<[f32]>,
-}
-
-macro_rules! interpolate {
-    ($run_length:expr, $start:expr, $end:expr) => {{
-        let (mut start, end) = ($start, $end);
-        let diff = end.zip(&start, |x, y| (x - y) / $run_length as f32);
-        std::iter::repeat_with(move || {
-            let new = start.zip(&diff, |x, y| x + y);
-            std::mem::replace(&mut start, new)
-        })
-    }};
-}
-fn interpolate_gain(run_length: usize, mut start: f32, end: f32) -> impl Iterator<Item = f32> {
-    let diff = (end - start) / run_length as f32;
-    std::iter::repeat_with(move || {
-        let new = start + diff;
-        std::mem::replace(&mut start, new)
-    })
 }
 
 #[wasm_bindgen]
@@ -112,6 +91,7 @@ impl CompressorInstance {
             ref end,
             ..
         } = *self;
+        let run_length_f32 = run_length as f32;
 
         if start.freq_lo_mid < 10.0 {
             // compressor hasn't been initialized yet; ignore
@@ -120,23 +100,17 @@ impl CompressorInstance {
 
         let (left, right) = self.buffer.split_at_mut(frame_size);
 
-        #[wasm_bindgen]
-        extern "C" {
-            #[wasm_bindgen(js_namespace = console)]
-            fn log(msg: String);
-        }
-
         let coef_lo_mid = CrossoverCoefficients::new(to_w0(start.freq_lo_mid, sample_rate));
         let coef_mid_hi = CrossoverCoefficients::new(to_w0(start.freq_mid_hi, sample_rate));
-        let mut comp_params = interpolate!(
-            run_length,
+        let mut comp_params = util::interpolate(
+            run_length_f32,
             start.comp_params(sample_rate),
-            end.comp_params(sample_rate)
+            end.comp_params(sample_rate),
         );
 
-        let mut lo_mult = interpolate_gain(run_length, start.lo_gain, end.lo_gain);
-        let mut mid_mult = interpolate_gain(run_length, start.mid_gain, end.mid_gain);
-        let mut hi_mult = interpolate_gain(run_length, start.hi_gain, end.hi_gain);
+        let mut lo_mult = util::interpolate(run_length_f32, start.lo_gain, end.lo_gain);
+        let mut mid_mult = util::interpolate(run_length_f32, start.mid_gain, end.mid_gain);
+        let mut hi_mult = util::interpolate(run_length_f32, start.hi_gain, end.hi_gain);
 
         for (l, r) in zip(&mut left[..run_length], &mut right[..run_length]) {
             let [mut lo, mut mid, mut hi] = [SamplePair { l: *l, r: *r }; 3];
@@ -144,11 +118,11 @@ impl CompressorInstance {
             self.split_mid_hi.run(&coef_mid_hi, &mut mid, &mut hi);
             self.split_lo_mid.run(&coef_lo_mid, &mut lo, &mut mid);
 
-            let cur_comp_params = comp_params.next().unwrap();
+            let cur_comp_params = comp_params.next();
 
-            let sample = self.lo.process(&cur_comp_params, lo) * lo_mult.next().unwrap()
-                + self.mid.process(&cur_comp_params, mid) * mid_mult.next().unwrap()
-                + self.hi.process(&cur_comp_params, hi) * hi_mult.next().unwrap();
+            let sample = self.lo.process(&cur_comp_params, lo) * lo_mult.next()
+                + self.mid.process(&cur_comp_params, mid) * mid_mult.next()
+                + self.hi.process(&cur_comp_params, hi) * hi_mult.next();
 
             *l = sample.l.clamp(-1.0, 1.0);
             *r = sample.r.clamp(-1.0, 1.0);

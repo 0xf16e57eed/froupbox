@@ -36,20 +36,6 @@ impl CompressorParams {
         }
     }
 
-    pub fn zip(&self, other: &Self, f: impl Fn(f32, f32) -> f32) -> Self {
-        debug_assert_eq!(self.time_scale, other.time_scale);
-        Self {
-            time_scale: self.time_scale,
-
-            attack: f(self.attack, other.attack),
-            decay: f(self.decay, other.decay),
-            threshold: f(self.threshold, other.threshold),
-            ratio_up: f(self.ratio_up, other.ratio_up),
-            ratio_down: f(self.ratio_down, other.ratio_down),
-            knee: f(self.knee, other.knee),
-        }
-    }
-
     fn output_gain(&self, lin_slope: f32) -> f32 {
         let slope = f32::ln(lin_slope) * 0.5 - self.threshold;
         let gain = if slope <= -self.knee {
@@ -66,6 +52,22 @@ impl CompressorParams {
             )
         };
         f32::exp(gain - slope)
+    }
+}
+
+impl crate::util::Zippable for CompressorParams {
+    fn zip(&self, other: &Self, f: impl Fn(f32, f32) -> f32) -> Self {
+        debug_assert_eq!(self.time_scale, other.time_scale);
+        Self {
+            time_scale: self.time_scale,
+
+            attack: f(self.attack, other.attack),
+            decay: f(self.decay, other.decay),
+            threshold: f(self.threshold, other.threshold),
+            ratio_up: f(self.ratio_up, other.ratio_up),
+            ratio_down: f(self.ratio_down, other.ratio_down),
+            knee: f(self.knee, other.knee),
+        }
     }
 }
 

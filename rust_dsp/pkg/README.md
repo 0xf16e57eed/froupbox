@@ -42,7 +42,7 @@ If that ran successfully, you should be all set!
 In this directory, run:
 
 ```
-npx wasm-pack build -d ../website/rust_dsp
+npx wasm-pack build
 ```
 
 And you're done! The newly-built module should be automatically picked up when you build froupbox.

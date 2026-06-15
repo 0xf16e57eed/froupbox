@@ -1,6 +1,28 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const start: () => void;
+export const __wbg_get_phaserinstance_disperse: (a: number) => number;
+export const __wbg_get_phaserinstance_end: (a: number) => number;
+export const __wbg_get_phaserinstance_frame_size: (a: number) => number;
+export const __wbg_get_phaserinstance_start: (a: number) => number;
+export const __wbg_get_phaserinstanceparams_feedback: (a: number) => number;
+export const __wbg_get_phaserinstanceparams_freq: (a: number) => number;
+export const __wbg_get_phaserinstanceparams_mix: (a: number) => number;
+export const __wbg_phaserinstance_free: (a: number, b: number) => void;
+export const __wbg_phaserinstanceparams_free: (a: number, b: number) => void;
+export const __wbg_set_phaserinstance_disperse: (a: number, b: number) => void;
+export const __wbg_set_phaserinstance_end: (a: number, b: number) => void;
+export const __wbg_set_phaserinstance_frame_size: (a: number, b: number) => void;
+export const __wbg_set_phaserinstance_start: (a: number, b: number) => void;
+export const __wbg_set_phaserinstanceparams_feedback: (a: number, b: number) => void;
+export const __wbg_set_phaserinstanceparams_freq: (a: number, b: number) => void;
+export const __wbg_set_phaserinstanceparams_mix: (a: number, b: number) => void;
+export const phaserinstance_begin: (a: number, b: number, c: number) => void;
+export const phaserinstance_new: (a: number) => number;
+export const phaserinstance_process: (a: number, b: number) => number;
+export const phaserinstance_set_legacy_behavior: (a: number, b: number) => void;
+export const phaserinstance_set_num_stages: (a: number, b: number) => void;
 export const __wbg_compressorinstance_free: (a: number, b: number) => void;
 export const __wbg_compressorinstanceparams_free: (a: number, b: number) => void;
 export const __wbg_get_compressorinstance_end: (a: number) => number;
@@ -32,7 +54,6 @@ export const __wbg_set_compressorinstanceparams_threshold: (a: number, b: number
 export const compressorinstance_get_buffer: (a: number) => any;
 export const compressorinstance_new: (a: number) => number;
 export const compressorinstance_process: (a: number, b: number, c: number) => void;
-export const start: () => void;
 export const __wbg_compressorparams_free: (a: number, b: number) => void;
 export const __wbg_get_compressorparams_attack: (a: number) => number;
 export const __wbg_get_compressorparams_decay: (a: number) => number;

@@ -51,14 +51,22 @@ export class Slider {
 
     public updateValue(value: number): void {
         this._value = value;
-        this.input.value = String(value);
+        this.setInputValue(value);
     }
 
+    // override these functions to make different sliders
+    protected setInputValue(value: number) {
+        this.input.value = String(value);
+    }
+    protected getInputValue(): number {
+        return parseFloat(this.input.value);
+    }
+    
     private _whenInput = (): void => {
         const continuingProspectiveChange: boolean = this._doc.lastChangeWas(this._change);
         if (!continuingProspectiveChange) this._oldValue = this._value;
         if (this._getChange != null) {
-            this._change = this._getChange(this._oldValue, parseFloat(this.input.value));
+            this._change = this._getChange(this._oldValue, this.getInputValue());
             this._doc.setProspectiveChange(this._change);
         }
     };
@@ -73,6 +81,20 @@ export class Slider {
             this._change = null;
         }
     };
+}
+
+export class LogarithmicSlider extends Slider {
+    constructor(...args: ConstructorParameters<typeof Slider>) {
+        super(...args);
+        this.input.min = String(Math.log1p(+this.input.min));
+        this.input.max = String(Math.log1p(+this.input.max));
+    }
+    protected setInputValue(value: number): void {
+        super.setInputValue(Math.log1p(value));
+    }
+    protected getInputValue(): number {
+        return Math.round(Math.expm1(super.getInputValue()));
+    }
 }
 
 export interface KnobOptions {

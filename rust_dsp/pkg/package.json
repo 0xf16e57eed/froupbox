@@ -4,7 +4,13 @@
   "collaborators": [
     "cyexclam <cypherfn@proton.me>"
   ],
+  "description": "FroupBox Rust DSP Code",
   "version": "0.1.0",
+  "license": "GPL-2.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/froupbox/froupbox.git"
+  },
   "files": [
     "rust_dsp_bg.wasm",
     "rust_dsp.js",

@@ -2875,6 +2875,20 @@ export class ChangePhaserClicklessStages extends Change {
         }
     }
 }
+export class ChangePhaserLegacyMode extends Change {
+    constructor(doc: SongDocument, newValue: boolean) {
+        super();
+        const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
+        const oldValue = instrument.phaserLegacyMode;
+
+        doc.notifier.changed();
+        if (oldValue != newValue) {
+            instrument.phaserLegacyMode = newValue;
+            instrument.preset = instrument.type;
+            this._didSomething();
+        }
+    }
+}
 
 export class ChangePhaserDisperse extends Change {
     constructor(doc: SongDocument, newValue: boolean) {

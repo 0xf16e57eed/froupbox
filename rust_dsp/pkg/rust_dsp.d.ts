@@ -40,4 +40,27 @@ export class CompressorParams {
     threshold: number;
 }
 
+export class PhaserInstance {
+    free(): void;
+    [Symbol.dispose](): void;
+    begin(sample_rate: number, run_length: number): void;
+    constructor(frame_size: number);
+    process(sample: number): number;
+    disperse: boolean;
+    end: PhaserInstanceParams;
+    frame_size: number;
+    start: PhaserInstanceParams;
+    set legacy_behavior(value: boolean);
+    set num_stages(value: number);
+}
+
+export class PhaserInstanceParams {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    feedback: number;
+    freq: number;
+    mix: number;
+}
+
 export function start(): void;

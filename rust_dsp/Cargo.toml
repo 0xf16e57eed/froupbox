@@ -1,13 +1,20 @@
 [package]
 name = "rust_dsp"
+description = "FroupBox Rust DSP Code"
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/froupbox/froupbox.git"
+license = "GPL-2.0-only"
 authors = ["cyexclam <cypherfn@proton.me>"]
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
+bytemuck = {
+  version = "1.25.0",
+  features = ["extern_crate_alloc", "must_cast", "nightly_portable_simd"]
+}
 console_error_panic_hook = "0.1.7"
 js-sys = "0.3.97"
 wasm-bindgen = "0.2.120"

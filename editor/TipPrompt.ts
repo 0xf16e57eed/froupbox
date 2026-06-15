@@ -708,6 +708,13 @@ export class TipPrompt implements Prompt {
 					p(`This checkbox makes the amount of phaser stages used static, to combat the clicking.`),
 				);
 			} break;
+			case "phaserLegacyMode": {
+				message = div(
+					h2("Phaser Legacy Mode"),
+					p(`To improve performance, by default phaser uses the new & improved parallel implementation. However, this new implementation sounds subtly different than the previous behavior. Check this box to use the old behavior.`),
+					p(`When importing a previous song, this box is always checked.`),
+				);
+			} break;
 			case "phaserDisperse": {
 				message = div(
 					h2("Phaser Disperse"),

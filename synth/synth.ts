@@ -1718,6 +1718,7 @@ export class Instrument {
     public phaserStages: number = 2;
     public phaserClicklessStages: boolean = false;
     public phaserDisperse: boolean = false;
+    public phaserLegacyMode: boolean = false;
     
     public invertWave: boolean = false;
 
@@ -2193,6 +2194,7 @@ export class Instrument {
             instrumentObject["phaserStages2"] = this.phaserStages;
             instrumentObject["phaserClicklessStages"] = this.phaserClicklessStages;
             instrumentObject["phaserDisperse"] = this.phaserDisperse;
+            instrumentObject["phaserLegacyMode"] = this.phaserLegacyMode;
         }
         if (effectsIncludeDistortion(this.effects)) {
             instrumentObject["distortion"] = Math.round(100 * this.distortion / (Config.distortionRange - 1));
@@ -2645,7 +2647,7 @@ export class Instrument {
         if (typeof instrumentObject["phaserDisperse"] === "boolean") {
             this.phaserDisperse = instrumentObject["phaserDisperse"];
         }
-
+        this.phaserLegacyMode = instrumentObject["phaserMix"] != undefined && instrumentObject["phaserLegacyMode"] !== false;
 
         if (instrumentObject["distortion"] != undefined) {
             this.distortion = clamp(0, Config.distortionRange, Math.round((Config.distortionRange - 1) * (instrumentObject["distortion"] | 0) / 100));
@@ -3918,8 +3920,10 @@ export class Song {
                 if (effectsIncludePhaser(instrument.effects)) {
                     buffer.push(base64IntToCharCode[instrument.phaserFreq]);
                     buffer.push(base64IntToCharCode[instrument.phaserFeedback]);
-                    // previous max stages was 32; thus, use 63 as a marker for the new phaser format
-                    buffer.push(base64IntToCharCode[63]);
+                    // previous max stages was 32; thus, use the other values as a marker/flags for the new phaser format
+                    let phaserFlags = 0;
+                    phaserFlags |= +instrument.phaserLegacyMode;
+                    buffer.push(base64IntToCharCode[0x3e | phaserFlags]);
                     buffer.push(base64IntToCharCode[instrument.phaserStages >> 6]);
                     buffer.push(base64IntToCharCode[instrument.phaserStages & 0x3f]);
                     buffer.push(base64IntToCharCode[instrument.phaserMix]);
@@ -5742,7 +5746,8 @@ export class Song {
                         instrument.phaserFreq = clamp(0, Config.phaserFreqRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         instrument.phaserFeedback = clamp(0, Config.phaserFeedbackRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]); 
-                        const newFormat = instrument.phaserStages === 63; // previous max stages was 32; thus, use 63 as a marker for the extended (12-bit) phaser stage number
+                        const newFormat = instrument.phaserStages > 32; // previous max stages was 32; thus, use the unused values as a marker for the new phaser format
+                        const phaserFlags = instrument.phaserStages & 0x1f; // ...and flags
                         if (newFormat) {
                           instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1,
                             base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6 | 
@@ -5753,6 +5758,7 @@ export class Song {
 
                         instrument.phaserClicklessStages = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
                         instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
+                        instrument.phaserLegacyMode = !newFormat || (phaserFlags & 1) === 1
                     }
                     if(effectsIncludeInvertWave(instrument.effects)) {
                         instrument.invertWave = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] ? true : false;
@@ -8872,18 +8878,10 @@ class InstrumentState {
 
     public invertWave: boolean = false;
 
-    public phaserSamples: Float32Array | null = null;
-    public phaserPrevInputs: Float32Array | null = null;
-    public phaserFeedbackMult: number = 0.0;
-    public phaserFeedbackMultDelta: number = 0.0;
-    public phaserMix: number = 0.0;
-    public phaserMixDelta: number = 0.0;
-    public phaserBreakCoef: number = 0.0;
-    public phaserBreakCoefDelta: number = 0.0;
+    public phaser: rustDspTypes.PhaserInstance | undefined;
     public phaserStages: number = 0;
     public phaserStagesDelta: number = 0;
     public phaserClicklessStages: boolean = false;
-    public phaserDisperse: boolean = false;
 
     public readonly spectrumWave: SpectrumWaveState = new SpectrumWaveState();
     public readonly harmonicsWave: HarmonicsWaveState = new HarmonicsWaveState();
@@ -8926,12 +8924,6 @@ class InstrumentState {
             // TODO: Make reverb delay line sample rate agnostic. Maybe just double buffer size for 96KHz? Adjust attenuation and shelf cutoff appropriately?
             if (this.reverbDelayLine == null) {
                 this.reverbDelayLine = new Float32Array(Config.reverbDelayBufferSize);
-            }
-        }
-        if (effectsIncludePhaser(instrument.effects)) {
-            if (this.phaserSamples == null) {
-                this.phaserSamples = new Float32Array(new ArrayBuffer(0, { maxByteLength: 2147483648 }));
-                this.phaserPrevInputs = new Float32Array(new ArrayBuffer(0, { maxByteLength: 2147483648 }));
             }
         }
         if (effectsIncludeGranular(instrument.effects)) {
@@ -9013,9 +9005,16 @@ class InstrumentState {
         this.reverbShelfPrevInput1 = 0.0;
         this.reverbShelfPrevInput2 = 0.0;
         this.reverbShelfPrevInput3 = 0.0;
-        if (this.phaserSamples != null) for (let i: number = 0; i < this.phaserSamples.length; i++) this.phaserSamples[i] = 0.0;
-        if (this.phaserPrevInputs != null) for (let i: number = 0; i < this.phaserPrevInputs.length; i++) this.phaserPrevInputs[i] = 0.0;
 
+        if (this.phaser) {
+            this.phaser.free();
+            this.phaser = undefined;
+        }
+        if (this.compressor) {
+            this.compressor.free();
+            this.compressor = undefined;
+        }
+        
         this.volumeScale = 1.0;
         this.aliases = false;
 
@@ -9557,7 +9556,13 @@ class InstrumentState {
 
         let maxReverbMult = 0.0;
 
-        if (usesPhaser) {
+        if (usesPhaser && !this.phaser && rustDsp) {
+            // we don't know the buffer size beforehand, so just set it to the max possible (which is currently 4096).
+            this.phaser = new rustDsp.PhaserInstance(4096);
+        }
+        if (usesPhaser && this.phaser) {
+            const { start, end } = this.phaser;
+            
             const phaserMinFeedback: number = 0.0;
             const phaserMaxFeedback: number = 0.95;
             const phaserFeedbackMultSlider: number = instrument.phaserFeedback / Config.phaserFeedbackRange;
@@ -9569,10 +9574,9 @@ class InstrumentState {
                 phaserFeedbackMultRawStart = synth.getModValue(Config.modulators.dictionary["phaser feedback"].index, channelIndex, instrumentIndex, false) / (Config.phaserFeedbackRange);
                 phaserFeedbackMultRawEnd = synth.getModValue(Config.modulators.dictionary["phaser feedback"].index, channelIndex, instrumentIndex, true) / (Config.phaserFeedbackRange);
             }
-            const phaserFeedbackMultStart: number = Math.max(phaserMinFeedback, Math.min(phaserMaxFeedback, phaserFeedbackMultRawStart));
-            const phaserFeedbackMultEnd: number = Math.max(phaserMinFeedback, Math.min(phaserMaxFeedback, phaserFeedbackMultRawEnd));
-            this.phaserFeedbackMult = phaserFeedbackMultStart;
-            this.phaserFeedbackMultDelta = (phaserFeedbackMultEnd - phaserFeedbackMultStart) / roundedSamplesPerTick;
+            start.feedback = Math.max(phaserMinFeedback, Math.min(phaserMaxFeedback, phaserFeedbackMultRawStart));
+            end.feedback = Math.max(phaserMinFeedback, Math.min(phaserMaxFeedback, phaserFeedbackMultRawEnd));
+            
             const phaserMixSlider: number = instrument.phaserMix / (Config.phaserMixRange - 1);
 
             const phaserMixEnvelopeStart: number = envelopeStarts[EnvelopeComputeIndex.phaserMix];
@@ -9584,8 +9588,8 @@ class InstrumentState {
                 phaserMixStart = Math.max(0, Math.min(Config.phaserMixRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, false))) / (Config.phaserMixRange - 1)
                 phaserMixEnd = Math.max(0, Math.min(Config.phaserMixRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, true))) / (Config.phaserMixRange - 1);
             }
-            this.phaserMix = phaserMixStart;
-            this.phaserMixDelta = (phaserMixEnd - phaserMixStart) / roundedSamplesPerTick;
+            start.mix = phaserMixStart;
+            end.mix = phaserMixEnd;
 
             // @TODO: Use filtering.ts
             const phaserBreakFreqSlider: number = instrument.phaserFreq / (Config.phaserFreqRange - 1);
@@ -9599,15 +9603,9 @@ class InstrumentState {
             }
             const phaserBreakFreqRemappedStart: number = Config.phaserMinFreq * Math.pow(Config.phaserMaxFreq / Config.phaserMinFreq, phaserBreakFreqRawStart);
             const phaserBreakFreqRemappedEnd: number = Config.phaserMinFreq * Math.pow(Config.phaserMaxFreq / Config.phaserMinFreq, phaserBreakFreqRawEnd);
-            const phaserBreakFreqStart: number = Math.max(Config.phaserMinFreq, Math.min(Config.phaserMaxFreq, phaserBreakFreqRemappedStart)); 
-            const phaserBreakFreqStartT: number = Math.tan(Math.PI * phaserBreakFreqStart / samplesPerSecond);
-            const phaserBreakCoefStart: number = (phaserBreakFreqStartT - 1) / (phaserBreakFreqStartT + 1);
-            const phaserBreakFreqEnd: number = Math.max(Config.phaserMinFreq, Math.min(Config.phaserMaxFreq, phaserBreakFreqRemappedEnd));
-            const phaserBreakFreqEndT: number = Math.tan(Math.PI * phaserBreakFreqEnd / samplesPerSecond);
-            const phaserBreakCoefEnd: number = (phaserBreakFreqEndT - 1) / (phaserBreakFreqEndT + 1);
+            start.freq = Math.max(Config.phaserMinFreq, Math.min(Config.phaserMaxFreq, phaserBreakFreqRemappedStart)); 
+            end.freq = Math.max(Config.phaserMinFreq, Math.min(Config.phaserMaxFreq, phaserBreakFreqRemappedEnd));
 
-            this.phaserBreakCoef = phaserBreakCoefStart;
-            this.phaserBreakCoefDelta = (phaserBreakCoefEnd - phaserBreakCoefStart) / roundedSamplesPerTick;
             const phaserStagesEnvelopeStart: number = envelopeStarts[EnvelopeComputeIndex.phaserStages];
             const phaserStagesEnvelopeEnd: number = envelopeEnds[EnvelopeComputeIndex.phaserStages];
             const phaserStagesSlider: number = instrument.phaserStages;
@@ -9623,8 +9621,11 @@ class InstrumentState {
             this.phaserStages = phaserStagesStart;
             this.phaserStagesDelta = (phaserStagesEnd - phaserStagesStart) / roundedSamplesPerTick;
             
-            this.phaserClicklessStages = instrument.phaserClicklessStages;
-            this.phaserDisperse = instrument.phaserDisperse;
+            this.phaser.disperse = instrument.phaserDisperse;
+            this.phaser.legacy_behavior = instrument.phaserLegacyMode;
+
+            this.phaser.start = start;
+            this.phaser.end = end;
         }
 
         if (usesReverb) {
@@ -9695,7 +9696,6 @@ class InstrumentState {
         
         this.compressor.start = start;
         this.compressor.end = end;
-        
       }
 
         if (this.tonesAddedInThisTick) {
@@ -14348,21 +14348,13 @@ export class Synth {
             if (usesPhaser) {
                 effectsSource += `
                 
-                const phaserSamples = instrumentState.phaserSamples;
-                const phaserPrevInputs = instrumentState.phaserPrevInputs;
                 let phaserStages = instrumentState.phaserStages;
                 let phaserStagesInt = Math.floor(phaserStages);
                 const phaserStagesDelta = instrumentState.phaserStagesDelta;
-                const phaserFeedbackMultDelta = +instrumentState.phaserFeedbackMultDelta;
-                let phaserFeedbackMult = +instrumentState.phaserFeedbackMult;
-                const phaserMixDelta = +instrumentState.phaserMixDelta;
-                let phaserMix = +instrumentState.phaserMix;
-                const phaserBreakCoefDelta = +instrumentState.phaserBreakCoefDelta;
-                let phaserBreakCoef = +instrumentState.phaserBreakCoef;
 
-                if(phaserSamples.length !== phaserStagesInt) {
-                  phaserSamples.buffer.resize(phaserStagesInt * 4);
-                  phaserPrevInputs.buffer.resize(phaserStagesInt * 4);
+                if(instrumentState.phaser){
+                    instrumentState.phaser.num_stages = phaserStagesInt;
+                    instrumentState.phaser.begin(synth.samplesPerSecond, runLength);
                 }
                 `
             }
@@ -14663,26 +14655,10 @@ export class Synth {
 
             if (usesPhaser) {
                 effectsSource += `
-                        const phaserFeedback = phaserSamples[Math.max(0,phaserStagesInt - 1)] * phaserFeedbackMult;
-                        for (let stage = 0; stage < phaserStagesInt; stage++) {
-                            const phaserInput = stage === 0 ? sample + phaserFeedback : phaserSamples[stage - 1];
-                            const phaserPrevInput = phaserPrevInputs[stage];
-                            const phaserSample = phaserSamples[stage];
-                            const phaserNextOutput = phaserBreakCoef * phaserInput + phaserPrevInput - phaserBreakCoef * phaserSample;
-                            phaserPrevInputs[stage] = phaserInput;
-                            phaserSamples[stage] = phaserNextOutput;
-                        }
-                        const phaserOutput = phaserSamples[Math.max(0,phaserStagesInt - 1)];
-                        if(instrumentState.phaserDisperse)
-                          sample = sample + (phaserOutput - sample) * phaserMix;
-                        else
-                          sample = sample + phaserOutput * phaserMix;
-                        phaserFeedbackMult += phaserFeedbackMultDelta;
-                        phaserBreakCoef += phaserBreakCoefDelta;
-                        phaserMix += phaserMixDelta;
+                    if(instrumentState.phaser) {
+                        sample = instrumentState.phaser.process(sample);
                         phaserStages += phaserStagesDelta;
-                        if (!instrumentState.phaserClicklessStages)
-                          phaserStagesInt = Math.floor(phaserStages);
+                    }
                     `
             }
 
@@ -14860,7 +14836,7 @@ export class Synth {
 				`;
         if (usesCompressor) {
           effectsSource += `
-          compressor.process(${synth.samplesPerSecond}, runLength);
+          compressor.process(synth.samplesPerSecond, runLength);
           
           for (let i = 0; i < runLength; i++) {
             outputDataL[bufferIndex + i] += compBufL[i] * mixVolume;
@@ -14932,19 +14908,6 @@ export class Synth {
                 instrumentState.ringModPulseWidth = ringModPulseWidth;
                 instrumentState.ringModMixFade = ringModMixFade;
                  `
-            }
-            if (usesPhaser) {
-                effectsSource += `
-                
-                for (let stage = 0; stage < phaserStages; stage++) {
-                    if (!Number.isFinite(phaserPrevInputs[stage]) || Math.abs(phaserPrevInputs[stage]) < epsilon) phaserPrevInputs[stage] = 0.0;
-                    if (!Number.isFinite(phaserSamples[stage]) || Math.abs(phaserSamples[stage]) < epsilon) phaserSamples[stage] = 0.0;
-                }
-                
-                instrumentState.phaserMix = phaserMix;
-                instrumentState.phaserFeedbackMult = phaserFeedbackMult;
-                instrumentState.phaserBreakCoef = phaserBreakCoef;
-                `
             }
 
             if (usesEqFilter) {

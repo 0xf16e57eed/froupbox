@@ -1,5 +1,10 @@
+#![feature(portable_simd)]
+
 mod compressor;
+mod filters;
+mod phaser;
 mod sample;
+mod util;
 
 pub(crate) use sample::{SamplePair, lerp};
 

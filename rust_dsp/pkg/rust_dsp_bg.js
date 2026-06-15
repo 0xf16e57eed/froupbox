@@ -320,6 +320,171 @@ export class CompressorParams {
 }
 if (Symbol.dispose) CompressorParams.prototype[Symbol.dispose] = CompressorParams.prototype.free;
 
+export class PhaserInstance {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PhaserInstanceFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_phaserinstance_free(ptr, 0);
+    }
+    /**
+     * @returns {boolean}
+     */
+    get disperse() {
+        const ret = wasm.__wbg_get_phaserinstance_disperse(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @returns {PhaserInstanceParams}
+     */
+    get end() {
+        const ret = wasm.__wbg_get_phaserinstance_end(this.__wbg_ptr);
+        return PhaserInstanceParams.__wrap(ret);
+    }
+    /**
+     * @returns {number}
+     */
+    get frame_size() {
+        const ret = wasm.__wbg_get_phaserinstance_frame_size(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {PhaserInstanceParams}
+     */
+    get start() {
+        const ret = wasm.__wbg_get_phaserinstance_start(this.__wbg_ptr);
+        return PhaserInstanceParams.__wrap(ret);
+    }
+    /**
+     * @param {number} sample_rate
+     * @param {number} run_length
+     */
+    begin(sample_rate, run_length) {
+        wasm.phaserinstance_begin(this.__wbg_ptr, sample_rate, run_length);
+    }
+    /**
+     * @param {number} frame_size
+     */
+    constructor(frame_size) {
+        const ret = wasm.phaserinstance_new(frame_size);
+        this.__wbg_ptr = ret;
+        PhaserInstanceFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @param {number} sample
+     * @returns {number}
+     */
+    process(sample) {
+        const ret = wasm.phaserinstance_process(this.__wbg_ptr, sample);
+        return ret;
+    }
+    /**
+     * @param {boolean} legacy_behavior
+     */
+    set legacy_behavior(legacy_behavior) {
+        wasm.phaserinstance_set_legacy_behavior(this.__wbg_ptr, legacy_behavior);
+    }
+    /**
+     * @param {number} num_stages
+     */
+    set num_stages(num_stages) {
+        wasm.phaserinstance_set_num_stages(this.__wbg_ptr, num_stages);
+    }
+    /**
+     * @param {boolean} arg0
+     */
+    set disperse(arg0) {
+        wasm.__wbg_set_phaserinstance_disperse(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {PhaserInstanceParams} arg0
+     */
+    set end(arg0) {
+        _assertClass(arg0, PhaserInstanceParams);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_phaserinstance_end(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set frame_size(arg0) {
+        wasm.__wbg_set_phaserinstance_frame_size(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {PhaserInstanceParams} arg0
+     */
+    set start(arg0) {
+        _assertClass(arg0, PhaserInstanceParams);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_phaserinstance_start(this.__wbg_ptr, ptr0);
+    }
+}
+if (Symbol.dispose) PhaserInstance.prototype[Symbol.dispose] = PhaserInstance.prototype.free;
+
+export class PhaserInstanceParams {
+    static __wrap(ptr) {
+        const obj = Object.create(PhaserInstanceParams.prototype);
+        obj.__wbg_ptr = ptr;
+        PhaserInstanceParamsFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PhaserInstanceParamsFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_phaserinstanceparams_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get feedback() {
+        const ret = wasm.__wbg_get_phaserinstanceparams_feedback(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get freq() {
+        const ret = wasm.__wbg_get_phaserinstanceparams_freq(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get mix() {
+        const ret = wasm.__wbg_get_phaserinstanceparams_mix(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set feedback(arg0) {
+        wasm.__wbg_set_phaserinstanceparams_feedback(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set freq(arg0) {
+        wasm.__wbg_set_phaserinstanceparams_freq(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set mix(arg0) {
+        wasm.__wbg_set_phaserinstanceparams_mix(this.__wbg_ptr, arg0);
+    }
+}
+if (Symbol.dispose) PhaserInstanceParams.prototype[Symbol.dispose] = PhaserInstanceParams.prototype.free;
+
 export function start() {
     wasm.start();
 }
@@ -371,6 +536,12 @@ const CompressorInstanceParamsFinalization = (typeof FinalizationRegistry === 'u
 const CompressorParamsFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_compressorparams_free(ptr, 1));
+const PhaserInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_phaserinstance_free(ptr, 1));
+const PhaserInstanceParamsFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_phaserinstanceparams_free(ptr, 1));
 
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {
