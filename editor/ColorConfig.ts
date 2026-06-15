@@ -1078,6 +1078,126 @@ export class ColorConfig {
 
 			}
 		`,
+        "legacy beachcombing": `
+			:root {
+			--page-margin: #010121;
+			--editor-background: #020222;
+			--hover-preview: #f3ffff;
+			--playhead: #fff;
+			--primary-text: #c1f1ff;
+			--secondary-text: #546775;
+			--inverted-text: black;
+			--text-selection: rgba(119,68,255,0.99);
+			--box-selection-fill: #3e0028;
+			--loop-accent: #5a00ff;
+			--link-accent: #ff00c8fc;
+			--ui-widget-background: #1f2b52;
+			--ui-widget-focus: #384e91;
+			--pitch-background: #2c3155;
+			--tonic: #a32f6e;
+			--fifth-note: #0044a0;
+			--white-piano-key: #fff;
+			--black-piano-key: #202d42;
+			--use-color-formula: false;
+			--track-editor-bg-pitch: #34406c;
+			--track-editor-bg-pitch-dim: #1c1d28;
+			--track-editor-bg-noise: #562e3b;
+			--track-editor-bg-noise-dim: #161313;
+			--track-editor-bg-mod: #372e66;
+			--track-editor-bg-mod-dim: #2a1640;
+			--multiplicative-mod-slider: #606c9f;
+			--overwriting-mod-slider: #6850b5;
+			--indicator-primary: #ff67c2;
+			--indicator-secondary: #393e4f;
+			--select2-opt-group: #5d576f;
+			--input-box-outline: #222;
+			--mute-button-normal: #7ce1ff;
+			--mute-button-mod: #db519d;
+			--pitch1-secondary-channel: #329b70;
+			--pitch1-primary-channel: #53ffb8;
+			--pitch1-secondary-note: #4cb98c;
+			--pitch1-primary-note: #98ffd4;
+			--pitch2-secondary-channel: #8e8632;
+			--pitch2-primary-channel: #fff36a;
+			--pitch2-secondary-note: #afaf22;
+			--pitch2-primary-note: #f9f93f;
+			--pitch3-secondary-channel: #018e8e;
+			--pitch3-primary-channel: #00ffff;
+			--pitch3-secondary-note: #24b7b7;
+			--pitch3-primary-note: #a7ffff;
+			--pitch4-secondary-channel: #6c003d;
+			--pitch4-primary-channel: #ff0090;
+			--pitch4-secondary-note: #a73c78;
+			--pitch4-primary-note: #ff98d2;
+			--pitch5-secondary-channel: #0e8153;
+			--pitch5-primary-channel: #59ffbd;
+			--pitch5-secondary-note: #489979;
+			--pitch5-primary-note: #b0ffe0;
+			--pitch6-secondary-channel: #185aab;
+			--pitch6-primary-channel: #4e7ce5;
+			--pitch6-secondary-note: #3e99d9;
+			--pitch6-primary-note: #b3e3ff;
+			--pitch7-secondary-channel: #4f007d;
+			--pitch7-primary-channel: #a200ff;
+			--pitch7-secondary-note: #9741c9;
+			--pitch7-primary-note: #d386ff;
+			--pitch8-secondary-channel: #101c8d;
+			--pitch8-primary-channel: #1c5df1;
+			--pitch8-secondary-note: #FF4E63;
+			--pitch8-primary-note: #FFB2BB;
+			--pitch9-secondary-channel: #00A170;
+			--pitch9-primary-channel: #50FFC9;
+			--pitch9-secondary-note: #00C78A;
+			--pitch9-primary-note: #83FFD9;
+			--pitch10-secondary-channel: #A11FFF;
+			--pitch10-primary-channel: #CE8BFF;
+			--pitch10-secondary-note: #B757FF;
+			--pitch10-primary-note: #DFACFF;
+			--noise1-secondary-channel: #635070;
+			--noise1-primary-channel: #9071db;
+			--noise1-secondary-note: #915dc1;
+			--noise1-primary-note: #c5a5ff;
+			--noise2-secondary-channel: #993367;
+			--noise2-primary-channel: #dd777c;
+			--noise2-secondary-note: #cc6695;
+			--noise2-primary-note: #f0bbd1;
+			--noise3-secondary-channel: #4a8c8f;
+			--noise3-primary-channel: #77c5dd;
+			--noise3-secondary-note: #6fb4cf;
+			--noise3-primary-note: #bbf2ff;
+			--noise4-secondary-channel: #8e3e7d;
+			--noise4-primary-channel: #c682d2;
+			--noise4-secondary-note: #b871c1;
+			--noise4-primary-note: #ffb8f0;
+			--noise5-secondary-channel: #785e37;
+			--noise5-primary-channel: #bb9d77;
+			--noise5-secondary-note: #aa8c66;
+			--noise5-primary-note: #e2d1b2;
+			--mod1-secondary-channel: #4e8397;
+			--mod1-primary-channel: #92e6f3;
+			--mod1-secondary-note: #76b9d9;
+			--mod1-primary-note: #cde3ff;
+			--mod2-secondary-channel: #ad5774;
+			--mod2-primary-channel: #eba4ae;
+			--mod2-secondary-note: #c9719b;
+			--mod2-primary-note: #fdcee7;
+			--mod3-secondary-channel: #6f579f;
+			--mod3-primary-channel: #b192f7;
+			--mod3-secondary-note: #a778e1;
+			--mod3-primary-note: #f8ddff;
+			--mod4-secondary-channel: #a88a36;
+			--mod4-primary-channel: #bec825;
+			--mod4-secondary-note: #aecb57;
+			--mod4-primary-note: #dee9bd;
+			--mod-label-primary: #2c2c56;
+			--mod-label-secondary-text: rgb(71,69,147);
+			--mod-label-primary-text: white;
+			--disabled-note-primary: #91879f;
+			--disabled-note-secondary: #6a677a;
+
+
+			}
+		`,
         "roe": `
 			:root {
 			--page-margin: #050000;

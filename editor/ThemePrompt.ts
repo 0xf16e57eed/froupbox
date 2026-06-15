@@ -17,6 +17,7 @@ export class ThemePrompt implements Prompt {
 			option({ value: "canyon" }, "Canyon"),
 			option({ value: "midnight" }, "Midnight"),
 			option({ value: "beachcombing" }, "Beachcombing"),
+			option({ value: "legacy beachcombing" }, "Legacy Beachcombing"),
 			option({ value: "violet verdant" }, "Violet Verdant"),
 			option({ value: "sunset" }, "Sunset"),
 			option({ value: "autumn" }, "Autumn"),
