@@ -5362,43 +5362,7 @@ export class ChangeChannelName extends Change {
         if (oldValue != newValue) this._didSomething();
     }
 }
-/*
-export class ChangeChannelEquaveDivisions extends Change {
-    constructor(doc: SongDocument, oldValue: number, newValue: number) {
-        super();
-        newValue = clamp(1, Config.equaveDivisionsMax, newValue);
 
-        doc.song.channels[doc.channel].equaveDivisions = newValue;
-
-        doc.notifier.changed();
-        if (oldValue != newValue) this._didSomething();
-    }
-}
-
-export class ChangeChannelEquaveNumerator extends Change {
-    constructor(doc: SongDocument, oldValue: number, newValue: number) {
-        super();
-        newValue = Math.max(2, clamp(doc.song.channels[doc.channel].equaveDenominator + 1, Config.equaveNumeratorMax, newValue));
-
-        doc.song.channels[doc.channel].equaveNumerator = newValue;
-
-        doc.notifier.changed();
-        if (oldValue != newValue) this._didSomething();
-    }
-}
-
-export class ChangeChannelEquaveDenominator extends Change {
-    constructor(doc: SongDocument, oldValue: number, newValue: number) {
-        super();
-        newValue = Math.min(Config.equaveDenominatorMax, clamp(1, doc.song.channels[doc.channel].equaveNumerator, newValue));
-
-        doc.song.channels[doc.channel].equaveDenominator = newValue;
-
-        doc.notifier.changed();
-        if (oldValue != newValue) this._didSomething();
-    }
-}//pastenkopie
-*/
 export class ChangeChannelTuning extends Change {
     constructor(doc: SongDocument, newEquaveDivisions: number, newEquaveNumerator: number, newEquaveDenominator: number) {
         super();
