@@ -40,7 +40,10 @@ export default {
   },
   tools: {
     swc: { jsc: { loose: true } },
-    rspack: { output: { library: "beepbox" } },
+      rspack: {
+        output: { library: "beepbox" },
+        watchOptions: { aggregateTimeout: 100 },
+      },
   },
   server: {
     port: 5559,

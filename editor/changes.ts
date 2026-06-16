@@ -407,7 +407,7 @@ export class ChangeMoveAndOverflowNotes extends ChangeGroup {
 
         for (let channelIndex: number = 0; channelIndex < doc.song.getChannelCount(); channelIndex++) {
             const oldChannel: Channel = doc.song.channels[channelIndex];
-            const newChannel: Channel = new Channel();
+            const newChannel: Channel = new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator);
 
             if (channelIndex < doc.song.pitchChannelCount) {
                 pitchChannels.push(newChannel);
@@ -2035,7 +2035,7 @@ export class ChangeChannelCount extends Change {
                     if (i < oldCount) {
                         newChannels[channelIndex] = doc.song.channels[oldChannel];
                     } else {
-                        newChannels[channelIndex] = new Channel();
+                        newChannels[channelIndex] = new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator);
                         newChannels[channelIndex].octave = octave;
                         for (let j: number = 0; j < Config.instrumentCountMin; j++) {
                             const instrument: Instrument = new Instrument(isNoise, isMod);
@@ -4007,6 +4007,28 @@ export class ChangePatternsPerChannel extends Change {
     }
 }
 
+export class ChangeDefaultTuning extends Change {
+    constructor(doc: SongDocument, newEquaveDivisions: number, newEquaveNumerator: number, newEquaveDenominator: number) {
+        super();
+        newEquaveDivisions = clamp(1, Config.equaveDivisionsMax, newEquaveDivisions);
+        newEquaveNumerator = Math.max(2, clamp(2, Config.equaveNumeratorMax, newEquaveNumerator));
+        newEquaveDenominator = Math.min(Config.equaveDenominatorMax, clamp(1, newEquaveNumerator, newEquaveDenominator));
+
+        if (
+            doc.song.defaultEquaveDivisions != newEquaveDivisions
+            || doc.song.defaultEquaveNumerator != newEquaveNumerator
+            || doc.song.defaultEquaveDenominator != newEquaveDenominator
+        ) {
+            doc.song.defaultEquaveDivisions = newEquaveDivisions;
+            doc.song.defaultEquaveNumerator = newEquaveNumerator;
+            doc.song.defaultEquaveDenominator = newEquaveDenominator;
+
+            doc.notifier.changed();
+            this._didSomething();
+        }
+    }
+}
+
 export class ChangeEnsurePatternExists extends UndoableChange {
     private _doc: SongDocument;
     private _bar: number;
@@ -4556,9 +4578,9 @@ export class ChangeReplacePatterns extends ChangeGroup {
         removeExtraSparseChannels(noiseChannels, Config.noiseChannelCountMax);
         removeExtraSparseChannels(modChannels, Config.modChannelCountMax);
 
-        while (pitchChannels.length < Config.pitchChannelCountMin) pitchChannels.push(new Channel());
-        while (noiseChannels.length < Config.noiseChannelCountMin) noiseChannels.push(new Channel());
-        while (modChannels.length < Config.modChannelCountMin) modChannels.push(new Channel());
+        while (pitchChannels.length < Config.pitchChannelCountMin) pitchChannels.push(new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator));
+        while (noiseChannels.length < Config.noiseChannelCountMin) noiseChannels.push(new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator));
+        while (modChannels.length < Config.modChannelCountMin) modChannels.push(new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator));
 
         // Set minimum counts.
         song.barCount = 1;
@@ -5338,6 +5360,58 @@ export class ChangeChannelName extends Change {
 
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
+    }
+}
+/*
+export class ChangeChannelEquaveDivisions extends Change {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super();
+        newValue = clamp(1, Config.equaveDivisionsMax, newValue);
+
+        doc.song.channels[doc.channel].equaveDivisions = newValue;
+
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeChannelEquaveNumerator extends Change {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super();
+        newValue = Math.max(2, clamp(doc.song.channels[doc.channel].equaveDenominator + 1, Config.equaveNumeratorMax, newValue));
+
+        doc.song.channels[doc.channel].equaveNumerator = newValue;
+
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeChannelEquaveDenominator extends Change {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super();
+        newValue = Math.min(Config.equaveDenominatorMax, clamp(1, doc.song.channels[doc.channel].equaveNumerator, newValue));
+
+        doc.song.channels[doc.channel].equaveDenominator = newValue;
+
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}//pastenkopie
+*/
+export class ChangeChannelTuning extends Change {
+    constructor(doc: SongDocument, newEquaveDivisions: number, newEquaveNumerator: number, newEquaveDenominator: number) {
+        super();
+        newEquaveDivisions = clamp(1, Config.equaveDivisionsMax, newEquaveDivisions);
+        newEquaveNumerator = Math.max(2, clamp(2, Config.equaveNumeratorMax, newEquaveNumerator));
+        newEquaveDenominator = Math.min(Config.equaveDenominatorMax, clamp(1, newEquaveNumerator, newEquaveDenominator));
+
+        doc.song.channels[doc.channel].equaveDivisions = newEquaveDivisions;
+        doc.song.channels[doc.channel].equaveNumerator = newEquaveNumerator;
+        doc.song.channels[doc.channel].equaveDenominator = newEquaveDenominator;
+
+        doc.notifier.changed();
+        this._didSomething();
     }
 }
 

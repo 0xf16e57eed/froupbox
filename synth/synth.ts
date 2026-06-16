@@ -248,8 +248,8 @@ const enum SongTagCode {
     arpeggioSpeed = CharCode.G, // added in JummBox URL version 3 for arpeggioSpeed, DEPRECATED
     harmonics = CharCode.H, // added in BeepBox URL version 7
     stringSustain = CharCode.I, // added in BeepBox URL version 9
-    //	                    = CharCode.J,
-    //	                    = CharCode.K,
+    channelTuning = CharCode.J, // added in froupbox URL version 5
+    defaultTuning = CharCode.K, // added in froupbox URL version 5
     pan = CharCode.L, // added between 8 and 9, DEPRECATED
     customChipWave = CharCode.M, // added in JummBox URL version 1(?) for customChipWave
     songDetails = CharCode.N, // added in JummBox URL version 1(?) for songTitle
@@ -3275,11 +3275,19 @@ export class Instrument {
 
 export class Channel {
     public octave: number = 0;
+    public equaveDivisions: number = 1;
+    public equaveNumerator: number = 2;
+    public equaveDenominator: number = 1;
     public readonly instruments: Instrument[] = [];
     public readonly patterns: Pattern[] = [];
     public readonly bars: number[] = [];
     public muted: boolean = false;
     public name: string = "";
+    constructor(equaveDivisions: number, equaveNumerator: number, equaveDenominator: number) {
+        this.equaveDivisions = equaveDivisions;
+        this.equaveNumerator = equaveNumerator;
+        this.equaveDenominator = equaveDenominator;
+    }
 }
 
 export class Song {
@@ -3295,7 +3303,7 @@ export class Song {
     private static readonly _oldestSlarmoosBoxVersion: number = 1;
     private static readonly _latestSlarmoosBoxVersion: number = 5;
     private static readonly _oldestFroupBoxVersion: number = 1;
-    private static readonly _latestFroupBoxVersion: number = 4;
+    private static readonly _latestFroupBoxVersion: number = 5;
     // One-character variant detection at the start of URL to distinguish variants such as JummBox, Or Goldbox. "j" and "g" respectively
     //also "u" is ultrabox lol
     private static readonly _variant = 0x66; //"f" ~ froupbox
@@ -3306,6 +3314,9 @@ export class Song {
     public scale: number;
     public scaleCustom: boolean[] = [];
     public key: number;
+    public defaultEquaveDivisions: number;
+    public defaultEquaveNumerator: number;
+    public defaultEquaveDenominator: number;
     public octave: number;
     public tempo: number;
     public reverb: number;
@@ -3568,6 +3579,9 @@ export class Song {
         //this.scaleCustom = [true, false, true, true, false, false, false, true, true, false, true, true];
         //this.scaleCustom = [true, false, false, false, false, false, false, false, false, false, false, false];
         this.key = 0;
+        this.defaultEquaveDivisions = 12;
+        this.defaultEquaveNumerator = 2;
+        this.defaultEquaveDenominator = 1;
         this.octave = 0;
         this.loopStart = 0;
         this.loopLength = 4;
@@ -3597,10 +3611,13 @@ export class Song {
                 const isNoiseChannel: boolean = channelIndex >= this.pitchChannelCount && channelIndex < this.pitchChannelCount + this.noiseChannelCount;
                 const isModChannel: boolean = channelIndex >= this.pitchChannelCount + this.noiseChannelCount;
                 if (this.channels.length <= channelIndex) {
-                    this.channels[channelIndex] = new Channel();
+                    this.channels[channelIndex] = new Channel(this.defaultEquaveDivisions, this.defaultEquaveNumerator, this.defaultEquaveDenominator);
                 }
                 const channel: Channel = this.channels[channelIndex];
                 channel.octave = Math.max(3 - channelIndex, 0); // [3, 2, 1, 0]; Descending octaves with drums at zero in last channel.
+                channel.equaveDivisions = 12;
+                channel.equaveNumerator = 2;
+                channel.equaveDenominator = 1;
 
                 for (let pattern: number = 0; pattern < this.patternsPerChannel; pattern++) {
                     if (channel.patterns.length <= pattern) {
@@ -3670,6 +3687,11 @@ export class Song {
             }
         }
         buffer.push(SongTagCode.key, base64IntToCharCode[this.key], base64IntToCharCode[this.octave - Config.octaveMin]);
+        buffer.push(SongTagCode.defaultTuning,
+            base64IntToCharCode[this.defaultEquaveDivisions >> 6], base64IntToCharCode[this.defaultEquaveDivisions & 63],
+            base64IntToCharCode[this.defaultEquaveNumerator >> 6], base64IntToCharCode[this.defaultEquaveNumerator & 63],
+            base64IntToCharCode[this.defaultEquaveDenominator >> 6], base64IntToCharCode[this.defaultEquaveDenominator & 63]
+        );
         buffer.push(SongTagCode.loopStart, base64IntToCharCode[this.loopStart >> 6], base64IntToCharCode[this.loopStart & 0x3f]);
         buffer.push(SongTagCode.loopEnd, base64IntToCharCode[(this.loopLength - 1) >> 6], base64IntToCharCode[(this.loopLength - 1) & 0x3f]);
         buffer.push(SongTagCode.tempo, base64IntToCharCode[this.tempo >> 6], base64IntToCharCode[this.tempo & 0x3F]);
@@ -3747,6 +3769,13 @@ export class Song {
         buffer.push(SongTagCode.channelOctave);
         for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
             buffer.push(base64IntToCharCode[this.channels[channelIndex].octave]);
+        }
+
+        buffer.push(SongTagCode.channelTuning);
+        for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
+            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveDivisions >> 6], base64IntToCharCode[this.channels[channelIndex].equaveDivisions & 63]);
+            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveNumerator >> 6], base64IntToCharCode[this.channels[channelIndex].equaveNumerator & 63]);
+            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveDenominator >> 6], base64IntToCharCode[this.channels[channelIndex].equaveDenominator & 63]);
         }
 
         //This is for specific instrument stuff to url
@@ -4627,7 +4656,7 @@ export class Song {
                 this.modChannelCount = validateRange(Config.modChannelCountMin, Config.modChannelCountMax, this.modChannelCount);
 
                 for (let channelIndex = this.channels.length; channelIndex < this.getChannelCount(); channelIndex++) {
-                    this.channels[channelIndex] = new Channel();
+                    this.channels[channelIndex] = new Channel(this.defaultEquaveDivisions, this.defaultEquaveNumerator, this.defaultEquaveDenominator);
                 }
                 this.channels.length = this.getChannelCount();
                 if ((fromBeepBox && beforeNine) || ((fromJummBox && beforeFive) || (beforeFour && fromGoldBox))) {
@@ -4668,6 +4697,11 @@ export class Song {
                     this.key = clamp(0, Config.keys.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                     this.octave = clamp(Config.octaveMin, Config.octaveMax + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)] + Config.octaveMin);
                 }
+            } break;
+            case SongTagCode.defaultTuning: {
+                this.defaultEquaveDivisions = clamp(1, Config.equaveDivisionsMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                this.defaultEquaveNumerator = clamp(1, Config.equaveNumeratorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                this.defaultEquaveDenominator = clamp(1, Config.equaveDenominatorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
             } break;
             case SongTagCode.loopStart: {
                 if (beforeFive && fromBeepBox) {
@@ -4822,6 +4856,18 @@ export class Song {
                     for (let channelIndex: number = this.pitchChannelCount; channelIndex < this.getChannelCount(); channelIndex++) {
                         this.channels[channelIndex].octave = 0;
                     }
+                }
+            } break;
+            case SongTagCode.channelTuning: {
+                for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
+                    this.channels[channelIndex].equaveDivisions = clamp(1, Config.equaveDivisionsMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    this.channels[channelIndex].equaveNumerator = clamp(1, Config.equaveNumeratorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    this.channels[channelIndex].equaveDenominator = clamp(1, Config.equaveDenominatorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                }
+                for (let channelIndex: number = this.pitchChannelCount; channelIndex < this.getChannelCount(); channelIndex++) {
+                    this.channels[channelIndex].equaveDivisions = 1;
+                    this.channels[channelIndex].equaveNumerator = 2;
+                    this.channels[channelIndex].equaveDenominator = 1;
                 }
             } break;
             case SongTagCode.startInstrument: {
@@ -7064,6 +7110,9 @@ export class Song {
             if (!isNoiseChannel) {
                 // For compatibility with old versions the octave is offset by one.
                 channelObject["octaveScrollBar"] = channel.octave - 1;
+                channelObject["equaveDivisions"] = channel.equaveDivisions;
+                channelObject["equaveNumerator"] = channel.equaveNumerator;
+                channelObject["equaveDenominator"] = channel.equaveDenominator;
             }
             channelArray.push(channelObject);
         }
@@ -7077,6 +7126,9 @@ export class Song {
             "scale": Config.scales[this.scale].name,
             "customScale": this.scaleCustom,
             "key": Config.keys[this.key].name,
+            "defaultEquaveDivisions": this.defaultEquaveDivisions,
+            "defaultEquaveNumerator": this.defaultEquaveNumerator,
+            "defaultEquaveDenominator": this.defaultEquaveDenominator,
             "keyOctave": this.octave,
             "introBars": this.loopStart,
             "loopBars": this.loopLength,
@@ -7520,6 +7572,18 @@ export class Song {
             this.tempo = clamp(Config.tempoMin, Config.tempoMax + 1, jsonObject["beatsPerMinute"] | 0);
         }
 
+        if (jsonObject["defaultEquaveDivisions"] != undefined) {
+            this.defaultEquaveDivisions = clamp(1, Config.equaveDivisionsMax, jsonObject["defaultEquaveDivisions"] | 0);
+        }
+
+        if (jsonObject["defaultEquaveNumerator"] != undefined) {
+            this.defaultEquaveNumerator = clamp(1, Config.equaveNumeratorMax, jsonObject["defaultEquaveNumerator"] | 0);
+        }
+
+        if (jsonObject["defaultEquaveDivisions"] != undefined) {
+            this.defaultEquaveDenominator = clamp(1, Config.equaveDenominatorMax, jsonObject["defaultEquaveDivisions"] | 0);
+        }
+
         if (jsonObject["keyOctave"] != undefined) {
             this.octave = clamp(Config.octaveMin, Config.octaveMax + 1, jsonObject["keyOctave"] | 0);
         }
@@ -7638,7 +7702,7 @@ export class Song {
             for (let channelIndex: number = 0; channelIndex < jsonObject["channels"].length; channelIndex++) {
                 let channelObject: any = jsonObject["channels"][channelIndex];
 
-                const channel: Channel = new Channel();
+                const channel: Channel = new Channel(this.defaultEquaveDivisions, this.defaultEquaveNumerator, this.defaultEquaveDenominator);
 
                 let isNoiseChannel: boolean = false;
                 let isModChannel: boolean = false;
@@ -7661,6 +7725,21 @@ export class Song {
                 if (channelObject["octaveScrollBar"] != undefined) {
                     channel.octave = clamp(0, Config.pitchOctaves, (channelObject["octaveScrollBar"] | 0) + 1);
                     if (isNoiseChannel) channel.octave = 0;
+                }
+
+                if (channelObject["equaveDivisions"] != undefined) {
+                    channel.equaveDivisions = clamp(0, Config.equaveDivisionsMax, (channelObject["equaveDivisions"] | 0));
+                    if (isNoiseChannel) channel.equaveDivisions = 1;
+                }
+
+                if (channelObject["equaveNumerator"] != undefined) {
+                    channel.equaveNumerator = clamp(0, Config.equaveNumeratorMax, (channelObject["equaveNumerator"] | 0));
+                    if (isNoiseChannel) channel.equaveNumerator = 2;
+                }
+
+                if (channelObject["equaveDenominator"] != undefined) {
+                    channel.equaveDenominator = clamp(0, Config.equaveDenominatorMax, (channelObject["equaveDenominator"] | 0));
+                    if (isNoiseChannel) channel.equaveDenominator = 1;
                 }
 
                 if (channelObject["name"] != undefined) {

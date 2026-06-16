@@ -423,7 +423,7 @@ export class ImportPrompt implements Prompt {
         for (let midiChannel: number = 0; midiChannel < 16; midiChannel++) {
             if (noteEvents[midiChannel].length == 0) continue;
 
-            const channel: Channel = new Channel();
+            const channel: Channel = new Channel(12, 2, 1);
 
             const channelPresetValue: number | null = EditorConfig.midiProgramToPresetValue(noteEvents[midiChannel][0].program);
             const channelPreset: Preset | null = (channelPresetValue == null) ? null : EditorConfig.valueToPreset(channelPresetValue);
@@ -825,7 +825,7 @@ export class ImportPrompt implements Prompt {
         }
         // Add mod channel to hold the tempo changes, if necessary.
         if (tempoChanges.length > 1) {
-            let tempoModChannel = new Channel();
+            let tempoModChannel = new Channel(1, 2, 1);
             modChannels.push(tempoModChannel);
             let tempoModInstrument = new Instrument(false, true);
             tempoModInstrument.setTypeAndReset(9 /* InstrumentType.mod */, false, true);

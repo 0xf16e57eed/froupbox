@@ -1616,6 +1616,9 @@ export class Config {
     public static readonly detuneCenter: number = 200;
     public static readonly detuneMax: number = 400;
     public static readonly detuneMin: number = 0;
+    public static readonly equaveDivisionsMax: number = 4096;
+    public static readonly equaveNumeratorMax: number = 4096;
+    public static readonly equaveDenominatorMax: number = 4096;
     public static readonly songDetuneMin: number = 0;
     public static readonly songDetuneMax: number = 500;
     public static readonly unisonVoicesMin: number = 1;
