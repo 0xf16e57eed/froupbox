@@ -248,8 +248,8 @@ const enum SongTagCode {
     arpeggioSpeed = CharCode.G, // added in JummBox URL version 3 for arpeggioSpeed, DEPRECATED
     harmonics = CharCode.H, // added in BeepBox URL version 7
     stringSustain = CharCode.I, // added in BeepBox URL version 9
-    channelTuning = CharCode.J, // added in froupbox URL version 5
-    defaultTuning = CharCode.K, // added in froupbox URL version 5
+    tuning = CharCode.J, // added in froupbox URL version 5
+    //                      = CharCode.K,
     pan = CharCode.L, // added between 8 and 9, DEPRECATED
     customChipWave = CharCode.M, // added in JummBox URL version 1(?) for customChipWave
     songDetails = CharCode.N, // added in JummBox URL version 1(?) for songTitle
@@ -3688,11 +3688,16 @@ export class Song {
             }
         }
         buffer.push(SongTagCode.key, base64IntToCharCode[this.key], base64IntToCharCode[this.octave - Config.octaveMin]);
-        buffer.push(SongTagCode.defaultTuning,
+        buffer.push(SongTagCode.tuning,
             base64IntToCharCode[this.defaultEquaveDivisions >> 6], base64IntToCharCode[this.defaultEquaveDivisions & 63],
             base64IntToCharCode[this.defaultEquaveNumerator >> 6], base64IntToCharCode[this.defaultEquaveNumerator & 63],
             base64IntToCharCode[this.defaultEquaveDenominator >> 6], base64IntToCharCode[this.defaultEquaveDenominator & 63]
         );
+        for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
+            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveDivisions >> 6], base64IntToCharCode[this.channels[channelIndex].equaveDivisions & 63]);
+            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveNumerator >> 6], base64IntToCharCode[this.channels[channelIndex].equaveNumerator & 63]);
+            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveDenominator >> 6], base64IntToCharCode[this.channels[channelIndex].equaveDenominator & 63]);
+        }
         buffer.push(SongTagCode.loopStart, base64IntToCharCode[this.loopStart >> 6], base64IntToCharCode[this.loopStart & 0x3f]);
         buffer.push(SongTagCode.loopEnd, base64IntToCharCode[(this.loopLength - 1) >> 6], base64IntToCharCode[(this.loopLength - 1) & 0x3f]);
         buffer.push(SongTagCode.tempo, base64IntToCharCode[this.tempo >> 6], base64IntToCharCode[this.tempo & 0x3F]);
@@ -3770,13 +3775,6 @@ export class Song {
         buffer.push(SongTagCode.channelOctave);
         for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
             buffer.push(base64IntToCharCode[this.channels[channelIndex].octave]);
-        }
-
-        buffer.push(SongTagCode.channelTuning);
-        for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
-            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveDivisions >> 6], base64IntToCharCode[this.channels[channelIndex].equaveDivisions & 63]);
-            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveNumerator >> 6], base64IntToCharCode[this.channels[channelIndex].equaveNumerator & 63]);
-            buffer.push(base64IntToCharCode[this.channels[channelIndex].equaveDenominator >> 6], base64IntToCharCode[this.channels[channelIndex].equaveDenominator & 63]);
         }
 
         //This is for specific instrument stuff to url
@@ -4703,10 +4701,20 @@ export class Song {
                     this.octave = clamp(Config.octaveMin, Config.octaveMax + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)] + Config.octaveMin);
                 }
             } break;
-            case SongTagCode.defaultTuning: {
+            case SongTagCode.tuning: {
                 this.defaultEquaveDivisions = clamp(1, Config.equaveDivisionsMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                 this.defaultEquaveNumerator = clamp(1, Config.equaveNumeratorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                 this.defaultEquaveDenominator = clamp(1, Config.equaveDenominatorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
+                    this.channels[channelIndex].equaveDivisions = clamp(1, Config.equaveDivisionsMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    this.channels[channelIndex].equaveNumerator = clamp(1, Config.equaveNumeratorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    this.channels[channelIndex].equaveDenominator = clamp(1, Config.equaveDenominatorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                }
+                for (let channelIndex: number = this.pitchChannelCount; channelIndex < this.getChannelCount(); channelIndex++) {
+                    this.channels[channelIndex].equaveDivisions = 1;
+                    this.channels[channelIndex].equaveNumerator = 2;
+                    this.channels[channelIndex].equaveDenominator = 1;
+                }
             } break;
             case SongTagCode.loopStart: {
                 if (beforeFive && fromBeepBox) {
@@ -4861,18 +4869,6 @@ export class Song {
                     for (let channelIndex: number = this.pitchChannelCount; channelIndex < this.getChannelCount(); channelIndex++) {
                         this.channels[channelIndex].octave = 0;
                     }
-                }
-            } break;
-            case SongTagCode.channelTuning: {
-                for (let channelIndex: number = 0; channelIndex < this.pitchChannelCount; channelIndex++) {
-                    this.channels[channelIndex].equaveDivisions = clamp(1, Config.equaveDivisionsMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                    this.channels[channelIndex].equaveNumerator = clamp(1, Config.equaveNumeratorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                    this.channels[channelIndex].equaveDenominator = clamp(1, Config.equaveDenominatorMax, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                }
-                for (let channelIndex: number = this.pitchChannelCount; channelIndex < this.getChannelCount(); channelIndex++) {
-                    this.channels[channelIndex].equaveDivisions = 1;
-                    this.channels[channelIndex].equaveNumerator = 2;
-                    this.channels[channelIndex].equaveDenominator = 1;
                 }
             } break;
             case SongTagCode.startInstrument: {
