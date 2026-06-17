@@ -420,7 +420,7 @@ export class SongPerformance {
                 this.clearAllBassPitches();
                 this._bassPitchesAreTemporary = false;
             }
-            if (this._doc.prefs.ignorePerformedNotesNotInScale && !scaleToBools(Config.scales[this._doc.song.scale].intervals, 12, 2, 1)[pitch % Config.pitchesPerOctave]) {
+            if (this._doc.prefs.ignorePerformedNotesNotInScale && !scaleToBools(Config.scales[this._doc.song.scale].intervals, 12, 2, 1)[pitch % Config.pitchesPerOctave]) { //pastenkopie
                 return;
             }
             if (this._doc.synth.liveBassInputPitches.indexOf(pitch) == -1) {

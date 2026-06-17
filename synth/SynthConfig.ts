@@ -921,9 +921,16 @@ export class Config {
         { name: "Altered", realName: "altered", intervals: "1/1, 16/15, 32/27, 32/25, 64/45, 8/5, 16/9" }, // Altered
         { name: "Pentatonic Major", realName: "major pentatonic", intervals: "1/1, 9/8, 5/4, 3/2, 5/3" }, // Major Pentatonic
         { name: "Pentatonic Minor", realName: "minor pentatonic", intervals: "1/1, 6/5, 4/3, 3/2, 9/5" }, // Minor Pentatonic
-        { name: "Whole Tone", realName: "whole tone", intervals: "0\\12, 2\\12, 4\\12, 6\\12, 8\\12, 10\\12" }, // Whole Tone
+        { name: "Whole Tone", realName: "whole tone", intervals: "0\\6, 1\\6, 2\\6, 3\\6, 4\\6, 5\\6" }, // Whole Tone
         { name: "Octatonic", realName: "octatonic", intervals: "0\\12, 2\\12, 3\\12, 5\\12, 6\\12, 8\\12, 9\\12, 11\\12" }, // Octatonic
         { name: "Hexatonic", realName: "hexatonic", intervals: "0\\12, 3\\12, 4\\12, 7\\12, 8\\12, 11\\12" }, // Hexatonic
+
+        { name: "Septimal", realName: "septimal", intervals: "1/1, 35/32, 9/8, 7/6, 5/4, 21/16, 4/3, 3/2, 5/3, 7/4, 15/8" }, // septimal
+        { name: "Undecimal", realName: "undecimal", intervals: "1/1, 33/32, 35/32, 9/8, 7/6, 77/64, 5/4, 21/16, 4/3, 11/8, 3/2, 5/3, 55/32, 7/4, 11/6, 15/8" }, // undecimal
+        { name: "Tridecimal", realName: "tridecimal", intervals: "1/1, 65/64, 33/32, 13/12, 35/32, 143/128, 9/8, 7/6, 77/64, 39/32, 5/4, 21/16, 4/3, 11/8, 91/64, 3/2, 13/8 ,5/3, 55/32, 7/4, 11/6, 15/8" }, // tridecimal
+
+        { name: "Harmonics 4-8", realName: "harmonics 4-8", intervals: "4, 5, 6, 7, 8" }, // Harmonics 4-8
+        { name: "Harmonics 8-16", realName: "harmonics 8-16", intervals: "8, 9, 10, 11, 12, 13, 14, 15, 16" }, // Harmonics 8-16
         
         { name: "Custom", realName: "custom", intervals: "1/1, 5/4, 3/2, 7/4" }, // Custom - this scale is configurable
          
@@ -2598,6 +2605,8 @@ export function scaleToBools(scale: string, equaveDivisions: number, equaveNumer
             } else if (currentInterval.includes("\\")) {
                 let splitNums: string[] = currentInterval.split("\\");
                 scaleNums.push(Math.pow(2, +splitNums[0] / +splitNums[1]));
+            } else {
+                scaleNums.push(+currentInterval);
             }
         }
     
@@ -2606,7 +2615,7 @@ export function scaleToBools(scale: string, equaveDivisions: number, equaveNumer
         }
 
         for (let i: number = 0; i < scaleNums.length; i++) {
-            scaleBools[Math.round(equaveDivisions * Math.log(scaleNums[i]) / Math.log(equave))] = true;
+            scaleBools[Math.round(equaveDivisions * Math.log(scaleNums[i]) / Math.log(equave)) % equaveDivisions] = true;
         }
     }
 
