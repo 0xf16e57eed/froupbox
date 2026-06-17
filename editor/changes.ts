@@ -44,12 +44,12 @@ export function unionOfUsedNotes(pattern: Pattern, flags: boolean[]): void {
         }
     }
 }
-//pastenkopie - check for generateScaleMap
-export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, newScaleValue: number, customScaleFlags: ReadonlyArray<boolean>): number[] {
-    const newScaleFlags: ReadonlyArray<boolean> = newScaleValue == Config.scales["dictionary"]["Custom"].index ? customScaleFlags : scaleToBools(Config.scales[newScaleValue].intervals, 12, 2, 1); //pastenkopie - this is different than all other instances of getScaleIntervals
+//pastenkopie - broken, i'll fix this later. this is used for snap notes to scale.
+export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, song: Song, equaveDivisions: number, equaveNumerator: number, equaveDenominator: number): number[] {
+    const newScaleFlags: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(song), equaveDivisions, equaveNumerator, equaveDenominator);
     const oldScale: number[] = [];
     const newScale: number[] = [];
-    for (let i: number = 0; i < 12; i++) {
+    for (let i: number = 0; i < equaveDivisions; i++) {
         if (oldScaleFlags[i]) oldScale.push(i);
         if (newScaleFlags[i]) newScale.push(i);
     }
@@ -57,7 +57,6 @@ export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, newScale
     const smallerScale: number[] = largerToSmaller ? newScale : oldScale;
     const largerScale: number[] = largerToSmaller ? oldScale : newScale;
 
-    const roles: string[] = ["root", "second", "second", "third", "third", "fourth", "tritone", "fifth", "sixth", "sixth", "seventh", "seventh", "root"];
     let bestScore: number = Number.MAX_SAFE_INTEGER;
     let bestIndexMap: number[] = [];
     const stack: number[][] = [[0]]; // Root always maps to root.
@@ -70,10 +69,6 @@ export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, newScale
             let score: number = 0;
             for (let i: number = 0; i < indexMap.length; i++) {
                 score += Math.abs(smallerScale[i] - largerScale[indexMap[i]]);
-                if (roles[smallerScale[i]] != roles[largerScale[indexMap[i]]]) {
-                    // Penalize changing roles.
-                    score += 0.75;
-                }
             }
             if (bestScore > score) {
                 bestScore = score;
@@ -117,10 +112,6 @@ export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, newScale
         let nearestPitchDistance: number = Number.MAX_SAFE_INTEGER;
         for (const newPitch of newScale) {
             let distance: number = Math.abs(newPitch - transformedPitch);
-            if (roles[newPitch] != roles[i]) {
-                // Again, penalize changing roles.
-                distance += 0.1;
-            }
             if (nearestPitchDistance > distance) {
                 nearestPitchDistance = distance;
                 nearestPitch = newPitch;

@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Dictionary, Config, scaleToBools } from "../synth/SynthConfig";
+import { Dictionary, Config } from "../synth/SynthConfig";
 import { Note, NotePin, Pattern } from "../synth/synth";
 import { SongDocument } from "./SongDocument";
 import { ChangeGroup } from "./Change";
@@ -772,7 +772,7 @@ export class Selection {
 
         this._doc.record(group);
     }
-
+//pastenkopie - broken, i'll fix this later. this is used for snap notes to scale.
     public forceScale(): void {
         const group: ChangeGroup = new ChangeGroup();
 
@@ -788,7 +788,7 @@ export class Selection {
             }
         }
 
-        const scaleMap: number[] = generateScaleMap(scaleFlags, this._doc.song.scale, scaleToBools(this._doc.song.scaleCustom, 12, 2, 1)); //pastenkopie - come back and fix this later
+        const scaleMap: number[] = generateScaleMap(scaleFlags, this._doc.song, 12, 2, 1);
 
         for (const channelIndex of this._eachSelectedChannel()) {
             if (this._doc.song.getChannelIsNoise(channelIndex) || this._doc.song.getChannelIsMod(channelIndex)) continue;
