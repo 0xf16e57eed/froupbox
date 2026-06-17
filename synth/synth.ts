@@ -3312,7 +3312,7 @@ export class Song {
     public author: string;
     public description: string;
     public scale: number;
-    public scaleCustom: boolean[] = [];
+    public scaleCustom: string;
     public key: number;
     public defaultEquaveDivisions: number;
     public defaultEquaveNumerator: number;
@@ -3575,9 +3575,7 @@ export class Song {
 
     public initToDefault(andResetChannels: boolean = true): void {
         this.scale = 0;
-        this.scaleCustom = [true, false, false, false, false, false, false, false, false, false, false, false];
-        //this.scaleCustom = [true, false, true, true, false, false, false, true, true, false, true, true];
-        //this.scaleCustom = [true, false, false, false, false, false, false, false, false, false, false, false];
+        this.scaleCustom = "1/1, 5/4, 3/2, 7/4";
         this.key = 0;
         this.defaultEquaveDivisions = 12;
         this.defaultEquaveNumerator = 2;
@@ -3682,8 +3680,11 @@ export class Song {
         buffer.push(SongTagCode.channelCount, base64IntToCharCode[this.pitchChannelCount], base64IntToCharCode[this.noiseChannelCount], base64IntToCharCode[this.modChannelCount]);
         buffer.push(SongTagCode.scale, base64IntToCharCode[this.scale]);
         if (this.scale == Config.scales["dictionary"]["Custom"].index) {
-            for (var i = 1; i < Config.pitchesPerOctave; i++) {
-                buffer.push(base64IntToCharCode[this.scaleCustom[i] ? 1 : 0]) // ineffiecent? yes, all we're going to do for now? hell yes
+            var encodedCustomScale: string = encodeURIComponent(this.scaleCustom);
+            buffer.push(base64IntToCharCode[encodedCustomScale.length >> 6], base64IntToCharCode[encodedCustomScale.length & 0x3f]);
+
+            for (let i: number = 0; i < encodedCustomScale.length; i++) {
+                buffer.push(encodedCustomScale.charCodeAt(i));
             }
         }
         buffer.push(SongTagCode.key, base64IntToCharCode[this.key], base64IntToCharCode[this.octave - Config.octaveMin]);
@@ -4667,14 +4668,18 @@ export class Song {
                 }
             } break;
             case SongTagCode.scale: {
-                this.scale = clamp(0, Config.scales.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                // All the scales were jumbled around by Jummbox. Just convert to free.
-                if (this.scale == Config.scales["dictionary"]["Custom"].index) {
-                    for (var i = 1; i < Config.pitchesPerOctave; i++) {
-                        this.scaleCustom[i] = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] == 1; // ineffiecent? yes, all we're going to do for now? hell yes
+                if (!fromFroupBox || beforeFive) {
+                    this.scale = 0;
+                    charIndex++;
+                } else {
+                    this.scale = clamp(0, Config.scales.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    if (this.scale == Config.scales["dictionary"]["Custom"].index) {
+                        var customScaleLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                        this.scaleCustom = decodeURIComponent(compressed.substring(charIndex, charIndex + customScaleLength));
+
+                        charIndex += customScaleLength;
                     }
                 }
-                if (fromBeepBox) this.scale = 0;
             } break;
             case SongTagCode.key: {
                 if (beforeSeven && fromBeepBox) {
@@ -7513,22 +7518,11 @@ export class Song {
 
         this.scale = 0; // default to free.
         if (jsonObject["scale"] != undefined) {
-            const oldScaleNames: Dictionary<string> = {
-                "romani :)": "double harmonic :)",
-                "romani :(": "double harmonic :(",
-                "dbl harmonic :)": "double harmonic :)",
-                "dbl harmonic :(": "double harmonic :(",
-                "enigma": "strange",
-            };
-            const scaleName: string = (oldScaleNames[jsonObject["scale"]] != undefined) ? oldScaleNames[jsonObject["scale"]] : jsonObject["scale"];
+            const scaleName: string = jsonObject["scale"];
             const scale: number = Config.scales.findIndex(scale => scale.name == scaleName);
             if (scale != -1) this.scale = scale;
             if (this.scale == Config.scales["dictionary"]["Custom"].index) {
-                if (jsonObject["customScale"] != undefined) {
-                    for (var i of jsonObject["customScale"].keys()) {
-                        this.scaleCustom[i] = jsonObject["customScale"][i];
-                    }
-                }
+                this.scaleCustom = jsonObject["customScale"]
             }
         }
 

@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { getLocalStorageItem, Chord, Transition, Config, effectsIncludeNoteRange } from "../synth/SynthConfig";
+import { getLocalStorageItem, Chord, Transition, Config, effectsIncludeNoteRange, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { NotePin, Note, makeNotePin, FilterSettings, Channel, Pattern, Instrument, FilterControlPoint } from "../synth/synth";
 import { ColorConfig } from "./ColorConfig";
 import { SongDocument } from "./SongDocument";
@@ -599,7 +599,7 @@ export class PatternEditor {
     private _snapToPitch(guess: number, min: number, max: number): number {
         if (guess < min) guess = min;
         if (guess > max) guess = max;
-        const scale: ReadonlyArray<boolean> = this._doc.prefs.notesOutsideScale ? Config.scales.dictionary["Free"].flags : this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+        const scale: ReadonlyArray<boolean> = this._doc.prefs.notesOutsideScale ? scaleToBools(Config.scales.dictionary["Free"].intervals, 12, 2, 1) : scaleToBools(getScaleIntervals(this._doc.song), 12, 2, 1); //pastenkopie - fix this
         if (scale[Math.floor(guess) % Config.pitchesPerOctave] || this._doc.song.getChannelIsNoise(this._doc.channel) || this._doc.song.getChannelIsMod(this._doc.channel)) {
 
             return Math.floor(guess);
@@ -2003,7 +2003,7 @@ export class PatternEditor {
                     this._dragChange = sequence;
                     this._doc.setProspectiveChange(this._dragChange);
 
-                    let scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+                    let scale = scaleToBools(getScaleIntervals(this._doc.song), 12, 2, 1); //pastenkopie
                     const notesInScale: number = scale.filter(x => x).length;
                     const pitchRatio: number = this._doc.song.getChannelIsNoise(this._doc.channel) ? 1 : 12 / notesInScale;
                     const draggedParts: number = Math.round((this._mouseX - this._mouseXStart) / (this._partWidth * minDivision)) * minDivision;
@@ -2901,7 +2901,7 @@ export class PatternEditor {
         }
 
         for (let j: number = 0; j < Config.pitchesPerOctave; j++) {
-            let scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+            let scale = scaleToBools(getScaleIntervals(this._doc.song), 12, 2, 1); //pastenkopie
 
             this._backgroundPitchRows[j].style.visibility = scale[j] ? "visible" : "hidden";
         }

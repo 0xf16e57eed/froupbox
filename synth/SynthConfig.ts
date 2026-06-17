@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import { Song } from "./synth";
+
 export interface Dictionary<T> {
     [K: string]: T;
 }
@@ -203,7 +205,7 @@ export interface BeepBoxOption {
 }
 
 export interface Scale extends BeepBoxOption {
-    readonly flags: ReadonlyArray<boolean>;
+    readonly intervals: string;
     readonly realName: string;
 }
 
@@ -898,42 +900,33 @@ export class Config {
     // public static thurmboxImportUrl: string = "https://file.garden/ZMQ0Om5nmTe-x2hq/PandoraArchive%20Samples/";
 
     public static readonly scales: DictionaryArray<Scale> = toNameMap([
-
-        //   C     Db      D     Eb      E      F     F#      G     Ab      A     Bb      B      C
-        { name: "Free", realName: "chromatic", flags: [true, true, true, true, true, true, true, true, true, true, true, true] }, // Free
-        { name: "Major", realName: "ionian", flags: [true, false, true, false, true, true, false, true, false, true, false, true] }, // Major
-        { name: "Minor", realName: "aeolian", flags: [true, false, true, true, false, true, false, true, true, false, true, false] }, // Minor
-        { name: "Mixolydian", realName: "mixolydian", flags: [true, false, true, false, true, true, false, true, false, true, true, false] }, // Mixolydian
-        { name: "Lydian", realName: "lydian", flags: [true, false, true, false, true, false, true, true, false, true, false, true] }, // Lydian
-        { name: "Dorian", realName: "dorian", flags: [true, false, true, true, false, true, false, true, false, true, true, false] }, // Dorian
-        { name: "Phrygian", realName: "phrygian", flags: [true, true, false, true, false, true, false, true, true, false, true, false] }, // Phrygian
-        { name: "Locrian", realName: "locrian", flags: [true, true, false, true, false, true, true, false, true, false, true, false] }, // Locrian
-        { name: "Lydian Dominant", realName: "lydian dominant", flags: [true, false, true, false, true, false, true, true, false, true, true, false] }, // Lydian Dominant
-        { name: "Phrygian Dominant", realName: "phrygian dominant", flags: [true, true, false, false, true, true, false, true, true, false, true, false] }, // Phrygian Dominant
-        { name: "Harmonic Major", realName: "harmonic major", flags: [true, false, true, false, true, true, false, true, true, false, false, true] }, // Harmonic Major
-        { name: "Harmonic Minor", realName: "harmonic minor", flags: [true, false, true, true, false, true, false, true, true, false, false, true] }, // Harmonic Minor
-        { name: "Melodic Minor", realName: "melodic minor", flags: [true, false, true, true, false, true, false, true, false, true, false, true] }, // Melodic Minor
-        { name: "Blues", realName: "blues major", flags: [true, false, true, true, true,false, false, true, false, true, false, false] }, // Blues Major
-        { name: "Blues Minor", realName: "blues", flags: [true, false, false, true, false, true, true, true, false, false, true, false] }, // Blues
-        { name: "Altered", realName: "altered", flags: [true, true, false, true, true, false, true, false, true, false, true, false] }, // Altered
-        { name: "Pentatonic Major", realName: "major pentatonic", flags: [true, false, true, false, true, false, false, true, false, true, false, false] }, // Major Pentatonic
-        { name: "Pentatonic Minor", realName: "minor pentatonic", flags: [true, false, false, true, false, true, false, true, false, false, true, false] }, // Minor Pentatonic
-        { name: "Whole Tone", realName: "whole tone", flags: [true, false, true, false, true, false, true, false, true, false, true, false] }, // Whole Tone
-        { name: "Octatonic", realName: "octatonic", flags: [true, false, true, true, false, true, true, false, true, true, false, true] }, // Octatonic
-        { name: "Hexatonic", realName: "hexatonic", flags: [true, false, false, true, true, false, false, true, true, false, false, true] }, // Hexatonic
-        // TODO: remove these with 2.3
-        // modbox
-        { name: "No Dabbing (MB)", realName: "no dabbing", flags:[true, true, false, true, true, true, true, true, true, false, true, false] },
-        // todbox
-        { name: "Jacked Toad (TB)", realName: "jacked toad", flags: [true, false, true, true, false, true, true, true, true, false, true, true] },
-        { name: "Test Scale (TB)", realName: "**t", flags: [true, true, false, false, false, true, true, false, false, true, true, false] },
-        // froupbox
-        { name: "Test Scale (TB)", realName: "**t", flags: [true, true, false, false, false, true, true, false, false, true, true, false] },
         
-        // crashes, but not because of the lack of a root note
-        // { name: "Empty", realName: "empty", flags: [false, false, false, false, false, false, false, false, false, false, false, false] }, // Custom? considering allowing this one to be be completely configurable
-    
-        { name: "Custom", realName: "custom", flags: [true, false, false, true, false, false, false, false, false, true, true, false] }, // Custom? considering allowing this one to be be completely configurable
+        { name: "Free", realName: "chromatic", intervals: "" }, // Free - this scale is overriden to use all notes in the current tuning
+
+        { name: "Major", realName: "ionian", intervals: "1/1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8" }, // Major
+        { name: "Minor", realName: "aeolian", intervals: "1/1, 9/8, 6/5, 4/3, 3/2, 8/5, 9/5" }, // Minor
+        { name: "Mixolydian", realName: "mixolydian", intervals: "1/1, 10/9, 5/4, 4/3, 3/2, 5/3, 16/9" }, // Mixolydian
+        { name: "Lydian", realName: "lydian", intervals: "1/1, 9/8, 5/4, 45/32, 3/2, 27/16, 15/8" }, // Lydian
+        { name: "Dorian", realName: "dorian", intervals: "1/1, 10/9, 32/27, 4/3, 40/27, 5/3, 16/9" }, // Dorian
+        { name: "Phrygian", realName: "phrygian", intervals: "1/1, 16/15, 6/5, 4/3, 3/2, 8/5, 16/9" }, // Phrygian
+        { name: "Locrian", realName: "locrian", intervals: "1/1, 16/15, 32/27, 4/3, 64/45, 8/5, 16/9" }, // Locrian
+
+        { name: "Lydian Dominant", realName: "lydian dominant", intervals: "1/1, 9/8, 5/4, 45/32, 3/2, 27/16, 16/9" }, // Lydian Dominant
+        { name: "Phrygian Dominant", realName: "phrygian dominant", intervals: "1/1, 16/15, 5/4, 4/3, 3/2, 8/5, 16/9" }, // Phrygian Dominant
+        { name: "Harmonic Major", realName: "harmonic major", intervals: "1/1, 9/8, 5/4, 4/3, 3/2, 25/16, 15/8" }, // Harmonic Major
+        { name: "Harmonic Minor", realName: "harmonic minor", intervals: "1/1, 9/8, 6/5, 4/3, 3/2, 8/5, 15/8" }, // Harmonic Minor
+        { name: "Melodic Minor", realName: "melodic minor", intervals: "1/1, 9/8, 6/5, 4/3, 3/2, 27/16, 15/8" }, // Melodic Minor
+        { name: "Blues", realName: "blues major", intervals: "1/1, 9/8, 7/6, 5/4, 3/2, 5/3" }, // Blues Major
+        { name: "Blues Minor", realName: "blues", intervals: "1/1, 6/5, 4/3, 7/5, 3/2, 9/5" }, // Blues
+        { name: "Altered", realName: "altered", intervals: "1/1, 16/15, 32/27, 32/25, 64/45, 8/5, 16/9" }, // Altered
+        { name: "Pentatonic Major", realName: "major pentatonic", intervals: "1/1, 9/8, 5/4, 3/2, 5/3" }, // Major Pentatonic
+        { name: "Pentatonic Minor", realName: "minor pentatonic", intervals: "1/1, 6/5, 4/3, 3/2, 9/5" }, // Minor Pentatonic
+        { name: "Whole Tone", realName: "whole tone", intervals: "0\\12, 2\\12, 4\\12, 6\\12, 8\\12, 10\\12" }, // Whole Tone
+        { name: "Octatonic", realName: "octatonic", intervals: "0\\12, 2\\12, 3\\12, 5\\12, 6\\12, 8\\12, 9\\12, 11\\12" }, // Octatonic
+        { name: "Hexatonic", realName: "hexatonic", intervals: "0\\12, 3\\12, 4\\12, 7\\12, 8\\12, 11\\12" }, // Hexatonic
+        
+        { name: "Custom", realName: "custom", intervals: "1/1, 5/4, 3/2, 7/4" }, // Custom - this scale is configurable
+         
     ]);
     public static readonly keys: DictionaryArray<Key> = toNameMap([
         { name: "C", isWhiteKey: true, basePitch: 12 }, // C0 has index 12 on the MIDI scale. C7 is 96, and C9 is 120. C10 is barely in the audible range.
@@ -948,14 +941,6 @@ export class Config {
         { name: "A", isWhiteKey: true, basePitch: 21 },
         { name: "A♯", isWhiteKey: false, basePitch: 22 },
         { name: "B", isWhiteKey: true, basePitch: 23 },
-        // { name: "C+", isWhiteKey: false, basePitch: 24 },
-        //taken from todbox, called "B#" for some reason lol
-        // { name: "G- (actually F#-)", isWhiteKey: false, basePitch: 6 },
-        // { name: "C-", isWhiteKey: true, basePitch: 0 },
-        //brucebox
-        //g- isn't actually g-???
-        // { name: "oh no (F-)", isWhiteKey: true, basePitch: 5 },
-        //shitbox
     ]);
     public static readonly blackKeyNameParents: ReadonlyArray<number> = [-1, 1, -1, 1, -1, 1, -1, -1, 1, -1, 1, -1];
     public static readonly tempoMin:                    number = 1;
@@ -2584,6 +2569,48 @@ export function calculateRingModHertz(sliderHz: number, sliderHzOffset: number):
     if (sliderHz > 1 / Config.ringModHzRange) sliderHz += 1 / Config.ringModHzRange;
     //calculate ring mod
     return Math.max(1, Math.floor(Config.ringModMinHz * Math.pow(Config.ringModMaxHz / Config.ringModMinHz, sliderHz) + sliderHzOffset - 200))
+}
+
+export function getScaleIntervals(song: Song): string {
+    return song.scale == Config.scales.dictionary["Custom"].index ? song.scaleCustom : Config.scales[song.scale].intervals
+}
+export function scaleToStrings(scale: string): string[] {
+    return scale.replaceAll(" ", "").split(",");
+}
+export function scaleToBools(scale: string, equaveDivisions: number, equaveNumerator: number, equaveDenominator: number): boolean[] {
+    let scaleBools: boolean[] = [];
+
+    if (scale == "") { //check if scale is set to "free"
+        for (let i: number = 0; i < equaveDivisions; i++) {
+            scaleBools.push(true);
+        }
+    } else {
+        let equave: number = equaveNumerator / equaveDenominator;
+        let scaleNums: number[] = [];
+        let scaleArr: string[] = scaleToStrings(scale);
+
+        for (let i: number = 0; i < scaleArr.length; i++) {
+            let currentInterval = scaleArr[i];
+
+            if (currentInterval.includes("/")) {
+                let splitNums: string[] = currentInterval.split("/");
+                scaleNums.push(+splitNums[0] / +splitNums[1]);
+            } else if (currentInterval.includes("\\")) {
+                let splitNums: string[] = currentInterval.split("\\");
+                scaleNums.push(Math.pow(2, +splitNums[0] / +splitNums[1]));
+            }
+        }
+    
+        for (let i: number = 0; i < equaveDivisions; i++) {
+            scaleBools.push(false);
+        }
+
+        for (let i: number = 0; i < scaleNums.length; i++) {
+            scaleBools[Math.round(equaveDivisions * Math.log(scaleNums[i]) / Math.log(equave))] = true;
+        }
+    }
+
+    return scaleBools;
 }
 
 export function rawChipToIntegrated(raw: DictionaryArray<ChipWave>): DictionaryArray<ChipWave> {

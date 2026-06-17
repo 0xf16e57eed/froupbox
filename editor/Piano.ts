@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Config } from "../synth/SynthConfig";
+import { Config, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { SongDocument } from "./SongDocument";
 import { HTML, SVG } from "imperative-html/dist/esm/elements-strict";
 import { ColorConfig } from "./ColorConfig";
@@ -116,7 +116,7 @@ export class Piano {
     }
 
     private _updateCursorPitch(): void {
-        const scale: ReadonlyArray<boolean> = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+        const scale: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(this._doc.song), 12, 2, 1); //pastenkopie - temporary fix, assumes 12edo
         const mousePitch: number = Math.max(0, Math.min(this._pitchCount - 1, this._pitchCount - (this._mouseY / this._pitchHeight)));
         if (scale[Math.floor(mousePitch) % Config.pitchesPerOctave] || this._doc.song.getChannelIsNoise(this._doc.channel)) {
             this._cursorPitch = Math.floor(mousePitch);
@@ -320,7 +320,7 @@ export class Piano {
                 const pitchNameIndex: number = (j + Config.keys[this._doc.song.key].basePitch) % Config.pitchesPerOctave;
                 const isWhiteKey: boolean = Config.keys[pitchNameIndex].isWhiteKey;
                 this._pianoKeys[j].style.background = isWhiteKey ? ColorConfig.whitePianoKey : ColorConfig.blackPianoKey;
-                let scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+                const scale: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(this._doc.song), 12, 2, 1); //pastenkopie - temporary fix, assumes 12edo
                 if (!scale[j % Config.pitchesPerOctave]) {
                     this._pianoKeys[j].classList.add("disabled");
                     this._pianoLabels[j].style.display = "none";

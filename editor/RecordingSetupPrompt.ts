@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Config } from "../synth/SynthConfig";
+import { Config, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { EditorConfig } from "./EditorConfig";
 import { SongDocument } from "./SongDocument";
 import { Prompt } from "./Prompt";
@@ -152,7 +152,7 @@ export class RecordingSetupPrompt implements Prompt {
             this._keyboardLayoutPreview.removeChild(this._keyboardLayoutPreview.firstChild);
         }
         const rowLengths: number[] = [12, 12, 11, 10];
-        const scale: ReadonlyArray<boolean> = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+        const scale: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(this._doc.song), 12, 2 ,1); //pastenkopie - this will need to be fixed more thoroughly later
         for (let rowIndex: number = 0; rowIndex < 4; rowIndex++) {
             const row: HTMLDivElement = div({ style: "display: flex;" });
             this._keyboardLayoutPreview.appendChild(row);

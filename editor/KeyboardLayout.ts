@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Config } from "../synth/SynthConfig";
+import { Config, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { SongDocument } from "./SongDocument";
 
 export class KeyboardLayout {
@@ -25,7 +25,7 @@ export class KeyboardLayout {
 				pitchOffset = y * 5 + x * 2 - 2;
 				break;
 			case "songScale":
-				const scaleFlags: ReadonlyArray<boolean> = doc.song.scale == Config.scales.dictionary["Custom"].index ? doc.song.scaleCustom : Config.scales[doc.song.scale].flags;
+				const scaleFlags: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(doc.song), 12, 2, 1); //pastenkopie - might wanna break this later
 				const scaleIndices: number[] = <number[]> scaleFlags.map((flag, index) => flag ? index : null).filter((index) => index != null);
 				pitchOffset = (y - 1 + Math.floor(x / scaleIndices.length)) * Config.pitchesPerOctave + scaleIndices[(x + scaleIndices.length) % scaleIndices.length];
 				break;

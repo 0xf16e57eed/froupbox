@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { InstrumentType, /*EnvelopeType,*/ Config, getArpeggioPitchIndex } from "../synth/SynthConfig";
+import { InstrumentType, /*EnvelopeType,*/ Config, getArpeggioPitchIndex, getScaleIntervals, scaleToStrings } from "../synth/SynthConfig";
 import { Instrument, Pattern, Note, Song, Synth } from "../synth/synth";
 import { ColorConfig } from "./ColorConfig";
 import { Preset, EditorConfig } from "./EditorConfig";
@@ -526,7 +526,7 @@ export class ExportPrompt implements Prompt {
                 writeEventTime(0);
                 writer.writeUint8(MidiEventType.meta);
                 writer.writeMidi7Bits(MidiMetaEventMessage.text);
-                writer.writeMidiAscii("Composed with jummbus.bitbucket.io");
+                writer.writeMidiAscii("Composed with froupbox.github.io");
 
                 writeEventTime(0);
                 writer.writeUint8(MidiEventType.meta);
@@ -542,8 +542,8 @@ export class ExportPrompt implements Prompt {
                 writer.writeUint8(2); // denominator exponent in 2^E. 2^2 = 4, and we will always use "quarter" notes.
                 writer.writeUint8(24); // MIDI Clocks per metronome tick (should match beats), standard is 24
                 writer.writeUint8(8); // number of 1/32 notes per 24 MIDI Clocks, standard is 8, meaning 24 clocks per "quarter" note.
-                let tempScale = song.scale == Config.scales.dictionary["Custom"].index ? song.scaleCustom : Config.scales[song.scale].flags;
-                const isMinor: boolean = tempScale[3] && !tempScale[4];
+                let tempScale: string[] = scaleToStrings(getScaleIntervals(song));
+                const isMinor: boolean = tempScale.includes("6/5") && !tempScale.includes("5/4");
                 const key: number = song.key; // C=0, C#=1, counting up to B=11
                 let numSharps: number = key; // For even key values in major scale, number of sharps/flats is same...
                 if ((key & 1) == 1) numSharps += 6; // For odd key values (consider circle of fifths) rotate around the circle... kinda... Look conventional key signatures are just weird, okay?

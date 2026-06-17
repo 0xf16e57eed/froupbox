@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Algorithm, Dictionary, FilterType, SustainType, InstrumentType, EffectType, AutomationTarget, Config, effectsIncludeDistortion, LFOEnvelopeTypes, RandomEnvelopeTypes } from "../synth/SynthConfig";
+import { Algorithm, Dictionary, FilterType, SustainType, InstrumentType, EffectType, AutomationTarget, Config, effectsIncludeDistortion, LFOEnvelopeTypes, RandomEnvelopeTypes, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { NotePin, Note, makeNotePin, Pattern, FilterSettings, FilterControlPoint, SpectrumWave, HarmonicsWave, Instrument, Channel, Song, Synth, clamp, JsCompressorParams } from "../synth/synth";
 import { Preset, PresetCategory, EditorConfig } from "./EditorConfig";
 import { Change, ChangeGroup, ChangeSequence, UndoableChange } from "./Change";
@@ -44,9 +44,9 @@ export function unionOfUsedNotes(pattern: Pattern, flags: boolean[]): void {
         }
     }
 }
-
+//pastenkopie - check for generateScaleMap
 export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, newScaleValue: number, customScaleFlags: ReadonlyArray<boolean>): number[] {
-    const newScaleFlags: ReadonlyArray<boolean> = newScaleValue == Config.scales["dictionary"]["Custom"].index ? customScaleFlags : Config.scales[newScaleValue].flags;
+    const newScaleFlags: ReadonlyArray<boolean> = newScaleValue == Config.scales["dictionary"]["Custom"].index ? customScaleFlags : scaleToBools(Config.scales[newScaleValue].intervals, 12, 2, 1); //pastenkopie - this is different than all other instances of getScaleIntervals
     const oldScale: number[] = [];
     const newScale: number[] = [];
     for (let i: number = 0; i < 12; i++) {
@@ -2010,12 +2010,10 @@ export class ChangeChannelOrder extends Change {
 }
 
 export class ChangeCustomScale extends Change {
-    constructor(doc: SongDocument, flags: boolean[]) {
+    constructor(doc: SongDocument, intervals: string) {
         super();
 
-        for (let i: number = 0; i < Config.pitchesPerOctave; i++) {
-            doc.song.scaleCustom[i] = flags[i];
-        }
+        doc.song.scaleCustom = intervals;
 
         doc.notifier.changed();
         this._didSomething();
@@ -4947,10 +4945,10 @@ class ChangeTransposeNote extends UndoableChange {
                     pitch = Math.max(0, pitch - 12);
                 }
             } else {
-                let scale = doc.song.scale == Config.scales.dictionary["Custom"].index ? doc.song.scaleCustom : Config.scales[doc.song.scale].flags;
+                let scale = scaleToBools(getScaleIntervals(doc.song), doc.song.channels[channelIndex].equaveDivisions, doc.song.channels[channelIndex].equaveNumerator, doc.song.channels[channelIndex].equaveDenominator);
                 if (upward) {
                     for (let j: number = pitch + 1; j <= maxPitch; j++) {
-                        if (isNoise || ignoreScale || scale[j % 12]) {
+                        if (isNoise || ignoreScale || scale[j % 12]) { //pastenkopie - this uses modulo by 12, fix it
                             pitch = j;
                             break;
                         }
@@ -4996,7 +4994,7 @@ class ChangeTransposeNote extends UndoableChange {
                     interval = Math.max(min, interval - 12);
                 }
             } else {
-                let scale = doc.song.scale == Config.scales.dictionary["Custom"].index ? doc.song.scaleCustom : Config.scales[doc.song.scale].flags;
+                let scale = scaleToBools(getScaleIntervals(doc.song), doc.song.channels[channelIndex].equaveDivisions, doc.song.channels[channelIndex].equaveNumerator, doc.song.channels[channelIndex].equaveDenominator);
                 if (upward) {
                     for (let i: number = interval + 1; i <= max; i++) {
                         if (isNoise || ignoreScale || scale[i % 12]) {
