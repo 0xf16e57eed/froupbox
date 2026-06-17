@@ -925,12 +925,20 @@ export class Config {
         { name: "Octatonic", realName: "octatonic", intervals: "0\\12, 2\\12, 3\\12, 5\\12, 6\\12, 8\\12, 9\\12, 11\\12" }, // Octatonic
         { name: "Hexatonic", realName: "hexatonic", intervals: "0\\12, 3\\12, 4\\12, 7\\12, 8\\12, 11\\12" }, // Hexatonic
 
-        { name: "Septimal", realName: "septimal", intervals: "1/1, 35/32, 9/8, 7/6, 5/4, 21/16, 4/3, 3/2, 5/3, 7/4, 15/8" }, // septimal
-        { name: "Undecimal", realName: "undecimal", intervals: "1/1, 33/32, 35/32, 9/8, 7/6, 77/64, 5/4, 21/16, 4/3, 11/8, 3/2, 5/3, 55/32, 7/4, 11/6, 15/8" }, // undecimal
-        { name: "Tridecimal", realName: "tridecimal", intervals: "1/1, 65/64, 33/32, 13/12, 35/32, 143/128, 9/8, 7/6, 77/64, 39/32, 5/4, 21/16, 4/3, 11/8, 91/64, 3/2, 13/8 ,5/3, 55/32, 7/4, 11/6, 15/8" }, // tridecimal
+        { name: "Supermajor", realName: "septimal supermajor", intervals: "1/1, 8/7, 9/7, 10/7, 3/2, 12/7, 27/14" }, // septimal supermajor
+        { name: "Neutral", realName: "undecimal neutral", intervals: "1/1, 12/11, 11/9, 11/8, 3/2, 18/11, 11/6" }, // undecimal neutral
+        { name: "Subminor", realName: "septimal subminor", intervals: "1/1, 28/27, 7/6, 21/16, 3/2, 14/9, 7/4" }, // septimal subminor
+
+        { name: "Septimal", realName: "septimal", intervals: "1/1, 9/8, 7/6, 21/16, 4/3, 3/2, 7/4" }, // septimal
+        { name: "Expanded Septimal", realName: "expanded septimal", intervals: "1/1, 35/32, 9/8, 7/6, 5/4, 21/16, 4/3, 3/2, 5/3, 7/4, 15/8" }, // expanded septimal
+        { name: "Undecimal", realName: "undecimal", intervals: "1/1, 33/32, 9/8, 4/3, 11/8, 3/2, 11/6" }, // undecimal
+        { name: "Expanded Undecimal", realName: "expanded undecimal", intervals: "1/1, 33/32, 35/32, 9/8, 7/6, 77/64, 5/4, 21/16, 4/3, 11/8, 3/2, 5/3, 55/32, 7/4, 11/6, 15/8" }, // expanded undecimal
+        { name: "Tridecimal", realName: "tridecimal", intervals: "1/1, 13/12, 9/8, 39/32, 4/3, 3/2, 13/8" }, // tridecimal
+        { name: "Expanded Tridecimal", realName: "expanded tridecimal", intervals: "1/1, 65/64, 33/32, 13/12, 35/32, 143/128, 9/8, 7/6, 77/64, 39/32, 5/4, 21/16, 4/3, 11/8, 91/64, 3/2, 13/8, 5/3, 55/32, 7/4, 11/6, 15/8" }, // expanded tridecimal
 
         { name: "Harmonics 4-8", realName: "harmonics 4-8", intervals: "4, 5, 6, 7, 8" }, // Harmonics 4-8
         { name: "Harmonics 8-16", realName: "harmonics 8-16", intervals: "8, 9, 10, 11, 12, 13, 14, 15, 16" }, // Harmonics 8-16
+        { name: "Harmonics 16-32", realName: "harmonics 16-32", intervals: "16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32" }, // Harmonics 16-32
         
         { name: "Custom", realName: "custom", intervals: "1/1, 5/4, 3/2, 7/4" }, // Custom - this scale is configurable
          
