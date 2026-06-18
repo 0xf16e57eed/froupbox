@@ -190,7 +190,7 @@ export class PatternEditor {
         );
         this.container = HTML.div({ style: "height: 100%; overflow:hidden; position: relative; flex-grow: 1;" }, this._svg, this.modDragValueLabel);
 
-        for (let i: number = 0; i < Config.pitchesPerOctave; i++) {
+        for (let i: number = 0; i < Config.pitchesPerOctave; i++) { //2pastenkopie
             const rectangle: SVGRectElement = SVG.rect();
             rectangle.setAttribute("x", "1");
             rectangle.setAttribute("fill", (i == 0) ? ColorConfig.tonic : ColorConfig.pitchBackground);
@@ -214,26 +214,13 @@ export class PatternEditor {
         this._backgroundModRow.setAttribute("fill", ColorConfig.pitchBackground);
         this._svgModBackground.appendChild(this._backgroundModRow);
 
-        if (this._interactive) {
-            this._updateCursorStatus();
+        if (_barOffset != 0) {
             this._updatePreview();
-            window.requestAnimationFrame(this._animatePlayhead);
-            this._svg.addEventListener("mousedown", this._whenMousePressed);
-            document.addEventListener("mousemove", this._whenMouseMoved);
-            document.addEventListener("mouseup", this._whenCursorReleased);
-            this._svg.addEventListener("mouseover", this._whenMouseOver);
-            this._svg.addEventListener("mouseout", this._whenMouseOut);
-
-            this._svg.addEventListener("touchstart", this._whenTouchPressed);
-            this._svg.addEventListener("touchmove", this._whenTouchMoved);
-            this._svg.addEventListener("touchend", this._whenCursorReleased);
-            this._svg.addEventListener("touchcancel", this._whenCursorReleased);
-
-            this.modDragValueLabel.addEventListener("input", this._validateModDragLabelInput);
-        } else {
             this._svgPlayhead.style.display = "none";
             this._svg.appendChild(SVG.rect({ x: 0, y: 0, width: 10000, height: 10000, fill: ColorConfig.editorBackground, style: "opacity: 0.5;" }));
         }
+
+        this.updateInteractive();
 
         this.resetCopiedPins();
     }
@@ -2780,6 +2767,43 @@ export class PatternEditor {
         }
     }
 
+    public changeInteractive(newInteractive: boolean): void {
+        this._interactive = newInteractive;
+        this.updateInteractive();
+    }
+
+    public updateInteractive(): void {
+        if (this._interactive) {
+            window.requestAnimationFrame(this._animatePlayhead);
+
+            this._svg.addEventListener("mousedown", this._whenMousePressed);
+            document.addEventListener("mousemove", this._whenMouseMoved);
+            document.addEventListener("mouseup", this._whenCursorReleased);
+            this._svg.addEventListener("mouseover", this._whenMouseOver);
+            this._svg.addEventListener("mouseout", this._whenMouseOut);
+
+            this._svg.addEventListener("touchstart", this._whenTouchPressed);
+            this._svg.addEventListener("touchmove", this._whenTouchMoved);
+            this._svg.addEventListener("touchend", this._whenCursorReleased);
+            this._svg.addEventListener("touchcancel", this._whenCursorReleased);
+
+            this.modDragValueLabel.addEventListener("input", this._validateModDragLabelInput);
+        } else {
+            this._svg.removeEventListener("mousedown", this._whenMousePressed);
+            document.removeEventListener("mousemove", this._whenMouseMoved);
+            document.removeEventListener("mouseup", this._whenCursorReleased);
+            this._svg.removeEventListener("mouseover", this._whenMouseOver);
+            this._svg.removeEventListener("mouseout", this._whenMouseOut);
+
+            this._svg.removeEventListener("touchstart", this._whenTouchPressed);
+            this._svg.removeEventListener("touchmove", this._whenTouchMoved);
+            this._svg.removeEventListener("touchend", this._whenCursorReleased);
+            this._svg.removeEventListener("touchcancel", this._whenCursorReleased);
+
+            this.modDragValueLabel.removeEventListener("input", this._validateModDragLabelInput);
+        }
+    }
+
     public render(): void {
         const nextPattern: Pattern | null = this._doc.getCurrentPattern(this._barOffset);
 
@@ -2936,7 +2960,7 @@ export class PatternEditor {
         if (this._doc.prefs.showChannels) {
             if (!this._doc.song.getChannelIsMod(this._doc.channel)) {
                 let noteFlashColor: string = "#ffffff77";
-                if (this._doc.prefs.notesFlashWhenPlayed) noteFlashColor = ColorConfig.getComputed("--note-flash-secondary");
+                if (this._doc.prefs.notesFlashWhenPlayed && (this._barOffset == 0)) noteFlashColor = ColorConfig.getComputed("--note-flash-secondary");
                 for (let channel: number = this._doc.song.pitchChannelCount + this._doc.song.noiseChannelCount - 1; channel >= 0; channel--) {
                     if (channel == this._doc.channel) continue;
                     if (this._doc.song.getChannelIsNoise(channel) != this._doc.song.getChannelIsNoise(this._doc.channel)) continue;
@@ -2953,7 +2977,7 @@ export class PatternEditor {
                             this._drawNote(notePath, pitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset);
                             this._svgNoteContainer.appendChild(notePath);
 
-                            if (this._doc.prefs.notesFlashWhenPlayed) {
+                            if (this._doc.prefs.notesFlashWhenPlayed && (this._barOffset == 0)) {
                                 notePath = SVG.path();
                                 // const noteFlashColor = ColorConfig.getComputed("--note-flash-secondary") !== "" ? "var(--note-flash-secondary)" : "#ffffff77";
                                 notePath.setAttribute("fill", noteFlashColor);
@@ -2979,7 +3003,7 @@ export class PatternEditor {
             const transition: Transition = instrument.getTransition();
             const displayNumberedChords: boolean = chord.customInterval || chord.arpeggiates || chord.strumParts > 0 || transition.slides || chord.name == "monophonic";
             let noteFlashColor: string = "#ffffff";
-            if (this._doc.prefs.notesFlashWhenPlayed) noteFlashColor = ColorConfig.getComputed("--note-flash");
+            if (this._doc.prefs.notesFlashWhenPlayed && (this._barOffset == 0)) noteFlashColor = ColorConfig.getComputed("--note-flash");
             for (const note of this._pattern.notes) {
                 let disabled: boolean = false;
                 if (this._doc.song.getChannelIsMod(this._doc.channel)) {
@@ -3003,7 +3027,7 @@ export class PatternEditor {
                     this._drawNote(notePath, pitch, note.start, note.pins, (this._pitchHeight - this._pitchBorder) / 2 + 1, true, this._octaveOffset);
                     this._svgNoteContainer.appendChild(notePath);
 
-                    if (this._doc.prefs.notesFlashWhenPlayed && !disabled) {
+                    if (this._doc.prefs.notesFlashWhenPlayed && (this._barOffset == 0) && !disabled) {
                         notePath = SVG.path();
                         // const noteFlashColor = ColorConfig.getComputed("--note-flash") !== "" ? "var(--note-flash)" : "#ffffff";
                         notePath.setAttribute("fill", noteFlashColor);
