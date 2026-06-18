@@ -215,7 +215,6 @@ export class PatternEditor {
         this._svgModBackground.appendChild(this._backgroundModRow);
 
         if (_barOffset != 0) {
-            this._updatePreview();
             this._svgPlayhead.style.display = "none";
             this._svg.appendChild(SVG.rect({ x: 0, y: 0, width: 10000, height: 10000, fill: ColorConfig.editorBackground, style: "opacity: 0.5;" }));
         }
@@ -2774,6 +2773,7 @@ export class PatternEditor {
 
     public updateInteractive(): void {
         if (this._interactive) {
+            this._updatePreview();
             window.requestAnimationFrame(this._animatePlayhead);
 
             this._svg.addEventListener("mousedown", this._whenMousePressed);
