@@ -2639,7 +2639,8 @@ export class Instrument {
         if (instrumentObject["phaserStages2"] != undefined) {
             this.phaserStages = clamp(0, Config.phaserMaxStages + 1, instrumentObject["phaserStages2"]);
         } else if (instrumentObject["phaserStages"] != undefined) {
-            this.phaserStages = clamp(0, Config.phaserMaxStages + 1, Math.round((Config.phaserMaxStages - 1) * (instrumentObject["phaserStages"] | 0) / 100));
+            const prevPhaserMaxStages = 32;
+            this.phaserStages = clamp(0, prevPhaserMaxStages + 1, Math.round((prevPhaserMaxStages - 1) * (instrumentObject["phaserStages"] | 0) / 100));
         }
         if (typeof instrumentObject["phaserDisperse"] === "boolean") {
             this.phaserDisperse = instrumentObject["phaserDisperse"];
