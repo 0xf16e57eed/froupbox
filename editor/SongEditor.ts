@@ -728,9 +728,9 @@ export class SongEditor {
     public doc: SongDocument = new SongDocument();
 
     private readonly _keyboardLayout: KeyboardLayout = new KeyboardLayout(this.doc);
-    private readonly _patternEditorPrev: PatternEditor = new PatternEditor(this.doc, false, -1);
+    private readonly _patternEditorPrev: PatternEditor = new PatternEditor(this.doc, this.doc.prefs.notesOutsideBar, -1);
     private readonly _patternEditor: PatternEditor = new PatternEditor(this.doc, true, 0);
-    private readonly _patternEditorNext: PatternEditor = new PatternEditor(this.doc, false, 1);
+    private readonly _patternEditorNext: PatternEditor = new PatternEditor(this.doc, this.doc.prefs.notesOutsideBar, 1);
     private readonly _trackEditor: TrackEditor = new TrackEditor(this.doc, this);
     private readonly _muteEditor: MuteEditor = new MuteEditor(this.doc, this);
     private readonly _loopEditor: LoopEditor = new LoopEditor(this.doc, this._trackEditor);
@@ -804,6 +804,7 @@ export class SongEditor {
             option({ value: "autoFollow" }, "Auto Follow Playhead"),
             option({ value: "enableNotePreview" }, "Hear Added Notes"),
             option({ value: "notesOutsideScale" }, "Place Notes Out of Scale"),
+            option({ value: "notesOutsideBar" }, "Place Notes Out of Bar"),
             option({ value: "setDefaultScale" }, "Set Current Scale as Default"),
             option({ value: "alwaysFineNoteVol" }, "Always Fine Note Volume"),
             option({ value: "enableChannelMuting" }, "Enable Channel Muting"),
@@ -2551,6 +2552,7 @@ export class SongEditor {
             (prefs.autoFollow ? textOnIcon : textOffIcon) + "Auto Follow Playhead",
             (prefs.enableNotePreview ? textOnIcon : textOffIcon) + "Hear Added Notes",
             (prefs.notesOutsideScale ? textOnIcon : textOffIcon) + "Place Notes Out of Scale",
+            (prefs.notesOutsideBar ? textOnIcon : textOffIcon) + "Place Notes Out of Bar",
             (prefs.defaultScale == this.doc.song.scale ? textOnIcon : textOffIcon) + "Set Current Scale as Default",
             (prefs.alwaysFineNoteVol ? textOnIcon : textOffIcon) + "Always Fine Note Volume",
             (prefs.enableChannelMuting ? textOnIcon : textOffIcon) + "Enable Channel Muting",
@@ -2562,7 +2564,7 @@ export class SongEditor {
             textSpacingIcon + "Note Recording...",
             textSpacingIcon + "Appearance",
             (prefs.showFifth ? textOnIcon : textOffIcon) + 'Highlight "Fifth" Note',
-            (prefs.notesFlashWhenPlayed ? textOnIcon : textOffIcon) + "Notes Flash When Played (Dogebox2)",
+            (prefs.notesFlashWhenPlayed ? textOnIcon : textOffIcon) + "Notes Flash When Played",
             (prefs.instrumentButtonsAtTop ? textOnIcon : textOffIcon) + "Instrument Buttons at Top",
             (prefs.frostedGlassBackground ? textOnIcon : textOffIcon) + "Frosted Glass Prompt Backdrop",
             (prefs.showChannels ? textOnIcon : textOffIcon) + "Show All Channels",
@@ -5844,6 +5846,11 @@ export class SongEditor {
                 break;
             case "notesOutsideScale":
                 this.doc.prefs.notesOutsideScale = !this.doc.prefs.notesOutsideScale;
+                break;
+            case "notesOutsideBar":
+                this.doc.prefs.notesOutsideBar = !this.doc.prefs.notesOutsideBar;
+                this._patternEditorPrev.changeInteractive(this.doc.prefs.notesOutsideBar);
+                this._patternEditorNext.changeInteractive(this.doc.prefs.notesOutsideBar);
                 break;
             case "setDefaultScale":
                 this.doc.prefs.defaultScale = this.doc.song.scale;
