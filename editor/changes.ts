@@ -5294,7 +5294,48 @@ export class ChangeSongTitle extends Change {
         }
 
         doc.song.title = newValue;
-        document.title = newValue + " - " + EditorConfig.versionDisplayName;
+
+        let newTitle = "";
+		const tabTitleFormat = localStorage.getItem("customTabTitle") || `\\T - froupbox \\V`;
+		const splitTabTitle = tabTitleFormat.split(/(\\)/);
+
+		let lastWasBackslash: boolean = false;
+
+		for (let i: number = 0; i < splitTabTitle.length;) {
+			if (splitTabTitle[i] == "\\") {
+				lastWasBackslash = true;
+				i++;
+			} else {
+				if (lastWasBackslash) {
+					const firstChar: string = splitTabTitle[i].charAt(0);
+					const restOfString: string = splitTabTitle[i].substring(1);
+					splitTabTitle[i] = restOfString;
+
+					switch (firstChar) {
+						case "T":
+							newTitle += doc.song.title;
+							break;
+						case "A":
+							newTitle += doc.song.author;
+							break;
+						case "D":
+							newTitle += doc.song.description;
+							break;
+						case "V":
+							newTitle += EditorConfig.version;
+							break;
+					}
+
+					lastWasBackslash = false;
+				} else {
+					newTitle += splitTabTitle[i];
+					i++;
+				}
+			}
+		}
+
+        document.title = newTitle !== "" ? newTitle : EditorConfig.versionDisplayName;
+
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
     }

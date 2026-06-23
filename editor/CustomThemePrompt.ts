@@ -1,7 +1,7 @@
 import { HTML } from "imperative-html/dist/esm/elements-strict";
 import { Prompt } from "./Prompt";
 import { SongDocument } from "./SongDocument";
-
+import { EditorConfig } from "./EditorConfig";
 import { PatternEditor } from "./PatternEditor";
 // import { ColorConfig } from "./ColorConfig";
 
@@ -11,6 +11,7 @@ let doReload = false;
 export class CustomThemePrompt implements Prompt {
 	private readonly _fileInput: HTMLInputElement = input({ type: "file", accept: "image/*", text: "choose editor background image"});
 	private readonly _fileInput2: HTMLInputElement = input({ type: "file", accept: "image/*", text: "choose website background image" });
+	private readonly _tabTitleInput: HTMLInputElement = input({ type: "text", value: localStorage.getItem("customTabTitle") || `\\T - froupbox \\V`});
 	private readonly _colorInput: HTMLInputElement = input({ type: "text", value: localStorage.getItem("customColors") || `:root {
 	--page-margin: black;
 	--editor-background: black;
@@ -36,7 +37,7 @@ export class CustomThemePrompt implements Prompt {
 	--track-editor-bg-pitch: #444;
 	--track-editor-bg-pitch-dim: #333;
 	--track-editor-bg-noise: #444;
-	--track-editor-bg-noise-dim: #333;
+	--track-editor-bg-noise-dim: #333;div(),
 	--track-editor-bg-mod: #234;
 	--track-editor-bg-mod-dim: #123;
 	--multiplicative-mod-slider: #456;
@@ -152,6 +153,11 @@ export class CustomThemePrompt implements Prompt {
         ),
         div(),
         p({ style: "text-align: left; margin: 0;" },
+            "Alter the text below to change the tab title. Use \\T for song title, \\A for song author, \\D for song description, and \\V for froupbox version:",
+        ),
+        this._tabTitleInput,
+		div(),
+        p({ style: "text-align: left; margin: 0;" },
             "Replace the text below with your custom theme data to load it:",
         ),
         this._colorInput,
@@ -168,6 +174,7 @@ export class CustomThemePrompt implements Prompt {
     constructor(private _doc: SongDocument, private _pattern: PatternEditor, private _pattern2: HTMLDivElement, private _pattern3: HTMLElement) {
         this._fileInput.addEventListener("change", this._whenFileSelected);
         this._fileInput2.addEventListener("change", this._whenFileSelected2);
+        this._tabTitleInput.addEventListener("change", this._whenTabTitleChanged);
         this._colorInput.addEventListener("change", this._whenColorsChanged);
         this._okayButton.addEventListener("click", this._close);
         this._cancelButton.addEventListener("click", this._close);
@@ -189,7 +196,9 @@ export class CustomThemePrompt implements Prompt {
         // this.container.removeEventListener("keydown", this._whenKeyPressed);
         this._resetButton.removeEventListener("click", this._reset);
     }
+
     private _reset = (): void => {
+        window.localStorage.removeItem("customTabTitle");
         window.localStorage.removeItem("colorTheme");
         window.localStorage.removeItem("customTheme");
         window.localStorage.removeItem("customTheme2");
@@ -205,12 +214,59 @@ export class CustomThemePrompt implements Prompt {
         doReload = true;
         this._close();
     }
+
+	private _whenTabTitleChanged = (): void => {
+        window.localStorage.setItem("customTabTitle", this._tabTitleInput.value);
+
+		let newTitle = "";
+		const tabTitleFormat = localStorage.getItem("customTabTitle") || `\\T - froupbox \\V`;
+		const splitTabTitle = tabTitleFormat.split(/(\\)/);
+
+		let lastWasBackslash: boolean = false;
+
+		for (let i: number = 0; i < splitTabTitle.length;) {
+			if (splitTabTitle[i] == "\\") {
+				lastWasBackslash = true;
+				i++;
+			} else {
+				if (lastWasBackslash) {
+					const firstChar: string = splitTabTitle[i].charAt(0);
+					const restOfString: string = splitTabTitle[i].substring(1);
+					splitTabTitle[i] = restOfString;
+
+					switch (firstChar) {
+						case "T":
+							newTitle += this._doc.song.title;
+							break;
+						case "A":
+							newTitle += this._doc.song.author;
+							break;
+						case "D":
+							newTitle += this._doc.song.description;
+							break;
+						case "V":
+							newTitle += EditorConfig.version;
+							break;
+					}
+
+					lastWasBackslash = false;
+				} else {
+					newTitle += splitTabTitle[i];
+					i++;
+				}
+			}
+		}
+
+        document.title = newTitle !== "" ? newTitle : EditorConfig.versionDisplayName;
+    }
+
     private _whenColorsChanged = (): void => {
-        localStorage.setItem("customColors", this._colorInput.value);
+        window.localStorage.setItem("customColors", this._colorInput.value);
         window.localStorage.setItem("colorTheme", "custom");
         this._doc.colorTheme = "custom";
         doReload = true;
     }
+
     private _whenFileSelected = (): void => {
         const file: File = this._fileInput.files![0];
         if (!file) return;
@@ -227,6 +283,7 @@ export class CustomThemePrompt implements Prompt {
         });
         reader.readAsDataURL(file);
     }
+
     private _whenFileSelected2 = (): void => {
         const file: File = this._fileInput2.files![0];
         if (!file) return;

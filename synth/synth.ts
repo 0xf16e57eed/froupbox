@@ -3589,7 +3589,48 @@ export class Song {
         this.title = "Untitled";
         this.author = "";
         this.description = "";
-        document.title = this.title + " - " + EditorConfig.versionDisplayName;
+        
+        let newTitle = "";
+                const tabTitleFormat = localStorage.getItem("customTabTitle") || `\\T - froupbox \\V`;
+                const splitTabTitle = tabTitleFormat.split(/(\\)/);
+        
+                let lastWasBackslash: boolean = false;
+        
+                for (let i: number = 0; i < splitTabTitle.length;) {
+                    if (splitTabTitle[i] == "\\") {
+                        lastWasBackslash = true;
+                        i++;
+                    } else {
+                        if (lastWasBackslash) {
+                            const firstChar: string = splitTabTitle[i].charAt(0);
+                            const restOfString: string = splitTabTitle[i].substring(1);
+                            splitTabTitle[i] = restOfString;
+        
+                            switch (firstChar) {
+                                case "T":
+                                    newTitle += this.title;
+                                    break;
+                                case "A":
+                                    newTitle += this.author;
+                                    break;
+                                case "D":
+                                    newTitle += this.description;
+                                    break;
+                                case "V":
+                                    newTitle += EditorConfig.version;
+                                    break;
+                            }
+        
+                            lastWasBackslash = false;
+                        } else {
+                            newTitle += splitTabTitle[i];
+                            i++;
+                        }
+                    }
+                }
+        
+                document.title = newTitle !== "" ? newTitle : EditorConfig.versionDisplayName;
+
         if (andResetChannels) {
             this.pitchChannelCount = 5; //Slarmoo's Box: 3
             this.noiseChannelCount = 1;
@@ -4596,7 +4637,6 @@ export class Song {
                 // Length of song name string
                 var songNameLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                 this.title = decodeURIComponent(compressed.substring(charIndex, charIndex + songNameLength));
-                document.title = this.title + " - " + EditorConfig.versionDisplayName;
 
                 charIndex += songNameLength;
 
@@ -4613,6 +4653,48 @@ export class Song {
 
                     charIndex += songDescriptionLength;
                 }
+
+                let newTitle = "";
+                const tabTitleFormat = localStorage.getItem("customTabTitle") || `\\T - froupbox \\V`;
+                const splitTabTitle = tabTitleFormat.split(/(\\)/);
+
+                let lastWasBackslash: boolean = false;
+
+                for (let i: number = 0; i < splitTabTitle.length;) {
+                    if (splitTabTitle[i] == "\\") {
+                        lastWasBackslash = true;
+                        i++;
+                    } else {
+                        if (lastWasBackslash) {
+                            const firstChar: string = splitTabTitle[i].charAt(0);
+                            const restOfString: string = splitTabTitle[i].substring(1);
+                            splitTabTitle[i] = restOfString;
+
+                            switch (firstChar) {
+                                case "T":
+                                    newTitle += this.title;
+                                    break;
+                                case "A":
+                                    newTitle += this.author;
+                                    break;
+                                case "D":
+                                    newTitle += this.description;
+                                    break;
+                                case "V":
+                                    newTitle += EditorConfig.version;
+                                    break;
+                            }
+
+                            lastWasBackslash = false;
+                        } else {
+                            newTitle += splitTabTitle[i];
+                            i++;
+                        }
+                    }
+                }
+
+                document.title = newTitle !== "" ? newTitle : EditorConfig.versionDisplayName;
+
             } break;
             case SongTagCode.channelCount: {
                 this.pitchChannelCount = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
