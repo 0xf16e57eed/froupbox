@@ -6,7 +6,7 @@
 	"start_url": ".",
 	"display": "browser",
 	"orientation": "portrait-primary",
-	"theme_color": "#247d1d",
+	"theme_color": "#9b1bfa",
 	"background_color": "#000",
 	"categories": ["music"],
 	"icons": [
