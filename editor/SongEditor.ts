@@ -46,7 +46,7 @@ import { SpectrumEditor, SpectrumEditorPrompt } from "./SpectrumEditor";
 import { CustomThemePrompt } from "./CustomThemePrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar  } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -4549,37 +4549,45 @@ export class SongEditor {
                     } else {
                         const leftSel = Math.min(this.doc.selection.boxSelectionX0, this.doc.selection.boxSelectionX1);
                         const rightSel = Math.max(this.doc.selection.boxSelectionX0, this.doc.selection.boxSelectionX1);
-                        if ((leftSel < this.doc.synth.loopBarStart || this.doc.synth.loopBarStart == -1)
-                            || (rightSel > this.doc.synth.loopBarEnd || this.doc.synth.loopBarEnd == -1)
-                        ) {
-                            this.doc.synth.loopBarStart = leftSel;
-                            this.doc.synth.loopBarEnd = rightSel;
-
-                            if (!this.doc.synth.playing) {
-                                this.doc.synth.snapToBar();
-                                this.doc.performance.play();
-                            }
-                        }
-                        else {
-                            this.doc.synth.loopBarStart = -1;
-                            this.doc.synth.loopBarEnd = -1;
-                        }
-
-                        // Pressed while viewing a different bar than the current synth playhead.
-                        if (this.doc.bar != Math.floor(this.doc.synth.playhead) && this.doc.synth.loopBarStart != -1) {
-
-                            this.doc.synth.goToBar(this.doc.bar);
-                            this.doc.synth.snapToBar();
-                            this.doc.synth.initModFilters(this.doc.song);
-                            this.doc.synth.computeLatestModValues();
+                        if (event.altKey) {
+                            let oldStart: number = this.doc.song.loopStart;
+                            let oldLength: number = this.doc.song.loopLength;
+                            this.doc.record(new ChangeLoop(this.doc, oldStart, oldLength, leftSel, rightSel - leftSel + 1));
+                            this.doc.synth.jumpIntoLoop();
                             if (this.doc.prefs.autoFollow) {
-                                this.doc.selection.setChannelBar(this.doc.channel, Math.floor(this.doc.synth.playhead));
+                                new ChangeChannelBar(this.doc, this.doc.channel, Math.floor(this.doc.synth.playhead), true);
+                            }
+                        } else {
+                            if ((leftSel < this.doc.synth.loopBarStart || this.doc.synth.loopBarStart == -1)
+                                || (rightSel > this.doc.synth.loopBarEnd || this.doc.synth.loopBarEnd == -1)
+                            ) {
+                                this.doc.synth.loopBarStart = leftSel;
+                                this.doc.synth.loopBarEnd = rightSel;
+
+                                if (!this.doc.synth.playing) {
+                                    this.doc.synth.snapToBar();
+                                    this.doc.performance.play();
+                                }
+                            } else {
+                                this.doc.synth.loopBarStart = -1;
+                                this.doc.synth.loopBarEnd = -1;
                             }
 
+                            // Pressed while viewing a different bar than the current synth playhead.
+                            if (this.doc.bar != Math.floor(this.doc.synth.playhead) && this.doc.synth.loopBarStart != -1) {
+
+                                this.doc.synth.goToBar(this.doc.bar);
+                                this.doc.synth.snapToBar();
+                                this.doc.synth.initModFilters(this.doc.song);
+                                this.doc.synth.computeLatestModValues();
+                                if (this.doc.prefs.autoFollow) {
+                                    this.doc.selection.setChannelBar(this.doc.channel, Math.floor(this.doc.synth.playhead));
+                                }
+
+                            }
+
+                            this._loopEditor.setLoopAt(this.doc.synth.loopBarStart, this.doc.synth.loopBarEnd);
                         }
-
-                        this._loopEditor.setLoopAt(this.doc.synth.loopBarStart, this.doc.synth.loopBarEnd);
-
                     }
                 }
                 event.preventDefault();
@@ -4662,7 +4670,10 @@ export class SongEditor {
                 } else if (event.altKey) {
                     //open / close all envelope dropdowns
                     const instrument: Instrument = this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()];
-                    const isAllOpen: boolean = this.envelopeEditor.openExtraSettingsDropdowns.every((x) => { return x == true })
+                    let isAllOpen: boolean = true;
+                    for (let i = 0; i < instrument.envelopeCount; i++) {
+                        isAllOpen &&= this.envelopeEditor.openExtraSettingsDropdowns[i];
+                    }
                     for (let i = 0; i < instrument.envelopeCount; i++) {
                         if (isAllOpen) this.envelopeEditor.openExtraSettingsDropdowns[i] = false;
                         else this.envelopeEditor.openExtraSettingsDropdowns[i] = true;
