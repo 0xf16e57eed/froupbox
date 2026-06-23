@@ -3591,45 +3591,45 @@ export class Song {
         this.description = "";
         
         let newTitle = "";
-                const tabTitleFormat = localStorage.getItem("customTabTitle") || `\\T - froupbox \\V`;
-                const splitTabTitle = tabTitleFormat.split(/(\\)/);
-        
-                let lastWasBackslash: boolean = false;
-        
-                for (let i: number = 0; i < splitTabTitle.length;) {
-                    if (splitTabTitle[i] == "\\") {
-                        lastWasBackslash = true;
-                        i++;
-                    } else {
-                        if (lastWasBackslash) {
-                            const firstChar: string = splitTabTitle[i].charAt(0);
-                            const restOfString: string = splitTabTitle[i].substring(1);
-                            splitTabTitle[i] = restOfString;
-        
-                            switch (firstChar) {
-                                case "T":
-                                    newTitle += this.title;
-                                    break;
-                                case "A":
-                                    newTitle += this.author;
-                                    break;
-                                case "D":
-                                    newTitle += this.description;
-                                    break;
-                                case "V":
-                                    newTitle += EditorConfig.version;
-                                    break;
-                            }
-        
-                            lastWasBackslash = false;
-                        } else {
-                            newTitle += splitTabTitle[i];
-                            i++;
-                        }
+        const tabTitleFormat = localStorage.getItem("customTabTitle") || `\\T - froupbox \\V`;
+        const splitTabTitle = tabTitleFormat.split(/(\\)/);
+
+        let lastWasBackslash: boolean = false;
+
+        for (let i: number = 0; i < splitTabTitle.length;) {
+            if (splitTabTitle[i] == "\\") {
+                lastWasBackslash = true;
+                i++;
+            } else {
+                if (lastWasBackslash) {
+                    const firstChar: string = splitTabTitle[i].charAt(0);
+                    const restOfString: string = splitTabTitle[i].substring(1);
+                    splitTabTitle[i] = restOfString;
+
+                    switch (firstChar) {
+                        case "T":
+                            newTitle += this.title;
+                            break;
+                        case "A":
+                            newTitle += this.author;
+                            break;
+                        case "D":
+                            newTitle += this.description;
+                            break;
+                        case "V":
+                            newTitle += EditorConfig.version;
+                            break;
                     }
+
+                    lastWasBackslash = false;
+                } else {
+                    newTitle += splitTabTitle[i];
+                    i++;
                 }
-        
-                document.title = newTitle !== "" ? newTitle : "-";
+            }
+        }
+
+        document.title = newTitle !== "" ? newTitle : "-";
 
         if (andResetChannels) {
             this.pitchChannelCount = 5; //Slarmoo's Box: 3
