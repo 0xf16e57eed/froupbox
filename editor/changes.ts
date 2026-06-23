@@ -5334,7 +5334,7 @@ export class ChangeSongTitle extends Change {
 			}
 		}
 
-        document.title = newTitle !== "" ? newTitle : "O";
+        document.title = newTitle !== "" ? newTitle : EditorConfig.version;
 
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();

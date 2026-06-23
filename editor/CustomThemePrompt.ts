@@ -257,7 +257,7 @@ export class CustomThemePrompt implements Prompt {
 			}
 		}
 
-        document.title = newTitle !== "" ? newTitle : "O";
+        document.title = newTitle !== "" ? newTitle : EditorConfig.version;
     }
 
     private _whenColorsChanged = (): void => {

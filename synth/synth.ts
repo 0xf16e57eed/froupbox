@@ -3629,7 +3629,7 @@ export class Song {
                     }
                 }
         
-                document.title = newTitle !== "" ? newTitle : "O";
+                document.title = newTitle !== "" ? newTitle : EditorConfig.version;
 
         if (andResetChannels) {
             this.pitchChannelCount = 5; //Slarmoo's Box: 3
@@ -4693,7 +4693,7 @@ export class Song {
                     }
                 }
 
-                document.title = newTitle !== "" ? newTitle : "O";
+                document.title = newTitle !== "" ? newTitle : EditorConfig.version;
 
             } break;
             case SongTagCode.channelCount: {
