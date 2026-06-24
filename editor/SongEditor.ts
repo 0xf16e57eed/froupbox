@@ -827,6 +827,7 @@ export class SongEditor {
             option({ value: "displayVolumeBar" }, "Show Playback Volume"),
             option({ value: "showOscilloscope" }, "Show Oscilloscope"),
             option({ value: "showSampleLoadingStatus" }, "Show Sample Loading Status"),
+            option({ value: "bisectionalModNotes" }, "Use Bisectional Mod Notes"),
             option({ value: "showDescription" }, "Show Description"),
             option({ value: "layout" }, "Set Layout..."),
             option({ value: "colorTheme" }, "Set Theme..."),
@@ -2574,6 +2575,7 @@ export class SongEditor {
             (prefs.displayVolumeBar ? textOnIcon : textOffIcon) + "Show Playback Volume",
             (prefs.showOscilloscope ? textOnIcon : textOffIcon) + "Show Oscilloscope",
             (prefs.showSampleLoadingStatus ? textOnIcon : textOffIcon) + "Show Sample Loading Status",
+            (prefs.bisectionalModNotes ? textOnIcon : textOffIcon) + "Use Bisectional Mod Notes",
             (prefs.showDescription ? textOnIcon : textOffIcon) + "Show Description",
             textSpacingIcon + "Set Layout...",
             textSpacingIcon + "Set Theme...",
@@ -5887,6 +5889,9 @@ export class SongEditor {
                 break;
             case "notesFlashWhenPlayed":
                 this.doc.prefs.notesFlashWhenPlayed = !this.doc.prefs.notesFlashWhenPlayed;
+                break;
+            case "bisectionalModNotes":
+                this.doc.prefs.bisectionalModNotes = !this.doc.prefs.bisectionalModNotes;
                 break;
             case "layout":
                 this._openPrompt("layout");
