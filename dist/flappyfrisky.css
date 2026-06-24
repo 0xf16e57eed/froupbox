@@ -1,0 +1,48 @@
+.ff-container {
+    position: fixed;
+    inset: 0;
+    font-size: 20px;
+    * {
+        font-family: "Comic Sans MS";
+        user-select: none;
+    }
+    button {
+        margin: 0;
+        position: relative;
+        height: var(--button-size);
+        border: none;
+        border-radius: 5px;
+        background: var(--editor-background, #444);
+        color: inherit;
+        font-size: smaller;
+        font-family: inherit;
+        font-weight: inherit;
+        cursor: pointer;
+        &::hover {
+            text-decoration: underline;
+        }
+    }
+    z-index: 100000000;
+}
+.ff-dead {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+
+    text-align: center;
+}
+.ff-explode {
+    position: absolute;
+    translate: -50% -50%;
+    scale: 0.4;
+}
+.ff-credits {
+    font-size: 0.9em;
+    #ff-cypher {
+        cursor: pointer;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
