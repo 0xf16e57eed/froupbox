@@ -10,7 +10,7 @@ import { HTML } from "imperative-html/dist/esm/elements-strict";
 import { ArrayBufferWriter } from "./ArrayBufferWriter";
 import { MidiChunkType, MidiFileFormat, MidiControlEventMessage, MidiEventType, MidiMetaEventMessage, MidiRegisteredParameterNumberMSB, MidiRegisteredParameterNumberLSB, volumeMultToMidiVolume, volumeMultToMidiExpression, defaultMidiPitchBend, defaultMidiExpression } from "./Midi";
 
-const { button, div, h2, input, select, option } = HTML;
+const { button, div, h2, input, select, option} = HTML;
 
 function lerp(low: number, high: number, t: number): number {
     return low + t * (high - low);
@@ -47,16 +47,18 @@ export class ExportPrompt implements Prompt {
     private sampleFrames: number;
     private totalChunks: number;
     private currentChunk: number;
+    private samplesPerChunk: number;
     private outputStarted: boolean = false;
-    private readonly _fileName: HTMLInputElement = input({ type: "text", style: "width: 10em;", value: Config.jsonFormat + "-Song", maxlength: 250, "autofocus": "autofocus" });
+    private readonly _fileName: HTMLInputElement = input({ type: "text", style: "width: 10em;", value: "BeepBox-Song", maxlength: 250, "autofocus": "autofocus" });
     private readonly _computedSamplesLabel: HTMLDivElement = div({ style: "width: 10em;" }, new Text("0:00"));
     private readonly _enableIntro: HTMLInputElement = input({ type: "checkbox" });
-    private readonly _loopDropDown: HTMLInputElement = input({ style: "width: 2em;", type: "number", min: "1", max: "4", step: "1" });
+    private readonly _loopDropDown: HTMLInputElement = input({ style: "width: 3em;", type: "number", min: "1", max: "16", step: "1" });
     private readonly _enableOutro: HTMLInputElement = input({ type: "checkbox" });
     private readonly _formatSelect: HTMLSelectElement = select({ style: "width: 100%;" },
         option({ value: "wav" }, "Export to .wav file."),
         option({ value: "mp3" }, "Export to .mp3 file."),
-        //option({ value: "ogg" }, "Export to .ogg file."),
+	    option({ value: "ogg" }, "Export to .ogg file."),
+        option({ value: "opus" }, "Export to .opus file."),
         option({ value: "midi" }, "Export to .mid file."),
         option({ value: "json" }, "Export to .json file."),
         option({ value: "html" }, "Export to .html file."),
@@ -68,7 +70,7 @@ export class ExportPrompt implements Prompt {
     private readonly _exportButton: HTMLButtonElement = button({ class: "exportButton", style: "width:45%;" }, "Export");
     private readonly _outputProgressBar: HTMLDivElement = div({ style: `width: 0%; background: ${ColorConfig.loopAccent}; height: 100%; position: absolute; z-index: 2;` });
     private readonly _outputProgressLabel: HTMLDivElement = div({ style: `position: relative; top: -1px; z-index: 3;` }, "0%");
-    private readonly _outputProgressContainer: HTMLDivElement = div({ style: `height: 12px; background: ${ColorConfig.uiWidgetBackground}; display: block; position: relative; z-index: 1;` },
+    private readonly _outputProgressContainer: HTMLDivElement = div({ style: `height: 12px; background: ${ColorConfig.uiWidgetBackground}; display: block; position: relative; z-index: 1; margin-bottom: 14px;` },
         this._outputProgressBar,
         this._outputProgressLabel,
     );
@@ -83,37 +85,40 @@ export class ExportPrompt implements Prompt {
         0x51, // double pulse -> sawtooth wave
         0x51, // spiky -> sawtooth wave
     ];
-
-    public readonly container: HTMLDivElement = div({ class: "prompt noSelection", style: "width: 200px;" },
-        h2("Export Options"),
-        div({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" },
+    public _exportPrompt: HTMLDivElement = div({},
+        div({class:"promptTitle",style:"margin-bottom: 14px;"}, h2({class:"exportExt",style:"text-align: inherit;"}, ""), h2({class:"exportTitle"},"Export Options")),
+        div({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 14px;" },
             "File name:",
             this._fileName,
         ),
-        div({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" },
+        div({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 14px;" },
             "Length:",
             this._computedSamplesLabel,
         ),
-        div({ style: "display: table; width: 100%;" },
+        div({ style: "display: table; width: 100%; margin-bottom: 14px;" },
             div({ style: "display: table-row;" },
                 div({ style: "display: table-cell;" }, "Intro:"),
                 div({ style: "display: table-cell;" }, "Loop Count:"),
                 div({ style: "display: table-cell;" }, "Outro:"),
             ),
-            div({ style: "display: table-row;" },
+            div({ style: "display: table-row; margin-bottom: 14px;" },
                 div({ style: "display: table-cell; vertical-align: middle;" }, this._enableIntro),
                 div({ style: "display: table-cell; vertical-align: middle;" }, this._loopDropDown),
                 div({ style: "display: table-cell; vertical-align: middle;" }, this._enableOutro),
             ),
         ),
-        div({ class: "selectContainer", style: "width: 100%;" }, this._formatSelect),
         this._removeWhitespaceDiv,
-        div({ style: "text-align: left;" }, "Exporting can be slow. Reloading the page or clicking the X will cancel it. Please be patient."),
+        div({ class: "selectContainer", style: "width: 100%; margin-bottom: 14px;" }, this._formatSelect),
+        div({ style: "text-align: left; margin-bottom: 14px;" }, "Exporting can be slow. Reloading the page or clicking the X will cancel it. Please be patient."),
         this._outputProgressContainer,
-        div({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" },
+        div({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between; margin-bottom: 14px;" },
             this._exportButton,
         ),
         this._cancelButton,
+    );
+
+    public readonly container: HTMLDivElement = div({ class: "prompt noSelection", style: "width: 200px;" },
+        this._exportPrompt,
     );
 
     constructor(private _doc: SongDocument) {
@@ -139,7 +144,7 @@ export class ExportPrompt implements Prompt {
             this._formatSelect.value = lastExportFormat;
         }
 
-        const lastExportWhitespace: boolean = window.localStorage.getItem("exportWhitespace") != "false";
+        const lastExportWhitespace: boolean = window.localStorage.getItem("exportWhitespace") == "true";
         if (lastExportWhitespace != null) {
             this._removeWhitespace.checked = lastExportWhitespace;
         }
@@ -160,13 +165,17 @@ export class ExportPrompt implements Prompt {
         this._enableOutro.addEventListener("click", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
         this._enableIntro.addEventListener("click", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
         this._loopDropDown.addEventListener("change", () => { (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1)); });
-        this._formatSelect.addEventListener("change", () => { if (this._formatSelect.value == "json") { this._removeWhitespaceDiv.style.display = "block"; } else { this._removeWhitespaceDiv.style.display = "none"; } });
+        this._formatSelect.addEventListener("change", () => { if (this._formatSelect.value == "json") { this._removeWhitespaceDiv.style.display = "block"; } else {  this._removeWhitespaceDiv.style.display = "none"; } });
         this.container.addEventListener("keydown", this._whenKeyPressed);
 
         this._fileName.value = _doc.song.title;
         ExportPrompt._validateFileName(null, this._fileName);
 
         (this._computedSamplesLabel.firstChild as Text).textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, +this._loopDropDown.value - 1));
+    
+        if (this._doc.prompt == "quickExport") {
+            this._export();
+        }
     }
 
     private _close = (): void => {
@@ -224,6 +233,7 @@ export class ExportPrompt implements Prompt {
             return;
         window.localStorage.setItem("exportFormat", this._formatSelect.value);
         window.localStorage.setItem("exportWhitespace", this._removeWhitespace.value);
+        window.localStorage.setItem("exportFormat", this._formatSelect.value);
         switch (this._formatSelect.value) {
             case "wav":
                 this.outputStarted = true;
@@ -233,6 +243,14 @@ export class ExportPrompt implements Prompt {
                 this.outputStarted = true;
                 this._exportTo("mp3");
                 break;
+            case "ogg":
+                this.outputStarted = true;
+                this._exportTo("ogg");
+                break;   
+            case "opus":
+                this.outputStarted = true;
+                this._exportTo("opus");
+                break;    
             case "midi":
                 this.outputStarted = true;
                 this._exportToMidi();
@@ -257,11 +275,9 @@ export class ExportPrompt implements Prompt {
             return;
         }
 
-        // Update progress bar UI once per 5 sec of exported data
-        const samplesPerChunk: number = this.synth.samplesPerSecond * 5; //e.g. 44100 * 5
-        const currentFrame: number = this.currentChunk * samplesPerChunk;
+        const currentFrame: number = this.currentChunk * this.samplesPerChunk;
 
-        const samplesInChunk: number = Math.min(samplesPerChunk, this.sampleFrames - currentFrame);
+        const samplesInChunk: number = Math.min(this.samplesPerChunk, this.sampleFrames - currentFrame);
         const tempSamplesL = new Float32Array(samplesInChunk);
         const tempSamplesR = new Float32Array(samplesInChunk);
 
@@ -289,6 +305,12 @@ export class ExportPrompt implements Prompt {
             else if (this.thenExportTo == "mp3") {
                 this._exportToMp3Finish();
             }
+            else if (this.thenExportTo == "ogg") {
+                this._exportToOggFinish();
+            }
+            else if (this.thenExportTo == "opus") {
+                this._exportToOpusFinish();
+            }
             else {
                 throw new Error("Unrecognized file export type chosen!");
             }
@@ -312,6 +334,12 @@ export class ExportPrompt implements Prompt {
         else if (type == "mp3") {
             this.synth.samplesPerSecond = 44100; // Use consumer CD standard sample rate for .mp3 export.
         }
+        else if (type == "ogg") {
+            this.synth.samplesPerSecond = 48000; // Wikipedia says ogg typically uses 44.1 kHz.
+        } 
+        else if (type == "opus") {
+            this.synth.samplesPerSecond = 48000; // Wikipedia says ogg typically uses 44.1 kHz.
+        } 
         else {
             throw new Error("Unrecognized file export type chosen!");
         }
@@ -326,14 +354,16 @@ export class ExportPrompt implements Prompt {
             }
         }
 
-
+        
         this.synth.initModFilters(this._doc.song);
         this.synth.computeLatestModValues();
-        this.synth.warmUpSynthesizer(this._doc.song);
+	      this.synth.warmUpSynthesizer(this._doc.song);
 
         this.sampleFrames = this.synth.getTotalSamples(this._enableIntro.checked, this._enableOutro.checked, this.synth.loopRepeatCount);
         // Compute how many UI updates will need to run to determine how many 
-        this.totalChunks = Math.ceil(this.sampleFrames / (this.synth.samplesPerSecond * 5));
+        // Update progress bar UI once per 5 sec of exported data
+        this.samplesPerChunk = this.synth.samplesPerSecond * 5;
+        this.totalChunks = Math.ceil(this.sampleFrames / this.samplesPerChunk);
         this.recordedSamplesL = new Float32Array(this.sampleFrames);
         this.recordedSamplesR = new Float32Array(this.sampleFrames);
 
@@ -441,6 +471,160 @@ export class ExportPrompt implements Prompt {
             script.src = "https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js";
             script.onload = whenEncoderIsAvailable;
             document.head.appendChild(script);
+        }
+    }
+
+    private _exportToOggFinish(): void {
+        const scripts: string[] = [
+            "https://unpkg.com/wasm-media-encoders/dist/umd/WasmMediaEncoder.min.js",
+        ];
+        let scriptsLoaded: number = 0;
+        const scriptsToLoad: number = scripts.length;
+        const whenEncoderIsAvailable = (): void => {
+            scriptsLoaded++;
+            if (scriptsLoaded < scriptsToLoad) return;
+            const WasmMediaEncoder: any = (<any>window)["WasmMediaEncoder"];
+            const channelCount: number = 2;
+            const quality: number = 10;
+            const sampleBlockSize: number = 4096;
+            WasmMediaEncoder.createOggEncoder().then((oggEncoder: any) => {
+                oggEncoder.configure({
+                    channels: channelCount,
+                    sampleRate: this.synth.samplesPerSecond,
+                    vbrQuality: quality,
+                });
+                const left: Float32Array = this.recordedSamplesL;
+                const right: Float32Array = this.recordedSamplesR;
+                const parts: Uint8Array[] = [];
+                let sampleIndex: number = 0;
+                for (; sampleIndex < left.length; sampleIndex += sampleBlockSize) {
+                    const leftChunk: Float32Array = left.subarray(sampleIndex, sampleIndex + sampleBlockSize);
+                    const rightChunk: Float32Array = right.subarray(sampleIndex, sampleIndex + sampleBlockSize);
+                    const frame: Float32Array[] = channelCount === 2 ? ([leftChunk, rightChunk]) : ([leftChunk]);
+                    parts.push(oggEncoder.encode(frame).slice());
+                }
+                parts.push(oggEncoder.finalize().slice());
+                const blob: Blob = new Blob(parts, { type: "audio/ogg" });
+                save(blob, this._fileName.value.trim() + ".ogg");
+                this._close();
+            });
+        }
+        if ("WasmMediaEncoder" in window) {
+            scriptsLoaded = scripts.length;
+            whenEncoderIsAvailable();
+        } else {
+            scriptsLoaded = 0;
+            for (const src of scripts) {
+                const script = document.createElement("script");
+                script.src = src;
+                script.onload = whenEncoderIsAvailable;
+                document.head.appendChild(script);
+            }
+        }
+    }
+    private _exportToOpusFinish(): void {
+        const scripts: string[] = [
+            "https://cdn.jsdelivr.net/gh/mmig/opus-encdec@e33ca40b92ddff8c168c7f5aca34b626c9acc08a/dist/libopus-encoder.js",
+            "https://cdn.jsdelivr.net/gh/mmig/opus-encdec@e33ca40b92ddff8c168c7f5aca34b626c9acc08a/src/oggOpusEncoder.js"
+        ];
+        let scriptsLoaded: number = 0;
+        const scriptsToLoad: number = scripts.length;
+        const whenEncoderIsAvailable = (): void => {
+            scriptsLoaded++;
+            if (scriptsLoaded < scriptsToLoad) return;
+            const OggOpusEncoder: any = (<any>window)["OggOpusEncoder"];
+            const OpusEncoderLib: any = (<any>window)["OpusEncoderLib"];
+            // @TODO: Very non-ideal.
+            OggOpusEncoder.prototype.getOpusControl = function (control: number): number | null {
+                let result: number | null = null;
+                // Hack to defeat Terser's mangling. Alternatively, the
+                // compilation scripts could be changed.
+                const doNotMangle: string = Math.random() > 2 ? "" : "";
+                const location: number = this["_" + doNotMangle + "malloc"](4);
+                const outputLocation: number = this["_" + doNotMangle + "malloc"](4);
+                this.HEAP32[location >> 2] = outputLocation;
+                const returnCode: number = this["_" + doNotMangle + "opus_encoder_ctl"](this.encoder, control, location);
+                if (returnCode === 0) {
+                    result = this.HEAP32[outputLocation >> 2];
+                }
+                this["_" + doNotMangle + "free"](outputLocation);
+                this["_" + doNotMangle + "free"](location);
+                return result;
+            };
+            OggOpusEncoder.prototype.getLookahead = function (): number {
+                return this.getOpusControl(4027) ?? 0;
+            };
+            OggOpusEncoder.prototype.setBitrate = function (value: number): void {
+                this.setOpusControl(4002, value);
+            };
+            OggOpusEncoder.prototype.generateIdPage2 = function (lookahead: number): any {
+                const segmentDataView: DataView = new DataView(this.segmentData.buffer);
+                segmentDataView.setUint32(0, 1937076303, true); // Magic Signature 'Opus'
+                segmentDataView.setUint32(4, 1684104520, true); // Magic Signature 'Head'
+                segmentDataView.setUint8(8, 1); // Version
+                segmentDataView.setUint8(9, this.config.numberOfChannels); // Channel count
+                segmentDataView.setUint16(10, lookahead, true); // pre-skip (0ms)
+                segmentDataView.setUint32(12, this.config.originalSampleRateOverride || this.config.originalSampleRate, true); // original sample rate
+                segmentDataView.setUint16(16, 0, true); // output gain
+                segmentDataView.setUint8(18, 0); // channel map 0 = mono or stereo
+                this.segmentTableIndex = 1;
+                this.segmentDataIndex = this.segmentTable[0] = 19;
+                this.headerType = 2;
+                return this.generatePage();
+            };
+            const channelCount: number = 2;
+            const frameSizeInMilliseconds: number = 20;
+            const frameSizeInSeconds: number = frameSizeInMilliseconds / 1000;
+            const sampleBlockSize: number = Math.floor(this.synth.samplesPerSecond * frameSizeInSeconds);
+            const oggEncoder: any = new OggOpusEncoder({
+                numberOfChannels: channelCount,
+                originalSampleRate: this.synth.samplesPerSecond,
+                encoderSampleRate: this.synth.samplesPerSecond,
+                bufferLength: sampleBlockSize,
+                encoderApplication: 2049,
+                encoderComplexity: 10,
+                resampleQuality: 3, // [0, 10], but we're not using this.
+            }, OpusEncoderLib);
+            const parts: Uint8Array[] = [];
+            const left: Float32Array = this.recordedSamplesL;
+            const right: Float32Array = this.recordedSamplesR;
+            oggEncoder.setBitrate(256_000); // bits per second
+            parts.push(oggEncoder.generateIdPage2(oggEncoder.getLookahead()).page);
+            parts.push(oggEncoder.generateCommentPage().page);
+            let sampleIndex: number = 0;
+            for (; sampleIndex < left.length; sampleIndex += sampleBlockSize) {
+                const leftChunk: Float32Array = left.subarray(sampleIndex, sampleIndex + sampleBlockSize);
+                const rightChunk: Float32Array = right.subarray(sampleIndex, sampleIndex + sampleBlockSize);
+                const frame: Float32Array[] = channelCount === 2 ? ([leftChunk, rightChunk]) : ([leftChunk]);
+                oggEncoder.encode(frame).forEach((page: any) => parts.push(page.page));
+            }
+            // @TODO: This padding matches FFmpeg... but is it correct?
+            {
+                const paddingSize: number = sampleIndex - left.length;
+                const leftChunk: Float32Array = new Float32Array(paddingSize);
+                const rightChunk: Float32Array = new Float32Array(paddingSize);
+                const frame: Float32Array[] = channelCount === 2 ? ([leftChunk, rightChunk]) : ([leftChunk]);
+                oggEncoder.encode(frame).forEach((page: any) => parts.push(page.page));
+            }
+            // const remaining: any = oggEncoder.flush();
+            // if (remaining) parts.push(remaining.page);
+            oggEncoder.encodeFinalFrame().forEach((page: any) => parts.push(page.page));
+            oggEncoder.destroy();
+            const blob: Blob = new Blob(parts, { type: "audio/opus" });
+            save(blob, this._fileName.value.trim() + ".opus");
+            this._close();
+        }
+        if (("OggOpusEncoder" in window) && ("OpusEncoderLib" in window)) {
+            scriptsLoaded = scripts.length;
+            whenEncoderIsAvailable();
+        } else {
+            scriptsLoaded = 0;
+            for (const src of scripts) {
+                const script = document.createElement("script");
+                script.src = src;
+                script.onload = whenEncoderIsAvailable;
+                document.head.appendChild(script);
+            }
         }
     }
 
