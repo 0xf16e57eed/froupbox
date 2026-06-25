@@ -44,6 +44,7 @@ import { SongRecoveryPrompt } from "./SongRecoveryPrompt";
 import { RecordingSetupPrompt } from "./RecordingSetupPrompt";
 import { SpectrumEditor, SpectrumEditorPrompt } from "./SpectrumEditor";
 import { CustomThemePrompt } from "./CustomThemePrompt";
+import { CustomPresetsPrompt } from "./CustomPresetsPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
 import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar  } from "./changes";
@@ -93,7 +94,8 @@ function buildPresetOptions(isNoise: boolean, idSet: string): HTMLSelectElement 
         menu.appendChild(option({ value: InstrumentType.pwm }, EditorConfig.valueToPreset(InstrumentType.pwm)!.name));
         menu.appendChild(option({ value: InstrumentType.supersaw }, EditorConfig.valueToPreset(InstrumentType.supersaw)!.name));
         menu.appendChild(option({ value: InstrumentType.fm }, EditorConfig.valueToPreset(InstrumentType.fm)!.name));
-        menu.appendChild(option({ value: InstrumentType.fm6op }, EditorConfig.instrumentToPreset(InstrumentType.fm6op)!.name));
+        //pastenkopie - this is a temporary fix to get stuff working, it will need to be fixed (TODO)
+        if (!localStorage.getItem("customPresetsCompiled")) menu.appendChild(option({ value: InstrumentType.fm6op }, EditorConfig.instrumentToPreset(InstrumentType.fm6op)!.name));
         menu.appendChild(option({ value: InstrumentType.harmonics }, EditorConfig.valueToPreset(InstrumentType.harmonics)!.name));
         menu.appendChild(option({ value: InstrumentType.pickedString }, EditorConfig.valueToPreset(InstrumentType.pickedString)!.name));
         menu.appendChild(option({ value: InstrumentType.spectrum }, EditorConfig.valueToPreset(InstrumentType.spectrum)!.name));
@@ -832,6 +834,7 @@ export class SongEditor {
             option({ value: "layout" }, "Set Layout..."),
             option({ value: "colorTheme" }, "Set Theme..."),
 	        option({ value: "customTheme" }, "Custom Theme..."),
+	        option({ value: "customPresets" }, "Custom Presets..."),
         ),
     );
     private readonly _scaleSelect: HTMLSelectElement = buildOptions(select(), Config.scales.map(scale => scale.name));
@@ -2391,6 +2394,9 @@ export class SongEditor {
                 case "customTheme":
                     this.prompt = new CustomThemePrompt(this.doc, this._patternEditor, this._trackArea, document.getElementById("beepboxEditorContainer")!);
                     break;
+                case "customPresets":
+                    this.prompt = new CustomPresetsPrompt(this.doc);
+                    break;
                 case "visualLoopControls":
                     this.prompt = new VisualLoopControlsPrompt(this.doc, this);
                     break;
@@ -2580,6 +2586,7 @@ export class SongEditor {
             textSpacingIcon + "Set Layout...",
             textSpacingIcon + "Set Theme...",
 	        textSpacingIcon + "Custom Theme...",
+	        textSpacingIcon + "Custom Presets...",
         ];
         // Technical dropdown
         const technicalOptionGroup: HTMLOptGroupElement = <HTMLOptGroupElement>this._optionsMenu.children[1];
@@ -4781,6 +4788,26 @@ export class SongEditor {
                     this.doc.prefs.save();
                     event.preventDefault();
                     location.reload();
+                } else if (event.shiftKey) {
+                    // Copy the current instrument as a preset to the clipboard.
+                    const instrument: Instrument = this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()];
+                    const instrumentObject: any = instrument.toJsonObject();
+                    delete instrumentObject["preset"];
+                    // Volume and the panning effect are not included in presets.
+                    delete instrumentObject["volume"];
+                    delete instrumentObject["pan"];
+                    const panningEffectIndex: number = instrumentObject["effects"].indexOf(Config.effectNames[EffectType.panning]);
+                    if (panningEffectIndex != -1) instrumentObject["effects"].splice(panningEffectIndex, 1);
+                    for (let i: number = 0; i < instrumentObject["envelopes"].length; i++) {
+                        const envelope: any = instrumentObject["envelopes"][i];
+                        // If there are any envelopes targeting panning or none, remove those too.
+                        if (envelope["target"] == "panning" || envelope["target"] == "none" || envelope["envelope"] == "none") {
+                            instrumentObject["envelopes"].splice(i, 1);
+                            i--;
+                        }
+                    }
+                    this._copyTextToClipboard(JSON.stringify(instrumentObject));
+                    event.preventDefault();
                 }
                 break;
             case 76: // l
@@ -5901,6 +5928,9 @@ export class SongEditor {
                 break;
             case "customTheme":
                 this._openPrompt("customTheme");
+                break;
+            case "customPresets":
+                this._openPrompt("customPresets");
                 break;
             case "recordingSetup":
                 this._openPrompt("recordingSetup");
