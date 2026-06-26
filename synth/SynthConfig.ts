@@ -122,6 +122,7 @@ export const enum EffectType {
     octaveShift, //Studio Box port placeholder just in case
     invertWave,
     compressor,
+    phaseShift,
     length,
 }
 
@@ -174,6 +175,11 @@ export const enum EnvelopeComputeIndex {
     compressorLoGain,
     compressorMidGain,
     compressorHiGain,
+
+    phaseShiftMix,
+    phaseShiftDelay,
+    phaseShiftPan,
+    phaseShiftFeedmix,
 
     length,
 }
@@ -979,6 +985,12 @@ export class Config {
     public static readonly phaserMaxFreq:               number = 20000.0; 
     public static readonly phaserMinStages:             number = 0; 
     public static readonly phaserMaxStages:             number = 1024; 
+    public static readonly phaseShiftMixRange:          number = 64; 
+    public static readonly phaseShiftDelayMin:          number = 0;
+    public static readonly phaseShiftDelayMax:          number = 8191;
+    public static readonly phaseShiftPanCenter:         number = 50;
+    public static readonly phaseShiftPanMax:            number = Config.phaseShiftPanCenter * 2;
+    public static readonly phaseShiftFeedmixRange:      number = 64; 
     public static readonly beatsPerBarMin:              number = 1;
     public static readonly beatsPerBarMax:              number = 64;
     public static readonly barCountMin:                 number = 1;
@@ -1272,8 +1284,8 @@ export class Config {
       InstrumentType.fm6op,
       InstrumentType.supersaw,
     ]);
-    public static readonly effectNames: ReadonlyArray<string> = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "note range", "ring mod", "granular", "phaser", "", "invert wave", "compressor"];
-    public static readonly effectOrder: ReadonlyArray<EffectType> = [EffectType.panning, EffectType.transition, EffectType.chord, EffectType.pitchShift, EffectType.detune, EffectType.vibrato, EffectType.noteFilter, EffectType.granular, EffectType.distortion, EffectType.bitcrusher, EffectType.chorus, EffectType.echo, EffectType.reverb, EffectType.ringModulation, EffectType.phaser, EffectType.invertWave, EffectType.compressor, EffectType.noteRange];
+    public static readonly effectNames: ReadonlyArray<string> = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "note range", "ring mod", "granular", "phaser", "", "invert wave", "compressor", "phase shift"];
+    public static readonly effectOrder: ReadonlyArray<EffectType> = [EffectType.panning, EffectType.transition, EffectType.chord, EffectType.pitchShift, EffectType.detune, EffectType.vibrato, EffectType.noteFilter, EffectType.granular, EffectType.distortion, EffectType.bitcrusher, EffectType.chorus, EffectType.echo, EffectType.reverb, EffectType.ringModulation, EffectType.phaser, EffectType.invertWave, EffectType.compressor, EffectType.noteRange, EffectType.phaseShift];
     public static readonly noteSizeMax: number = 6;
     public static readonly volumeRange: number = 50;
     // Beepbox's old volume scale used factor -0.5 and was [0~7] had roughly value 6 = 0.125 power. This new value is chosen to have -21 be the same,
@@ -1904,6 +1916,10 @@ export class Config {
         { name: "compressorLoGain",       computeIndex: EnvelopeComputeIndex.compressorLoGain,          displayName: "comp. low gain",   perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.compressor, compatibleInstruments: null },
         { name: "compressorMidGain",      computeIndex: EnvelopeComputeIndex.compressorMidGain,         displayName: "comp. mid gain",   perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.compressor, compatibleInstruments: null },
         { name: "compressorHiGain",       computeIndex: EnvelopeComputeIndex.compressorHiGain,          displayName: "comp. high gain",  perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.compressor, compatibleInstruments: null },
+        { name: "phaseShiftMix",          computeIndex: EnvelopeComputeIndex.phaseShiftMix,             displayName: "phase shift mix",        perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.phaseShift, compatibleInstruments: null },
+        { name: "phaseShiftDelay",        computeIndex: EnvelopeComputeIndex.phaseShiftDelay,           displayName: "phase shift delay",      perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.phaseShift, compatibleInstruments: null },
+        { name: "phaseShiftPan",          computeIndex: EnvelopeComputeIndex.phaseShiftPan,             displayName: "phase shift pan",        perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.phaseShift, compatibleInstruments: null },
+        { name: "phaseShiftFeedmix",      computeIndex: EnvelopeComputeIndex.phaseShiftFeedmix,         displayName: "phase shift feedmix",    perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.phaseShift, compatibleInstruments: null },
     ]);
     public static readonly operatorWaves: DictionaryArray<OperatorWave> = toNameMap([
 		{ name: "sine", samples: Config.sineWave },
@@ -2245,6 +2261,26 @@ export class Config {
             maxRawVol: Config.phaserMaxStages, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.phaser, maxIndex: 0,
             promptName: "Phaser Stages", 
             promptDesc: [ "This setting controls the number of phaser stages in your insturment, just like the phaser stages slider.", "At $LO, your instrument will have no phaser stages. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"] },                       
+        { name: "phase shift mix", 
+            pianoName: "Phase Shift Mix", 
+            maxRawVol: Config.phaseShiftMixRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.phaseShift, maxIndex: 0,
+            promptName: "Phase Shift Mix", 
+            promptDesc: [ "This setting controls the phase shift mix.", "[OVERWRITING] [$LO - $HI]"] },
+        { name: "phase shift delay", 
+            pianoName: "Phase Shift Delay", 
+            maxRawVol: Config.phaseShiftDelayMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.phaseShift, maxIndex: 0,
+            promptName: "Phase Shift Delay", 
+            promptDesc: [ "This setting controls the phase shift delay.", "[OVERWRITING] [$LO - $HI]"] }, 
+        { name: "phase shift pan", 
+            pianoName: "Phase Shift Pan", 
+            maxRawVol: Config.phaseShiftPanMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.phaseShift, maxIndex: 0,
+            promptName: "Phase Shift Pan", 
+            promptDesc: [ "This setting controls the phase shift pan.", "[OVERWRITING] [$LO - $HI]"] },     
+        { name: "phase shift feedmix", 
+            pianoName: "Phase Shift Feedmix", 
+            maxRawVol: Config.phaseShiftFeedmixRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.phaseShift, maxIndex: 0,
+            promptName: "Phase Shift Feedmix", 
+            promptDesc: [ "This setting controls the phase shift feedmix.", "[OVERWRITING] [$LO - $HI]"] },      
         ]);
 }
 
@@ -2604,6 +2640,9 @@ export function effectsIncludeOctaveShift(effects: number): boolean {
 }
 export function effectsIncludePhaser(effects: number): boolean {
 	return (effects & (1 << EffectType.phaser)) != 0;
+}
+export function effectsIncludePhaseShift(effects: number): boolean {
+	return (effects & (1 << EffectType.phaseShift)) != 0;
 }
 export function effectsIncludeInvertWave(effects: number): boolean {
     return (effects & (1 << EffectType.invertWave)) != 0;

@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor } from "./SynthConfig";
+import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludePhaseShift } from "./SynthConfig";
 import { Preset, EditorConfig } from "../editor/EditorConfig";
 import { scaleElementsByFactor, inverseRealFourierTransform } from "./FFT";
 import { Deque } from "./Deque";
@@ -1719,6 +1719,11 @@ export class Instrument {
     public phaserDisperse: boolean = false;
     public phaserLegacyMode: boolean = false;
     
+    public phaseShiftMix: number = Config.phaseShiftMixRange - 1;
+    public phaseShiftDelay: number = 256;
+    public phaseShiftPan: number = Config.phaseShiftPanCenter;
+    public phaseShiftFeedmix: number = 0;
+
     public invertWave: boolean = false;
 
     public algorithm: number = 0;
@@ -1853,6 +1858,11 @@ export class Instrument {
         this.phaserFeedback = 0;
         this.phaserStages = 2;
         this.phaserDisperse = false;
+
+        this.phaseShiftMix = Config.phaseShiftMixRange - 1;
+        this.phaseShiftDelay = 256;
+        this.phaseShiftPan = Config.phaseShiftPanCenter;
+        this.phaseShiftFeedmix = 0;
 
         this.invertWave = false;
         
@@ -2192,6 +2202,12 @@ export class Instrument {
             instrumentObject["phaserStages2"] = this.phaserStages;
             instrumentObject["phaserDisperse"] = this.phaserDisperse;
             instrumentObject["phaserLegacyMode"] = this.phaserLegacyMode;
+        }
+        if (effectsIncludePhaseShift(this.effects)) {
+            instrumentObject["phaseShiftMix"] =  Math.round(100 * this.phaseShiftMix/(Config.phaseShiftMixRange - 1));
+            instrumentObject["phaseShiftDelay"] =  this.phaseShiftDelay;
+            instrumentObject["phaseShiftPan"] =  Math.round(100 * (this.phaseShiftPan - Config.phaseShiftPanCenter) / Config.phaseShiftPanCenter);
+            instrumentObject["phaseShiftFeedmix"] = Math.round(100 * this.phaseShiftMix/(Config.phaseShiftFeedmixRange - 1));
         }
         if (effectsIncludeDistortion(this.effects)) {
             instrumentObject["distortion"] = Math.round(100 * this.distortion / (Config.distortionRange - 1));
@@ -2646,6 +2662,21 @@ export class Instrument {
             this.phaserDisperse = instrumentObject["phaserDisperse"];
         }
         this.phaserLegacyMode = instrumentObject["phaserMix"] != undefined && instrumentObject["phaserLegacyMode"] !== false;
+
+
+        if (instrumentObject["phaseShiftMix"] != undefined) {
+            this.phaseShiftMix = clamp(0, Config.phaseShiftMixRange, Math.round((Config.phaseShiftMixRange - 1) * (instrumentObject["phaseShiftMix"] | 0) / 100));
+        }
+        if (instrumentObject["phaseShiftDelay"] != undefined) {
+            this.phaseShiftDelay = clamp(0, Config.phaseShiftDelayMax + 1, instrumentObject["phaseShiftDelay"]);
+        }
+        if (instrumentObject["phaseShiftPan"] != undefined) {
+            this.phaseShiftPan = clamp(0, Config.phaseShiftPanMax + 1, Math.round(Config.phaseShiftPanCenter + (instrumentObject["phaseShiftPan"] | 0) * Config.phaseShiftPanCenter / 100));
+        }
+        if (instrumentObject["phaseShiftFeedmix"] != undefined) {
+            this.phaseShiftFeedmix = clamp(0, Config.phaseShiftFeedmixRange, Math.round((Config.phaseShiftFeedmixRange - 1) * (instrumentObject["phaseShiftFeedmix"] | 0) / 100));
+        }
+
 
         if (instrumentObject["distortion"] != undefined) {
             this.distortion = clamp(0, Config.distortionRange, Math.round((Config.distortionRange - 1) * (instrumentObject["distortion"] | 0) / 100));
@@ -3296,7 +3327,7 @@ export class Song {
     private static readonly _oldestSlarmoosBoxVersion: number = 1;
     private static readonly _latestSlarmoosBoxVersion: number = 5;
     private static readonly _oldestFroupBoxVersion: number = 1;
-    private static readonly _latestFroupBoxVersion: number = 4;
+    private static readonly _latestFroupBoxVersion: number = 5;
     // One-character variant detection at the start of URL to distinguish variants such as JummBox, Or Goldbox. "j" and "g" respectively
     //also "u" is ultrabox lol
     private static readonly _variant = 0x66; //"f" ~ froupbox
@@ -3962,6 +3993,16 @@ export class Song {
                     buffer.push(base64IntToCharCode[+instrument.phaserDisperse]);
                 }
 
+                if (effectsIncludePhaseShift(instrument.effects)) {
+                    buffer.push(base64IntToCharCode[instrument.phaseShiftMix]);
+                    buffer.push(base64IntToCharCode[instrument.phaseShiftDelay >> 12]);
+                    buffer.push(base64IntToCharCode[instrument.phaseShiftDelay >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[instrument.phaseShiftDelay & 0x3f]);
+                    buffer.push(base64IntToCharCode[instrument.phaseShiftPan >> 6]);
+                    buffer.push(base64IntToCharCode[instrument.phaseShiftPan & 0x3f]);
+                    buffer.push(base64IntToCharCode[instrument.phaseShiftFeedmix]);
+                }
+
                 if (effectsIncludeInvertWave(instrument.effects)) {
                     buffer.push(base64IntToCharCode[+instrument.invertWave]);
                 }
@@ -4322,7 +4363,7 @@ export class Song {
                             shapeBits.write(bitsPerNoteSize, note.pins[0].size); // volume
                         }
                         else {
-                            shapeBits.write(11, note.pins[0].size); // Modulator value. had to change from 9 to 11 for 2000 max tempo
+                            shapeBits.write(13, note.pins[0].size); // Modulator value. had to change from 9 to 13 for 8000
                         }
 
                         let shapePart: number = 0;
@@ -4344,7 +4385,7 @@ export class Song {
                             if (!isModChannel) {
                                 shapeBits.write(bitsPerNoteSize, pin.size);
                             } else {
-                                shapeBits.write(11, pin.size); // Modulator value. had to change from 9 to 11 for 2000 max tempo
+                                shapeBits.write(13, pin.size); // Modulator value. had to change from 9 to 13 for 8000
                             }
                         }
 
@@ -5833,6 +5874,12 @@ export class Song {
                         instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
                         instrument.phaserLegacyMode = !newFormat || (phaserFlags & 1) === 1;
                     }
+                    if (effectsIncludePhaseShift(instrument.effects)) {
+                        instrument.phaseShiftMix = clamp(0, Config.phaseShiftMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.phaseShiftDelay = clamp(0, Config.phaseShiftDelayMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.phaseShiftPan = clamp(0, Config.phaseShiftPanMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.phaseShiftFeedmix = clamp(0, Config.phaseShiftFeedmixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    }    
                     if(effectsIncludeInvertWave(instrument.effects)) {
                         instrument.invertWave = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] ? true : false;
                     }
@@ -6607,8 +6654,10 @@ export class Song {
                                         shape.initialSize = bits.read(2) * 2;
                                     } else if (!isModChannel) {
                                         shape.initialSize = bits.read(bitsPerNoteSize);
-                                    } else if (fromFroupBox) {
+                                    } else if (fromFroupBox && beforeFive) {
                                         shape.initialSize = bits.read(11); //mod channels use 11 bits for 2000 tempo now
+                                    } else if (fromFroupBox) {
+                                        shape.initialSize = bits.read(13); //mod channels use 13 bits for 8000 phase shift delay now
                                     } else {
                                         shape.initialSize = bits.read(9);
                                     }
@@ -6628,8 +6677,10 @@ export class Song {
                                             pinObj.size = bits.read(2) * 2;
                                         } else if (!isModChannel) {
                                             pinObj.size = bits.read(bitsPerNoteSize);
-                                        } else if (fromFroupBox) {
+                                        } else if (fromFroupBox && beforeFive) {
                                             pinObj.size = bits.read(11); //mod channels use 11 bits for 2000 tempo now
+                                        } else if (fromFroupBox) {
+                                            pinObj.size = bits.read(13); //mod channels use 13 bits for 8000 phase shift delay now
                                         } else {
                                             pinObj.size = bits.read(9);
                                         }
@@ -9205,6 +9256,7 @@ class InstrumentState {
         const usesReverb: boolean = effectsIncludeReverb(this.effects);
         const usesPhaser: boolean = effectsIncludePhaser(this.effects);
         const usesCompressor: boolean = effectsIncludeCompressor(this.effects);
+        //const usesPhaseShift: boolean = effectsIncludePhaseShift(this.effects);
         
         let granularChance: number = 0;
         if (usesGranular) { //has to happen before buffer allocation
@@ -14275,6 +14327,7 @@ export class Synth {
         const usesGranular: boolean = effectsIncludeGranular(instrumentState.effects);
         const usesRingModulation: boolean = effectsIncludeRingModulation(instrumentState.effects);
         const usesPhaser: boolean = effectsIncludePhaser(instrumentState.effects);
+        const usesPhaseShift: boolean = effectsIncludePhaseShift(instrumentState.effects);
         const usesInvertWave: boolean = effectsIncludeInvertWave(instrumentState.effects) && instrumentState.invertWave;
         const usesCompressor: boolean = effectsIncludeCompressor(instrumentState.effects);
         let signature: number = 0; if (usesDistortion) signature = signature | 1;
@@ -14287,6 +14340,7 @@ export class Synth {
         signature = signature << 1; if (usesGranular) signature = signature | 1;
         signature = signature << 1; if (usesRingModulation) signature = signature | 1;
         signature = signature << 1; if (usesPhaser) signature = signature | 1;
+        signature = signature << 1; if (usesPhaseShift) signature = signature | 1;
         signature = signature << 1; if (usesInvertWave) signature = signature | 1;
         signature = signature << 1; if (usesCompressor) signature = signature | 1;
         

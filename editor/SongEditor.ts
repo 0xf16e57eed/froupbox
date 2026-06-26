@@ -1,7 +1,7 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
 //import {Layout} from "./Layout";
-import { sampleLoadEvents, SampleLoadedEvent, InstrumentType, EffectType, Config, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeRingModulation, effectsIncludeGranular, DropdownID, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeNoteRange, effectsIncludeCompressor } from "../synth/SynthConfig";
+import { sampleLoadEvents, SampleLoadedEvent, InstrumentType, EffectType, Config, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeRingModulation, effectsIncludeGranular, DropdownID, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeNoteRange, effectsIncludeCompressor, effectsIncludePhaseShift } from "../synth/SynthConfig";
 import { BarScrollBar } from "./BarScrollBar";
 import { BeatsPerBarPrompt } from "./BeatsPerBarPrompt";
 import { Change, ChangeGroup } from "./Change";
@@ -47,7 +47,7 @@ import { CustomThemePrompt } from "./CustomThemePrompt";
 import { CustomPresetsPrompt } from "./CustomPresetsPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar  } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar, ChangePhaseShiftMix, ChangePhaseShiftDelay, ChangePhaseShiftPan, ChangePhaseShiftFeedmix  } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -975,6 +975,23 @@ export class SongEditor {
     private readonly _phaserDisperseBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
     private readonly _phaserDisperseRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", style: "margin-left:10px;", onclick: () => this._openPrompt("phaserDisperse") }, "Disperse:"), this._phaserDisperseBox);
 
+    private readonly _phaseShiftMixSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaseShiftMixRange - 1, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePhaseShiftMix(this.doc, oldValue, newValue), false);
+    private readonly _phaseShiftMixRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaseShiftMix") }, span("Mix:")), this._phaseShiftMixSlider.container);
+    private readonly _phaseShiftDelaySlider: Slider = new LogarithmicSlider(input({ style: "margin: 0;", type: "range", min: Config.phaseShiftDelayMin, max: Config.phaseShiftDelayMax, value: "0", step: "any" }), this.doc, (oldValue: number, newValue: number) => new ChangePhaseShiftDelay(this.doc, oldValue, newValue), false);
+    private readonly _phaseShiftDelayInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "phaseShiftDelayInputBox", type: "number", step: "1", min: Config.phaseShiftDelayMin, max: Config.phaseShiftDelayMax, value: 256 });
+    private readonly _phaseShiftDelayRow: HTMLDivElement = div({ class: "selectRow" }, div({},
+        span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("phaseShiftDelay") }, div(" Delay:")), 
+        div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._phaseShiftDelayInputBox),
+    ), this._phaseShiftDelaySlider.container);
+    private readonly _phaseShiftPanSlider: Slider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.phaseShiftPanMax, value: Config.phaseShiftPanCenter, step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePhaseShiftPan(this.doc, oldValue, newValue), true);
+    private readonly _phaseShiftPanSliderInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "phaseShiftPanSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
+    private readonly _phaseShiftPanSliderRow: HTMLDivElement = div({ class: "selectRow" }, div({},
+        span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("phaseShiftPan") }, "Pan: "),
+        div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._phaseShiftPanSliderInputBox),
+    ), this._phaseShiftPanSlider.container);
+    private readonly _phaseShiftFeedmixSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaseShiftFeedmixRange - 1, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePhaseShiftFeedmix(this.doc, oldValue, newValue), false);
+    private readonly _phaseShiftFeedmixRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaseShiftFeedmix") }, span("Feedmix:")), this._phaseShiftFeedmixSlider.container);
+
     private readonly _pitchedPresetSelect: HTMLSelectElement = buildPresetOptions(false, "pitchPresetSelect");
     private readonly _drumPresetSelect: HTMLSelectElement = buildPresetOptions(true, "drumPresetSelect");
     private readonly _algorithmSelect: HTMLSelectElement = buildOptions(select(), Config.algorithms.map(algorithm => algorithm.name));
@@ -1343,6 +1360,10 @@ export class SongEditor {
         this._phaserStagesRow,
         this._phaserStagesDropdownGroup,
         this._phaserDisperseRow,
+        this._phaseShiftMixRow,
+        this._phaseShiftDelayRow,
+        this._phaseShiftPanSliderRow,
+        this._phaseShiftFeedmixRow,
         this._invertWaveRow,
         this._upperNoteLimitRow,
         this._lowerNoteLimitRow,
@@ -1893,6 +1914,9 @@ export class SongEditor {
         this._phaserLegacyModeBox.addEventListener("input", () => { this.doc.record(new ChangePhaserLegacyMode(this.doc, this._phaserLegacyModeBox.checked)) });
         this._phaserDisperseBox.addEventListener("input", () => { this.doc.record(new ChangePhaserDisperse(this.doc, this._phaserDisperseBox.checked)) });
 
+        this._phaseShiftDelayInputBox.addEventListener("input", () => { this.doc.record(new ChangePhaseShiftDelay(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].phaseShiftDelay, Math.min(Config.phaseShiftDelayMax, Math.max(Config.phaseShiftDelayMin, Math.round(+this._phaseShiftDelayInputBox.value))))) });
+        this._phaseShiftPanSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangePhaseShiftPan(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].phaseShiftPan, Math.min(100.0, Math.max(0.0, Math.round(+this._phaseShiftPanSliderInputBox.value))))) });
+
         this._songDetailsButton.addEventListener("click", this._openDetails);
 
         this._promptContainer.addEventListener("click", (event) => {
@@ -2289,7 +2313,15 @@ export class SongEditor {
             case Config.modulators.dictionary["phaser feedback"].index:
                 return this._phaserFeedbackSlider;    
             case Config.modulators.dictionary["phaser stages"].index:
-                return this._phaserStagesSlider;      
+                return this._phaserStagesSlider;   
+            case Config.modulators.dictionary["phase shift mix"].index:
+                return this._phaseShiftMixSlider;
+            case Config.modulators.dictionary["phase shift delay"].index:
+                return this._phaseShiftDelaySlider;
+            case Config.modulators.dictionary["phase shift pan"].index:
+                return this._phaseShiftPanSlider;    
+            case Config.modulators.dictionary["phase shift feedmix"].index:
+                return this._phaseShiftFeedmixSlider;        
             case Config.modulators.dictionary["granular"].index:
                 return this._granularSlider;
             case Config.modulators.dictionary["grain freq"].index:
@@ -3160,6 +3192,22 @@ export class SongEditor {
                 this._phaserDisperseRow.style.display = "none";
             }
 
+            if (effectsIncludePhaseShift(instrument.effects)) {
+                this._phaseShiftMixRow.style.display = "";
+                this._phaseShiftMixSlider.updateValue(instrument.phaseShiftMix);
+                this._phaseShiftDelayRow.style.display = "";
+                this._phaseShiftDelaySlider.updateValue(instrument.phaseShiftDelay);
+                this._phaseShiftPanSliderRow.style.display = "";
+                this._phaseShiftPanSlider.updateValue(instrument.phaseShiftPan);
+                this._phaseShiftFeedmixRow.style.display = "";
+                this._phaseShiftFeedmixSlider.updateValue(instrument.phaseShiftFeedmix);
+            } else {
+                this._phaseShiftMixRow.style.display = "none";
+                this._phaseShiftDelayRow.style.display = "none";
+                this._phaseShiftPanSliderRow.style.display = "none";
+                this._phaseShiftFeedmixRow.style.display = "none";
+            }
+
             if (effectsIncludeInvertWave(instrument.effects)) {
                 this._invertWaveRow.style.display = "";
             } else {
@@ -3261,6 +3309,8 @@ export class SongEditor {
             this._pwmSliderInputBox.value = instrument.pulseWidth + "";
             this._detuneSliderInputBox.value = (instrument.detune - Config.detuneCenter) + "";
             this._phaserStagesInputBox.value = instrument.phaserStages + "";
+            this._phaseShiftDelayInputBox.value = instrument.phaseShiftDelay + "";
+            this._phaseShiftPanSliderInputBox.value = instrument.phaseShiftPan + "";
             this._rmHzOffsetSliderInputBox.value = (instrument.ringModHzOffset - Config.rmHzOffsetCenter) + "";
             this.echoDelayNum.innerHTML = " (" + (Math.round((instrument.echoDelay + 1) * Config.echoDelayStepTicks / (Config.ticksPerPart * Config.partsPerBeat) * 1000) / 1000) + ")";
             this.ringModHzNum.innerHTML =  calculateRingModHertz(instrument.ringModulationHz / (Config.ringModHzRange - 1), instrument.ringModHzOffset) + " (" + calculateRingModHertz(instrument.ringModulationHz / (Config.ringModHzRange - 1), 200) + ")";
@@ -3509,6 +3559,7 @@ export class SongEditor {
                             anyInstrumentRingMods:     boolean = false,
                             anyInstrumentGranulars:    boolean = false,
                             anyInstrumentPhasers:      boolean = false,
+                            anyInstrumentPhaseShift:   boolean = false,
                             anyInstrumentHasEnvelopes: boolean = false;
                         let allInstrumentPitchShifts:  boolean = true,
                             allInstrumentNoteFilters:  boolean = true,
@@ -3624,6 +3675,12 @@ export class SongEditor {
                             }
                             else {
                                 anyInstrumentPhasers = false;
+                            }
+                            if (effectsIncludePhaseShift(channel.instruments[instrumentIndex].effects)) {
+                                anyInstrumentPhaseShift = true;
+                            }
+                            else {
+                                anyInstrumentPhaseShift = false;
                             }
                             if (effectsIncludeInvertWave(channel.instruments[instrumentIndex].effects)) {
                                 anyInstrumentInvertWave = true;
@@ -3778,6 +3835,13 @@ export class SongEditor {
                             settingList.push("phaser frequency");
                             settingList.push("phaser feedback");
                             settingList.push("phaser stages");
+                        }
+
+                        if (anyInstrumentPhaseShift) {
+                            settingList.push("phase shift mix");
+                            settingList.push("phase shift delay");
+                            settingList.push("phase shift pan");
+                            settingList.push("phase shift feedmix");
                         }
 
                         if (anyInstrumentInvertWave) {
@@ -4392,6 +4456,8 @@ export class SongEditor {
             || document.activeElement == this._pwmSliderInputBox
             || document.activeElement == this._detuneSliderInputBox
             || document.activeElement == this._phaserStagesInputBox
+            || document.activeElement == this._phaseShiftDelayInputBox
+            || document.activeElement == this._phaseShiftPanSliderInputBox
             || document.activeElement == this._instrumentVolumeSliderInputBox
             // advloop addition
             || document.activeElement == this._chipWaveLoopStartStepper
