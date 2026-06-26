@@ -9,28 +9,18 @@ export class CompressorInstance {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_compressorinstance_free(ptr, 0);
     }
-    /**
-     * @returns {Float32Array}
-     */
-    get_buffer() {
-        const ret = wasm.compressorinstance_get_buffer(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @param {number} frame_size
-     */
-    constructor(frame_size) {
-        const ret = wasm.compressorinstance_new(frame_size);
+    constructor() {
+        const ret = wasm.compressorinstance_new();
         this.__wbg_ptr = ret;
         CompressorInstanceFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
-     * @param {number} sample_rate
-     * @param {number} run_length
+     * @param {DspBuffer} buffer
      */
-    process(sample_rate, run_length) {
-        wasm.compressorinstance_process(this.__wbg_ptr, sample_rate, run_length);
+    process(buffer) {
+        _assertClass(buffer, DspBuffer);
+        wasm.compressorinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
     }
     /**
      * @returns {CompressorInstanceParams}
@@ -38,13 +28,6 @@ export class CompressorInstance {
     get end() {
         const ret = wasm.__wbg_get_compressorinstance_end(this.__wbg_ptr);
         return CompressorInstanceParams.__wrap(ret);
-    }
-    /**
-     * @returns {number}
-     */
-    get frame_size() {
-        const ret = wasm.__wbg_get_compressorinstance_frame_size(this.__wbg_ptr);
-        return ret >>> 0;
     }
     /**
      * @returns {CompressorInstanceParams}
@@ -60,12 +43,6 @@ export class CompressorInstance {
         _assertClass(arg0, CompressorInstanceParams);
         var ptr0 = arg0.__destroy_into_raw();
         wasm.__wbg_set_compressorinstance_end(this.__wbg_ptr, ptr0);
-    }
-    /**
-     * @param {number} arg0
-     */
-    set frame_size(arg0) {
-        wasm.__wbg_set_compressorinstance_frame_size(this.__wbg_ptr, arg0);
     }
     /**
      * @param {CompressorInstanceParams} arg0
@@ -320,6 +297,191 @@ export class CompressorParams {
 }
 if (Symbol.dispose) CompressorParams.prototype[Symbol.dispose] = CompressorParams.prototype.free;
 
+export class DspBuffer {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        DspBufferFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_dspbuffer_free(ptr, 0);
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get buffer() {
+        const ret = wasm.dspbuffer_buffer(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} frame_size
+     */
+    constructor(frame_size) {
+        const ret = wasm.dspbuffer_new(frame_size);
+        this.__wbg_ptr = ret;
+        DspBufferFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @returns {number}
+     */
+    get run_length() {
+        const ret = wasm.__wbg_get_dspbuffer_run_length(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get sample_rate() {
+        const ret = wasm.__wbg_get_dspbuffer_sample_rate(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set run_length(arg0) {
+        wasm.__wbg_set_dspbuffer_run_length(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set sample_rate(arg0) {
+        wasm.__wbg_set_dspbuffer_sample_rate(this.__wbg_ptr, arg0);
+    }
+}
+if (Symbol.dispose) DspBuffer.prototype[Symbol.dispose] = DspBuffer.prototype.free;
+
+export class PhaseShiftInstance {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PhaseShiftInstanceFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_phaseshiftinstance_free(ptr, 0);
+    }
+    /**
+     * @returns {PhaseShiftInstanceParams}
+     */
+    get end() {
+        const ret = wasm.__wbg_get_phaseshiftinstance_end(this.__wbg_ptr);
+        return PhaseShiftInstanceParams.__wrap(ret);
+    }
+    /**
+     * @returns {PhaseShiftInstanceParams}
+     */
+    get start() {
+        const ret = wasm.__wbg_get_phaseshiftinstance_start(this.__wbg_ptr);
+        return PhaseShiftInstanceParams.__wrap(ret);
+    }
+    constructor() {
+        const ret = wasm.phaseshiftinstance_new();
+        this.__wbg_ptr = ret;
+        PhaseShiftInstanceFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @param {DspBuffer} buffer
+     */
+    process(buffer) {
+        _assertClass(buffer, DspBuffer);
+        wasm.phaseshiftinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
+    }
+    /**
+     * @param {PhaseShiftInstanceParams} arg0
+     */
+    set end(arg0) {
+        _assertClass(arg0, PhaseShiftInstanceParams);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_phaseshiftinstance_end(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @param {PhaseShiftInstanceParams} arg0
+     */
+    set start(arg0) {
+        _assertClass(arg0, PhaseShiftInstanceParams);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_phaseshiftinstance_start(this.__wbg_ptr, ptr0);
+    }
+}
+if (Symbol.dispose) PhaseShiftInstance.prototype[Symbol.dispose] = PhaseShiftInstance.prototype.free;
+
+export class PhaseShiftInstanceParams {
+    static __wrap(ptr) {
+        const obj = Object.create(PhaseShiftInstanceParams.prototype);
+        obj.__wbg_ptr = ptr;
+        PhaseShiftInstanceParamsFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PhaseShiftInstanceParamsFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_phaseshiftinstanceparams_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get delay() {
+        const ret = wasm.__wbg_get_phaseshiftinstanceparams_delay(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get feedmix() {
+        const ret = wasm.__wbg_get_phaseshiftinstanceparams_feedmix(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get mix() {
+        const ret = wasm.__wbg_get_phaseshiftinstanceparams_mix(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get panning() {
+        const ret = wasm.__wbg_get_phaseshiftinstanceparams_panning(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set delay(arg0) {
+        wasm.__wbg_set_phaseshiftinstanceparams_delay(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set feedmix(arg0) {
+        wasm.__wbg_set_phaseshiftinstanceparams_feedmix(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set mix(arg0) {
+        wasm.__wbg_set_phaseshiftinstanceparams_mix(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set panning(arg0) {
+        wasm.__wbg_set_phaseshiftinstanceparams_panning(this.__wbg_ptr, arg0);
+    }
+}
+if (Symbol.dispose) PhaseShiftInstanceParams.prototype[Symbol.dispose] = PhaseShiftInstanceParams.prototype.free;
+
 export class PhaserInstance {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -536,6 +698,15 @@ const CompressorInstanceParamsFinalization = (typeof FinalizationRegistry === 'u
 const CompressorParamsFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_compressorparams_free(ptr, 1));
+const DspBufferFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_dspbuffer_free(ptr, 1));
+const PhaseShiftInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_phaseshiftinstance_free(ptr, 1));
+const PhaseShiftInstanceParamsFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_phaseshiftinstanceparams_free(ptr, 1));
 const PhaserInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_phaserinstance_free(ptr, 1));

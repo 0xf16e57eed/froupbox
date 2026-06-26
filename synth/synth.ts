@@ -8858,7 +8858,8 @@ class InstrumentState {
     public readonly releasedTones: Deque<Tone> = new Deque<Tone>(); // Tones that are in the process of fading out after the corresponding notes ended.
     public readonly liveInputTones: Deque<Tone> = new Deque<Tone>(); // Tones that are initiated by a source external to the loaded song data.
 
-    // Each instrument has at most one compressor instance. (For now.)
+    public dspBuffer: rustDspTypes.DspBuffer | undefined;
+  
     public compressor: rustDspTypes.CompressorInstance | undefined;
 
     public type: InstrumentType = InstrumentType.chip;
@@ -9005,6 +9006,8 @@ class InstrumentState {
     public phaser: rustDspTypes.PhaserInstance | undefined;
     public phaserStages: number = 0;
     public phaserStagesDelta: number = 0;
+  
+    public phaseShifter: rustDspTypes.PhaseShiftInstance | undefined;
 
     public readonly spectrumWave: SpectrumWaveState = new SpectrumWaveState();
     public readonly harmonicsWave: HarmonicsWaveState = new HarmonicsWaveState();
@@ -9137,6 +9140,10 @@ class InstrumentState {
             this.compressor.free();
             this.compressor = undefined;
         }
+        if (this.dspBuffer) {
+          this.dspBuffer.free();
+          this.dspBuffer = undefined;
+        }
         
         this.volumeScale = 1.0;
         this.aliases = false;
@@ -9256,7 +9263,7 @@ class InstrumentState {
         const usesReverb: boolean = effectsIncludeReverb(this.effects);
         const usesPhaser: boolean = effectsIncludePhaser(this.effects);
         const usesCompressor: boolean = effectsIncludeCompressor(this.effects);
-        //const usesPhaseShift: boolean = effectsIncludePhaseShift(this.effects);
+        const usesPhaseShift: boolean = effectsIncludePhaseShift(this.effects);
         
         let granularChance: number = 0;
         if (usesGranular) { //has to happen before buffer allocation
@@ -9784,6 +9791,13 @@ class InstrumentState {
             this.reverbShelfB1 = Synth.tempFilterStartCoefficients.b[1];
         }
       
+        if (usesCompressor) {
+          if (!this.compressor && rustDsp)
+            this.compressor = new rustDsp.CompressorInstance();
+        } else if(this.compressor) {
+          this.compressor.free();
+          this.compressor = undefined;
+        }
       if (usesCompressor && this.compressor) {
         const { start, end } = this.compressor, params = instrument.compressor;
         
@@ -9821,6 +9835,55 @@ class InstrumentState {
         this.compressor.start = start;
         this.compressor.end = end;
       }
+
+        if (usesPhaseShift) {
+          if (!this.phaseShifter && rustDsp)
+            this.phaseShifter = new rustDsp.PhaseShiftInstance();
+        } else if (this.phaseShifter) {
+          this.phaseShifter.free();
+          this.phaseShifter = undefined;
+        }
+        if (usesPhaseShift && this.phaseShifter)
+        {
+          const start = this.phaseShifter.start, end = this.phaseShifter.end;
+          
+          let usePanStart: number = instrument.phaseShiftPan;
+          let usePanEnd: number = instrument.phaseShiftPan;
+          // Check for pan mods
+          if (synth.isModActive(Config.modulators.dictionary["phase shift pan"].index, channelIndex, instrumentIndex)) {
+              usePanStart = synth.getModValue(Config.modulators.dictionary["phase shift pan"].index, channelIndex, instrumentIndex, false);
+              usePanEnd = synth.getModValue(Config.modulators.dictionary["phase shift pan"].index, channelIndex, instrumentIndex, true);
+          }
+
+          const panEnvelopeStart: number = envelopeStarts[EnvelopeComputeIndex.phaseShiftPan] * 2.0 - 1.0;
+          const panEnvelopeEnd: number = envelopeEnds[EnvelopeComputeIndex.phaseShiftPan] * 2.0 - 1.0;
+
+          start.panning = Math.max(-1.0, Math.min(1.0, (usePanStart - Config.panCenter) / Config.panCenter * panEnvelopeStart));
+          end.panning = Math.max(-1.0, Math.min(1.0, (usePanEnd - Config.panCenter) / Config.panCenter * panEnvelopeEnd));
+
+          function getModifiedValues(modulatorName: string, envelope: EnvelopeComputeIndex, defaultValue: number): [number, number] {
+            const modulatorIdx = Config.modulators.dictionary[modulatorName].index;
+
+            let start = defaultValue, end = defaultValue;
+            if (synth.isModActive(modulatorIdx, channelIndex, instrumentIndex)) {
+              start = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, false);
+              end = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, true);
+            }
+            return [
+              start * envelopeStarts[envelope],
+              end * envelopeEnds[envelope],
+            ];
+          }
+          
+          [start.delay, end.delay] = getModifiedValues("phase shift delay", EnvelopeComputeIndex.phaseShiftDelay, instrument.phaseShiftDelay);
+          [start.mix, end.mix] = getModifiedValues("phase shift mix", EnvelopeComputeIndex.phaseShiftMix, instrument.phaseShiftMix);
+          [start.feedmix, end.feedmix] = getModifiedValues("phase shift feedmix", EnvelopeComputeIndex.phaseShiftFeedmix, instrument.phaseShiftFeedmix);
+          
+          this.phaseShifter.start = start;
+          this.phaseShifter.end = end;
+          
+        }
+      
 
         if (this.tonesAddedInThisTick) {
             this.attentuationProgress = 0.0;
@@ -14343,22 +14406,32 @@ export class Synth {
         signature = signature << 1; if (usesPhaseShift) signature = signature | 1;
         signature = signature << 1; if (usesInvertWave) signature = signature | 1;
         signature = signature << 1; if (usesCompressor) signature = signature | 1;
-        
-        if (usesCompressor && rustDsp && instrumentState.compressor === undefined) {
-          // we don't know the buffer size beforehand, so just set it to the max possible (which is currently 4096).
-          instrumentState.compressor = new rustDsp.CompressorInstance(4096);
+        signature = signature << 1; if (usesPhaseShift) signature = signature | 1;
+
+        const usesRustDsp = usesCompressor || usesPhaseShift;
+        if (usesRustDsp) {
+          if (rustDsp && !instrumentState.dspBuffer)
+            instrumentState.dspBuffer = new rustDsp.DspBuffer(4096); // max frame size is currently 4096
+        } else if (instrumentState.dspBuffer) {
+          instrumentState.dspBuffer.free();
+          instrumentState.dspBuffer = undefined;
         }
+        
         let effectsFunction: Function = Synth.effectsFunctionCache[signature];
         if (effectsFunction == undefined) {
           let effectsSource: string = "return (synth, outputDataL, outputDataR, bufferIndex, runLength, instrumentState) => {";
 
-          if (usesCompressor) {
-            effectsSource += `
-          const compressor = instrumentState.compressor;
-          const compBuf = compressor.get_buffer();
-          const compBufL = compBuf.subarray(0, runLength), compBufR = compBuf.subarray(compBuf.length / 2, compBuf.length / 2 + runLength);
-          `
+          effectsSource += `
+          const usesRustDsp = instrumentState.dspBuffer !== undefined;
+          let dspBufL, dspBufR;
+          if(usesRustDsp) {
+            const arr = instrumentState.dspBuffer.buffer;
+            dspBufL = arr.subarray(0, runLength);
+            dspBufR = arr.subarray(arr.length / 2, arr.length / 2 + runLength);
+            instrumentState.dspBuffer.run_length = runLength;
+            instrumentState.dspBuffer.sample_rate = synth.samplesPerSecond;
           }
+          `;
 
             const usesDelays: boolean = usesChorus || usesReverb || usesEcho || usesGranular;
 
@@ -14938,18 +15011,15 @@ export class Synth {
 					reverb += reverbDelta;`
             }
 
-          if (usesCompressor) {
-            effectsSource += `
-  					compBufL[sampleIndex - bufferIndex] = sampleL;
-  					compBufR[sampleIndex - bufferIndex] = sampleR;
-  `;
+          effectsSource += `
+          if (usesRustDsp) {
+  					dspBufL[sampleIndex - bufferIndex] = sampleL;
+  					dspBufR[sampleIndex - bufferIndex] = sampleR;
           } else {
-            effectsSource += `
             outputDataL[sampleIndex] += sampleL * mixVolume;
   					outputDataR[sampleIndex] += sampleR * mixVolume;
   					mixVolume += mixVolumeDelta;
-       `;
-          }
+          }`;
           
             if (usesDelays) {
                 effectsSource += `
@@ -14960,18 +15030,28 @@ export class Synth {
           effectsSource += `
 				}
 				`;
-        if (usesCompressor) {
-          effectsSource += `
-          compressor.process(synth.samplesPerSecond, runLength);
-          
-          for (let i = 0; i < runLength; i++) {
-            outputDataL[bufferIndex + i] += compBufL[i] * mixVolume;
-            outputDataR[bufferIndex + i] += compBufR[i] * mixVolume;
-            mixVolume += mixVolumeDelta;
-          }`
-        }
 
-				effectsSource += ` instrumentState.mixVolume = mixVolume;
+        if (usesRustDsp) {
+          effectsSource += "if(usesRustDsp) {"
+          
+          if (usesPhaseShift) {
+            effectsSource += "instrumentState.phaseShifter?.process(instrumentState.dspBuffer);";
+          }
+          if (usesCompressor) {
+            effectsSource += "instrumentState.compressor?.process(instrumentState.dspBuffer);";
+          }
+
+          effectsSource += `
+            for (let i = 0; i < runLength; i++) {
+              outputDataL[bufferIndex + i] += dspBufL[i] * mixVolume;
+              outputDataR[bufferIndex + i] += dspBufR[i] * mixVolume;
+              mixVolume += mixVolumeDelta;
+            }
+          }
+          `;
+        }
+				
+        effectsSource += ` instrumentState.mixVolume = mixVolume;
 				instrumentState.eqFilterVolume = eqFilterVolume;
 				
 				// Avoid persistent denormal or NaN values in the delay buffers and filter history.

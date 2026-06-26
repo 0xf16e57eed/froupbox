@@ -1,12 +1,13 @@
 //! Compressor algorithm taken from cy!box, which is based on CALF's compressor.
 //! https://gitlab.com/cyphers-stuff/cybox/-/blob/31c2eda59748f321a09141b41552d8e65a755dfe/dsp/beepbox/src/effect/compressor.rs
 
-use std::{f32, iter::zip};
+use std::f32;
 
 use wasm_bindgen::prelude::*;
 
 use crate::{
     SamplePair,
+    buffer::DspBuffer,
     compressor::comp::{Compressor, CompressorParams},
     filters::{Crossover, CrossoverCoefficients, to_w0},
     util,
@@ -44,7 +45,6 @@ impl CompressorInstanceParams {
 
 #[wasm_bindgen]
 struct CompressorInstance {
-    pub frame_size: usize,
     pub start: CompressorInstanceParams,
     pub end: CompressorInstanceParams,
 
@@ -54,16 +54,13 @@ struct CompressorInstance {
     lo: Compressor,
     mid: Compressor,
     hi: Compressor,
-
-    buffer: Box<[f32]>,
 }
 
 #[wasm_bindgen]
 impl CompressorInstance {
     #[wasm_bindgen(constructor)]
-    pub fn new(frame_size: usize) -> Self {
+    pub fn new() -> Self {
         Self {
-            frame_size,
             split_lo_mid: Default::default(),
             split_mid_hi: Default::default(),
 
@@ -73,32 +70,22 @@ impl CompressorInstance {
 
             end: Default::default(),
             start: Default::default(),
-
-            buffer: vec![0.0; frame_size * 2].into_boxed_slice(),
         }
     }
 
     #[wasm_bindgen]
-    pub fn get_buffer(&mut self) -> js_sys::Float32Array {
-        unsafe { js_sys::Float32Array::view(&self.buffer) }
-    }
-
-    #[wasm_bindgen]
-    pub fn process(&mut self, sample_rate: f32, run_length: usize) {
+    pub fn process(&mut self, buffer: &mut DspBuffer) {
         let Self {
-            frame_size,
-            ref start,
-            ref end,
-            ..
+            ref start, ref end, ..
         } = *self;
-        let run_length_f32 = run_length as f32;
+
+        let run_length_f32 = buffer.run_length as f32;
+        let sample_rate = buffer.sample_rate;
 
         if start.freq_lo_mid < 10.0 {
             // compressor hasn't been initialized yet; ignore
             return;
         }
-
-        let (left, right) = self.buffer.split_at_mut(frame_size);
 
         let coef_lo_mid = CrossoverCoefficients::new(to_w0(start.freq_lo_mid, sample_rate));
         let coef_mid_hi = CrossoverCoefficients::new(to_w0(start.freq_mid_hi, sample_rate));
@@ -112,20 +99,20 @@ impl CompressorInstance {
         let mut mid_mult = util::interpolate(run_length_f32, start.mid_gain, end.mid_gain);
         let mut hi_mult = util::interpolate(run_length_f32, start.hi_gain, end.hi_gain);
 
-        for (l, r) in zip(&mut left[..run_length], &mut right[..run_length]) {
-            let [mut lo, mut mid, mut hi] = [SamplePair { l: *l, r: *r }; 3];
+        // for (l, r) in buffer.as_zipped() {
+        //     let [mut lo, mut mid, mut hi] = [SamplePair { l: *l, r: *r }; 3];
 
-            self.split_mid_hi.run(&coef_mid_hi, &mut mid, &mut hi);
-            self.split_lo_mid.run(&coef_lo_mid, &mut lo, &mut mid);
+        //     self.split_mid_hi.run(&coef_mid_hi, &mut mid, &mut hi);
+        //     self.split_lo_mid.run(&coef_lo_mid, &mut lo, &mut mid);
 
-            let cur_comp_params = comp_params.next();
+        //     let cur_comp_params = comp_params.next();
 
-            let sample = self.lo.process(&cur_comp_params, lo) * lo_mult.next()
-                + self.mid.process(&cur_comp_params, mid) * mid_mult.next()
-                + self.hi.process(&cur_comp_params, hi) * hi_mult.next();
+        //     let sample = self.lo.process(&cur_comp_params, lo) * lo_mult.next()
+        //         + self.mid.process(&cur_comp_params, mid) * mid_mult.next()
+        //         + self.hi.process(&cur_comp_params, hi) * hi_mult.next();
 
-            *l = sample.l.clamp(-1.0, 1.0);
-            *r = sample.r.clamp(-1.0, 1.0);
-        }
+        //     *l = sample.l.clamp(-1.0, 1.0);
+        //     *r = sample.r.clamp(-1.0, 1.0);
+        // }
     }
 }

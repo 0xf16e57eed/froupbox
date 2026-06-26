@@ -4,11 +4,9 @@
 export class CompressorInstance {
     free(): void;
     [Symbol.dispose](): void;
-    get_buffer(): Float32Array;
-    constructor(frame_size: number);
-    process(sample_rate: number, run_length: number): void;
+    constructor();
+    process(buffer: DspBuffer): void;
     end: CompressorInstanceParams;
-    frame_size: number;
     start: CompressorInstanceParams;
 }
 
@@ -38,6 +36,34 @@ export class CompressorParams {
     ratio_down: number;
     ratio_up: number;
     threshold: number;
+}
+
+export class DspBuffer {
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor(frame_size: number);
+    readonly buffer: Float32Array;
+    run_length: number;
+    sample_rate: number;
+}
+
+export class PhaseShiftInstance {
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor();
+    process(buffer: DspBuffer): void;
+    end: PhaseShiftInstanceParams;
+    start: PhaseShiftInstanceParams;
+}
+
+export class PhaseShiftInstanceParams {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    delay: number;
+    feedmix: number;
+    mix: number;
+    panning: number;
 }
 
 export class PhaserInstance {

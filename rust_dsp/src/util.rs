@@ -1,6 +1,6 @@
 use std::simd::f32x4;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Interpolator<T: Zippable> {
     val: T,
     diff: T,
