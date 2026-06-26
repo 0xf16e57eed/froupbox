@@ -2207,7 +2207,7 @@ export class Instrument {
             instrumentObject["phaseShiftMix"] =  Math.round(100 * this.phaseShiftMix/(Config.phaseShiftMixRange - 1));
             instrumentObject["phaseShiftDelay"] =  this.phaseShiftDelay;
             instrumentObject["phaseShiftPan"] =  Math.round(100 * (this.phaseShiftPan - Config.phaseShiftPanCenter) / Config.phaseShiftPanCenter);
-            instrumentObject["phaseShiftFeedmix"] = Math.round(100 * this.phaseShiftMix/(Config.phaseShiftFeedmixRange - 1));
+            instrumentObject["phaseShiftFeedmix"] = Math.round(100 * this.phaseShiftFeedmix/(Config.phaseShiftFeedmixRange - 1));
         }
         if (effectsIncludeDistortion(this.effects)) {
             instrumentObject["distortion"] = Math.round(100 * this.distortion / (Config.distortionRange - 1));

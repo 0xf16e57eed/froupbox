@@ -336,6 +336,8 @@ export class EditorConfig {
     }
 
     public static instrumentToPreset(instrument: InstrumentType): Preset | null {
-        return EditorConfig.presetCategories[0].presets.dictionary?.[TypePresets?.[instrument]];
+        // can't use .dictionary here b/c custom presets break it; just loop through all presets
+        // return EditorConfig.presetCategories[0].presets.dictionary?.[TypePresets?.[instrument]];
+        return EditorConfig.presetCategories[0].presets.find(preset => preset.name === TypePresets?.[instrument]) ?? null;
     }
 }

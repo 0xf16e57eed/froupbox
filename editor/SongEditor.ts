@@ -94,8 +94,7 @@ function buildPresetOptions(isNoise: boolean, idSet: string): HTMLSelectElement 
         menu.appendChild(option({ value: InstrumentType.pwm }, EditorConfig.valueToPreset(InstrumentType.pwm)!.name));
         menu.appendChild(option({ value: InstrumentType.supersaw }, EditorConfig.valueToPreset(InstrumentType.supersaw)!.name));
         menu.appendChild(option({ value: InstrumentType.fm }, EditorConfig.valueToPreset(InstrumentType.fm)!.name));
-        //pastenkopie - this is a temporary fix to get stuff working, it will need to be fixed (TODO)
-        if (!localStorage.getItem("customPresetsCompiled")) menu.appendChild(option({ value: InstrumentType.fm6op }, EditorConfig.instrumentToPreset(InstrumentType.fm6op)!.name));
+        menu.appendChild(option({ value: InstrumentType.fm6op }, EditorConfig.instrumentToPreset(InstrumentType.fm6op)!.name));
         menu.appendChild(option({ value: InstrumentType.harmonics }, EditorConfig.valueToPreset(InstrumentType.harmonics)!.name));
         menu.appendChild(option({ value: InstrumentType.pickedString }, EditorConfig.valueToPreset(InstrumentType.pickedString)!.name));
         menu.appendChild(option({ value: InstrumentType.spectrum }, EditorConfig.valueToPreset(InstrumentType.spectrum)!.name));
