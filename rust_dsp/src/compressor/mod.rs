@@ -99,20 +99,20 @@ impl CompressorInstance {
         let mut mid_mult = util::interpolate(run_length_f32, start.mid_gain, end.mid_gain);
         let mut hi_mult = util::interpolate(run_length_f32, start.hi_gain, end.hi_gain);
 
-        // for (l, r) in buffer.as_zipped() {
-        //     let [mut lo, mut mid, mut hi] = [SamplePair { l: *l, r: *r }; 3];
+        for (l, r) in buffer.as_zipped() {
+            let [mut lo, mut mid, mut hi] = [SamplePair { l: *l, r: *r }; 3];
 
-        //     self.split_mid_hi.run(&coef_mid_hi, &mut mid, &mut hi);
-        //     self.split_lo_mid.run(&coef_lo_mid, &mut lo, &mut mid);
+            self.split_mid_hi.run(&coef_mid_hi, &mut mid, &mut hi);
+            self.split_lo_mid.run(&coef_lo_mid, &mut lo, &mut mid);
 
-        //     let cur_comp_params = comp_params.next();
+            let cur_comp_params = comp_params.next();
 
-        //     let sample = self.lo.process(&cur_comp_params, lo) * lo_mult.next()
-        //         + self.mid.process(&cur_comp_params, mid) * mid_mult.next()
-        //         + self.hi.process(&cur_comp_params, hi) * hi_mult.next();
+            let sample = self.lo.process(&cur_comp_params, lo) * lo_mult.next()
+                + self.mid.process(&cur_comp_params, mid) * mid_mult.next()
+                + self.hi.process(&cur_comp_params, hi) * hi_mult.next();
 
-        //     *l = sample.l.clamp(-1.0, 1.0);
-        //     *r = sample.r.clamp(-1.0, 1.0);
-        // }
+            *l = sample.l.clamp(-1.0, 1.0);
+            *r = sample.r.clamp(-1.0, 1.0);
+        }
     }
 }
