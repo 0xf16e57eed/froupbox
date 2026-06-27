@@ -10,9 +10,9 @@
 	"icon": "path.join(__dirname, 'icon.ico')",
 	"scripts": {
 		"build": "rsbuild build",
-    	"dev": "rsbuild dev",
-    	"preview": "rsbuild preview",
-    	"build-all": "npm run build-synth && npm run build-player && npm run build-editor",
+		"dev": "rsbuild dev",
+		"preview": "rsbuild preview",
+		"build-all": "npm run build-synth && npm run build-player && npm run build-editor",
 		"build-synth": "bash ./scripts/compile_beepbox_synth.sh",
 		"build-player": "bash ./scripts/compile_beepbox_player.sh",
 		"build-editor": "bash ./scripts/compile_beepbox_editor.sh",
@@ -39,7 +39,7 @@
 		"typescript": "^5.4.5"
 	},
 	"dependencies": {
-		"@rsbuild/core": "^2.0.3",
+		"@rsbuild/core": "^2.0.15",
 		"@types/jquery": "^3.5.30",
 		"@types/select2": "^4.0.63",
 		"electron": "^29.1.1",
@@ -47,8 +47,8 @@
 		"esbuild": "^0.25.5",
 		"express": "^4.21.2",
 		"imperative-html": "^0.1.1",
-		"opus-encdec": "^0.1.1",
 		"js-xxhash": "^4.0.0",
+		"opus-encdec": "^0.1.1",
 		"select2": "^4.0.13"
 	}
 }

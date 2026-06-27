@@ -9952,6 +9952,11 @@ class InstrumentState {
             if (usesEcho) totalDelaySamples += this.echoDelayLineL!.length;
             if (usesReverb) totalDelaySamples += Config.reverbDelayBufferSize;
             if (usesGranular) totalDelaySamples += this.granularMaximumDelayTimeInSeconds;
+            if (usesPhaseShift) {
+              // copied from rust_dsp/src/phase_shift/mod.rs
+              let delay = instrument.phaseShiftDelay * 0.000024414063 * synth.samplesPerSecond;
+              totalDelaySamples += (delay | 0) + 328;
+            }
 
             this.flushedSamples += roundedSamplesPerTick;
             if (this.flushedSamples >= totalDelaySamples) {
