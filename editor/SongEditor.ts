@@ -974,7 +974,7 @@ export class SongEditor {
     private readonly _phaserDisperseBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
     private readonly _phaserDisperseRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", style: "margin-left:10px;", onclick: () => this._openPrompt("phaserDisperse") }, "Disperse:"), this._phaserDisperseBox);
 
-    private readonly _flangerMixSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerMixRange - 1, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeFlangerMix(this.doc, oldValue, newValue), false);
+    private readonly _flangerMixSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerMixRange - 1, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeFlangerMix(this.doc, oldValue, newValue), true);
     private readonly _flangerMixRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("flangerMix") }, span("Mix:")), this._flangerMixSlider.container);
     private readonly _flangerDelaySlider: Slider = new LogarithmicSlider(input({ style: "margin: 0;", type: "range", min: Config.flangerDelayMin, max: Config.flangerDelayMax, value: "0", step: "any" }), this.doc, (oldValue: number, newValue: number) => new ChangeFlangerDelay(this.doc, oldValue, newValue), false);
     private readonly _flangerDelayInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "flangerDelayInputBox", type: "number", step: "1", min: Config.flangerDelayMin, max: Config.flangerDelayMax, value: 256 });
