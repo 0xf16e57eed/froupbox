@@ -717,7 +717,8 @@ export class TipPrompt implements Prompt {
 			case "flangerMix": {
 				message = div(
 					h2("Flanger Mix"),
-					p(`This setting controls the volume of the phase shifted wave and the original wave. The higher it is, the more phase shifted wave and original wave.`),
+					p(`This setting controls the volume of the original wave and the phase shifted wave.`),
+					p(`In the middle of the slider, both waves are equal volume. When the slider is all the way to the left only the original wave plays, and when the slider is all the way to the right, only the phase shifted wave plays.`),
 				);
 			} break;
 			case "flangerDelay": {
