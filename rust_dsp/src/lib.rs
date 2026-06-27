@@ -4,7 +4,7 @@ mod buffer;
 mod compressor;
 mod delay_line;
 mod filters;
-mod phase_shift;
+mod flanger;
 mod phaser;
 mod sample;
 mod util;

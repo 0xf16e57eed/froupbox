@@ -2676,21 +2676,7 @@ export class Instrument {
         if (instrumentObject["flangerFeedmix"] != undefined) {
             this.flangerFeedmix = clamp(0, Config.flangerFeedmixRange, Math.round((Config.flangerFeedmixRange - 1) * (instrumentObject["flangerFeedmix"] | 0) / 100));
         }
-
-        //keep these for when flanger used to be called phase shift
-        if (instrumentObject["phaseShiftMix"] != undefined) {
-            this.flangerMix = clamp(0, Config.flangerMixRange, Math.round((Config.flangerMixRange - 1) * (instrumentObject["flangerMix"] | 0) / 100));
-        }
-        if (instrumentObject["phaseShiftDelay"] != undefined) {
-            this.flangerDelay = clamp(0, Config.flangerDelayMax + 1, instrumentObject["flangerDelay"]);
-        }
-        if (instrumentObject["phaseShiftPan"] != undefined) {
-            this.flangerPan = clamp(0, Config.flangerPanMax + 1, Math.round(Config.flangerPanCenter + (instrumentObject["flangerPan"] | 0) * Config.flangerPanCenter / 100));
-        }
-        if (instrumentObject["phaseShiftFeedmix"] != undefined) {
-            this.flangerFeedmix = clamp(0, Config.flangerFeedmixRange, Math.round((Config.flangerFeedmixRange - 1) * (instrumentObject["flangerFeedmix"] | 0) / 100));
-        }
-
+        
 
         if (instrumentObject["distortion"] != undefined) {
             this.distortion = clamp(0, Config.distortionRange, Math.round((Config.distortionRange - 1) * (instrumentObject["distortion"] | 0) / 100));
@@ -9971,7 +9957,7 @@ class InstrumentState {
             if (usesReverb) totalDelaySamples += Config.reverbDelayBufferSize;
             if (usesGranular) totalDelaySamples += this.granularMaximumDelayTimeInSeconds;
             if (usesFlanger) {
-              // copied from rust_dsp/src/phase_shift/mod.rs
+              // copied from rust_dsp/src/flanger/mod.rs
               let delay = instrument.flangerDelay * 0.000024414063 * synth.samplesPerSecond;
               totalDelaySamples += (delay | 0) + 328;
             }
