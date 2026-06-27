@@ -9140,6 +9140,10 @@ class InstrumentState {
             this.compressor.free();
             this.compressor = undefined;
         }
+        if (this.phaseShifter) {
+          this.phaseShifter.free();
+          this.phaseShifter = undefined;
+        }
         if (this.dspBuffer) {
           this.dspBuffer.free();
           this.dspBuffer = undefined;
