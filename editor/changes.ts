@@ -2891,40 +2891,40 @@ export class ChangePhaserDisperse extends Change {
     }
 }
 
-export class ChangePhaseShiftMix extends ChangeInstrumentSlider {
+export class ChangeFlangerMix extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super(doc);
-        this._instrument.phaseShiftMix = newValue;
+        this._instrument.flangerMix = newValue;
         // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
     }
 }
 
-export class ChangePhaseShiftDelay extends ChangeInstrumentSlider {
+export class ChangeFlangerDelay extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super(doc);
-        this._instrument.phaseShiftDelay = newValue;
+        this._instrument.flangerDelay = newValue;
         // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
     }
 }
 
-export class ChangePhaseShiftPan extends ChangeInstrumentSlider {
+export class ChangeFlangerPan extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super(doc);
-        this._instrument.phaseShiftPan = newValue;
+        this._instrument.flangerPan = newValue;
         // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
     }
 }
 
-export class ChangePhaseShiftFeedmix extends ChangeInstrumentSlider {
+export class ChangeFlangerFeedmix extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super(doc);
-        this._instrument.phaseShiftFeedmix = newValue;
+        this._instrument.flangerFeedmix = newValue;
         // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();

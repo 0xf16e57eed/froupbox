@@ -12,25 +12,25 @@ use crate::{
 
 #[wasm_bindgen]
 #[derive(Default, Clone, Copy)]
-pub struct PhaseShiftInstanceParams {
+pub struct FlangerInstanceParams {
     pub delay: f32,
     pub panning: f32,
     pub mix: f32,
     pub feedmix: f32,
 }
-impl PhaseShiftInstanceParams {
-    fn split(&self, sample_rate: f32) -> (PhaseShifterParams, PhaseShifterParams) {
+impl FlangerInstanceParams {
+    fn split(&self, sample_rate: f32) -> (FlangerParams, FlangerParams) {
         let delay = self.delay * 0.000024414063 * sample_rate;
         let panning = self.panning * 0.5 + 0.5;
         let mix = self.mix * (1.0 / 63.0);
         let feedmix = self.feedmix * (1.0 / 64.0);
         (
-            PhaseShifterParams {
+            FlangerParams {
                 delay: delay * (1.0 - panning),
                 mix,
                 feedmix,
             },
-            PhaseShifterParams {
+            FlangerParams {
                 delay: delay * panning,
                 mix,
                 feedmix,
@@ -41,15 +41,15 @@ impl PhaseShiftInstanceParams {
 
 #[wasm_bindgen]
 #[derive(Default)]
-pub struct PhaseShiftInstance {
-    pub start: PhaseShiftInstanceParams,
-    pub end: PhaseShiftInstanceParams,
+pub struct FlangerInstance {
+    pub start: FlangerInstanceParams,
+    pub end: FlangerInstanceParams,
 
-    shifter_l: PhaseShifter,
-    shifter_r: PhaseShifter,
+    shifter_l: Flanger,
+    shifter_r: Flanger,
 }
 #[wasm_bindgen]
-impl PhaseShiftInstance {
+impl FlangerInstance {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         Default::default()
@@ -73,12 +73,12 @@ impl PhaseShiftInstance {
     }
 }
 
-struct PhaseShifterParams {
+struct FlangerParams {
     delay: f32,
     mix: f32,
     feedmix: f32,
 }
-impl Zippable for PhaseShifterParams {
+impl Zippable for FlangerParams {
     fn zip(&self, other: &Self, f: impl Fn(f32, f32) -> f32) -> Self {
         Self {
             delay: f(self.delay, other.delay),
@@ -88,12 +88,12 @@ impl Zippable for PhaseShifterParams {
     }
 }
 
-/// mono phase shifter using linear interpolation
-struct PhaseShifter {
+/// mono flanger using linear interpolation
+struct Flanger {
     // not actually a SamplePair. left side is delayed input, right side is delayed output.
     delay_line: DelayLine<SamplePair>,
 }
-impl Default for PhaseShifter {
+impl Default for Flanger {
     fn default() -> Self {
         Self {
             // 200ms at 48kHz
@@ -101,8 +101,8 @@ impl Default for PhaseShifter {
         }
     }
 }
-impl PhaseShifter {
-    fn process(&mut self, buf: &mut [f32], mut interpolator: Interpolator<PhaseShifterParams>) {
+impl Flanger {
+    fn process(&mut self, buf: &mut [f32], mut interpolator: Interpolator<FlangerParams>) {
         for sample in buf {
             let params = interpolator.next();
             let SamplePair { l: dx, r: dy } = self.delay_line.compute(params.delay);

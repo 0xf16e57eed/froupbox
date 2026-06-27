@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludePhaseShift } from "./SynthConfig";
+import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludeFlanger } from "./SynthConfig";
 import { Preset, EditorConfig } from "../editor/EditorConfig";
 import { scaleElementsByFactor, inverseRealFourierTransform } from "./FFT";
 import { Deque } from "./Deque";
@@ -1719,10 +1719,10 @@ export class Instrument {
     public phaserDisperse: boolean = false;
     public phaserLegacyMode: boolean = false;
     
-    public phaseShiftMix: number = Config.phaseShiftMixRange - 1;
-    public phaseShiftDelay: number = 256;
-    public phaseShiftPan: number = Config.phaseShiftPanCenter;
-    public phaseShiftFeedmix: number = 0;
+    public flangerMix: number = 32;
+    public flangerDelay: number = 256;
+    public flangerPan: number = Config.flangerPanCenter;
+    public flangerFeedmix: number = 0;
 
     public invertWave: boolean = false;
 
@@ -1859,10 +1859,10 @@ export class Instrument {
         this.phaserStages = 2;
         this.phaserDisperse = false;
 
-        this.phaseShiftMix = Config.phaseShiftMixRange - 1;
-        this.phaseShiftDelay = 256;
-        this.phaseShiftPan = Config.phaseShiftPanCenter;
-        this.phaseShiftFeedmix = 0;
+        this.flangerMix = 32;
+        this.flangerDelay = 256;
+        this.flangerPan = Config.flangerPanCenter;
+        this.flangerFeedmix = 0;
 
         this.invertWave = false;
         
@@ -2203,11 +2203,11 @@ export class Instrument {
             instrumentObject["phaserDisperse"] = this.phaserDisperse;
             instrumentObject["phaserLegacyMode"] = this.phaserLegacyMode;
         }
-        if (effectsIncludePhaseShift(this.effects)) {
-            instrumentObject["phaseShiftMix"] =  Math.round(100 * this.phaseShiftMix/(Config.phaseShiftMixRange - 1));
-            instrumentObject["phaseShiftDelay"] =  this.phaseShiftDelay;
-            instrumentObject["phaseShiftPan"] =  Math.round(100 * (this.phaseShiftPan - Config.phaseShiftPanCenter) / Config.phaseShiftPanCenter);
-            instrumentObject["phaseShiftFeedmix"] = Math.round(100 * this.phaseShiftFeedmix/(Config.phaseShiftFeedmixRange - 1));
+        if (effectsIncludeFlanger(this.effects)) {
+            instrumentObject["flangerMix"] =  Math.round(100 * this.flangerMix/(Config.flangerMixRange - 1));
+            instrumentObject["flangerDelay"] =  this.flangerDelay;
+            instrumentObject["flangerPan"] =  Math.round(100 * (this.flangerPan - Config.flangerPanCenter) / Config.flangerPanCenter);
+            instrumentObject["flangerFeedmix"] = Math.round(100 * this.flangerFeedmix/(Config.flangerFeedmixRange - 1));
         }
         if (effectsIncludeDistortion(this.effects)) {
             instrumentObject["distortion"] = Math.round(100 * this.distortion / (Config.distortionRange - 1));
@@ -2664,17 +2664,31 @@ export class Instrument {
         this.phaserLegacyMode = instrumentObject["phaserMix"] != undefined && instrumentObject["phaserLegacyMode"] !== false;
 
 
+        if (instrumentObject["flangerMix"] != undefined) {
+            this.flangerMix = clamp(0, Config.flangerMixRange, Math.round((Config.flangerMixRange - 1) * (instrumentObject["flangerMix"] | 0) / 100));
+        }
+        if (instrumentObject["flangerDelay"] != undefined) {
+            this.flangerDelay = clamp(0, Config.flangerDelayMax + 1, instrumentObject["flangerDelay"]);
+        }
+        if (instrumentObject["flangerPan"] != undefined) {
+            this.flangerPan = clamp(0, Config.flangerPanMax + 1, Math.round(Config.flangerPanCenter + (instrumentObject["flangerPan"] | 0) * Config.flangerPanCenter / 100));
+        }
+        if (instrumentObject["flangerFeedmix"] != undefined) {
+            this.flangerFeedmix = clamp(0, Config.flangerFeedmixRange, Math.round((Config.flangerFeedmixRange - 1) * (instrumentObject["flangerFeedmix"] | 0) / 100));
+        }
+
+        //keep these for when flanger used to be called phase shift
         if (instrumentObject["phaseShiftMix"] != undefined) {
-            this.phaseShiftMix = clamp(0, Config.phaseShiftMixRange, Math.round((Config.phaseShiftMixRange - 1) * (instrumentObject["phaseShiftMix"] | 0) / 100));
+            this.flangerMix = clamp(0, Config.flangerMixRange, Math.round((Config.flangerMixRange - 1) * (instrumentObject["flangerMix"] | 0) / 100));
         }
         if (instrumentObject["phaseShiftDelay"] != undefined) {
-            this.phaseShiftDelay = clamp(0, Config.phaseShiftDelayMax + 1, instrumentObject["phaseShiftDelay"]);
+            this.flangerDelay = clamp(0, Config.flangerDelayMax + 1, instrumentObject["flangerDelay"]);
         }
         if (instrumentObject["phaseShiftPan"] != undefined) {
-            this.phaseShiftPan = clamp(0, Config.phaseShiftPanMax + 1, Math.round(Config.phaseShiftPanCenter + (instrumentObject["phaseShiftPan"] | 0) * Config.phaseShiftPanCenter / 100));
+            this.flangerPan = clamp(0, Config.flangerPanMax + 1, Math.round(Config.flangerPanCenter + (instrumentObject["flangerPan"] | 0) * Config.flangerPanCenter / 100));
         }
         if (instrumentObject["phaseShiftFeedmix"] != undefined) {
-            this.phaseShiftFeedmix = clamp(0, Config.phaseShiftFeedmixRange, Math.round((Config.phaseShiftFeedmixRange - 1) * (instrumentObject["phaseShiftFeedmix"] | 0) / 100));
+            this.flangerFeedmix = clamp(0, Config.flangerFeedmixRange, Math.round((Config.flangerFeedmixRange - 1) * (instrumentObject["flangerFeedmix"] | 0) / 100));
         }
 
 
@@ -3993,14 +4007,14 @@ export class Song {
                     buffer.push(base64IntToCharCode[+instrument.phaserDisperse]);
                 }
 
-                if (effectsIncludePhaseShift(instrument.effects)) {
-                    buffer.push(base64IntToCharCode[instrument.phaseShiftMix]);
-                    buffer.push(base64IntToCharCode[instrument.phaseShiftDelay >> 12]);
-                    buffer.push(base64IntToCharCode[instrument.phaseShiftDelay >> 6 & 0x3f]);
-                    buffer.push(base64IntToCharCode[instrument.phaseShiftDelay & 0x3f]);
-                    buffer.push(base64IntToCharCode[instrument.phaseShiftPan >> 6]);
-                    buffer.push(base64IntToCharCode[instrument.phaseShiftPan & 0x3f]);
-                    buffer.push(base64IntToCharCode[instrument.phaseShiftFeedmix]);
+                if (effectsIncludeFlanger(instrument.effects)) {
+                    buffer.push(base64IntToCharCode[instrument.flangerMix]);
+                    buffer.push(base64IntToCharCode[instrument.flangerDelay >> 12]);
+                    buffer.push(base64IntToCharCode[instrument.flangerDelay >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[instrument.flangerDelay & 0x3f]);
+                    buffer.push(base64IntToCharCode[instrument.flangerPan >> 6]);
+                    buffer.push(base64IntToCharCode[instrument.flangerPan & 0x3f]);
+                    buffer.push(base64IntToCharCode[instrument.flangerFeedmix]);
                 }
 
                 if (effectsIncludeInvertWave(instrument.effects)) {
@@ -5874,11 +5888,11 @@ export class Song {
                         instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
                         instrument.phaserLegacyMode = !newFormat || (phaserFlags & 1) === 1;
                     }
-                    if (effectsIncludePhaseShift(instrument.effects)) {
-                        instrument.phaseShiftMix = clamp(0, Config.phaseShiftMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                        instrument.phaseShiftDelay = clamp(0, Config.phaseShiftDelayMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                        instrument.phaseShiftPan = clamp(0, Config.phaseShiftPanMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                        instrument.phaseShiftFeedmix = clamp(0, Config.phaseShiftFeedmixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    if (effectsIncludeFlanger(instrument.effects)) {
+                        instrument.flangerMix = clamp(0, Config.flangerMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.flangerDelay = clamp(0, Config.flangerDelayMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.flangerPan = clamp(0, Config.flangerPanMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.flangerFeedmix = clamp(0, Config.flangerFeedmixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                     }    
                     if(effectsIncludeInvertWave(instrument.effects)) {
                         instrument.invertWave = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] ? true : false;
@@ -6657,7 +6671,7 @@ export class Song {
                                     } else if (fromFroupBox && beforeFive) {
                                         shape.initialSize = bits.read(11); //mod channels use 11 bits for 2000 tempo now
                                     } else if (fromFroupBox) {
-                                        shape.initialSize = bits.read(13); //mod channels use 13 bits for 8000 phase shift delay now
+                                        shape.initialSize = bits.read(13); //mod channels use 13 bits for 8000 flanger delay now
                                     } else {
                                         shape.initialSize = bits.read(9);
                                     }
@@ -6680,7 +6694,7 @@ export class Song {
                                         } else if (fromFroupBox && beforeFive) {
                                             pinObj.size = bits.read(11); //mod channels use 11 bits for 2000 tempo now
                                         } else if (fromFroupBox) {
-                                            pinObj.size = bits.read(13); //mod channels use 13 bits for 8000 phase shift delay now
+                                            pinObj.size = bits.read(13); //mod channels use 13 bits for 8000 flanger delay now
                                         } else {
                                             pinObj.size = bits.read(9);
                                         }
@@ -9007,7 +9021,7 @@ class InstrumentState {
     public phaserStages: number = 0;
     public phaserStagesDelta: number = 0;
   
-    public phaseShifter: rustDspTypes.PhaseShiftInstance | undefined;
+    public flanger: rustDspTypes.FlangerInstance | undefined;
 
     public readonly spectrumWave: SpectrumWaveState = new SpectrumWaveState();
     public readonly harmonicsWave: HarmonicsWaveState = new HarmonicsWaveState();
@@ -9140,9 +9154,9 @@ class InstrumentState {
             this.compressor.free();
             this.compressor = undefined;
         }
-        if (this.phaseShifter) {
-          this.phaseShifter.free();
-          this.phaseShifter = undefined;
+        if (this.flanger) {
+          this.flanger.free();
+          this.flanger = undefined;
         }
         if (this.dspBuffer) {
           this.dspBuffer.free();
@@ -9267,7 +9281,7 @@ class InstrumentState {
         const usesReverb: boolean = effectsIncludeReverb(this.effects);
         const usesPhaser: boolean = effectsIncludePhaser(this.effects);
         const usesCompressor: boolean = effectsIncludeCompressor(this.effects);
-        const usesPhaseShift: boolean = effectsIncludePhaseShift(this.effects);
+        const usesFlanger: boolean = effectsIncludeFlanger(this.effects);
         
         let granularChance: number = 0;
         if (usesGranular) { //has to happen before buffer allocation
@@ -9840,27 +9854,27 @@ class InstrumentState {
         this.compressor.end = end;
       }
 
-        if (usesPhaseShift) {
-          if (!this.phaseShifter && rustDsp)
-            this.phaseShifter = new rustDsp.PhaseShiftInstance();
-        } else if (this.phaseShifter) {
-          this.phaseShifter.free();
-          this.phaseShifter = undefined;
+        if (usesFlanger) {
+          if (!this.flanger && rustDsp)
+            this.flanger = new rustDsp.FlangerInstance();
+        } else if (this.flanger) {
+          this.flanger.free();
+          this.flanger = undefined;
         }
-        if (usesPhaseShift && this.phaseShifter)
+        if (usesFlanger && this.flanger)
         {
-          const start = this.phaseShifter.start, end = this.phaseShifter.end;
+          const start = this.flanger.start, end = this.flanger.end;
           
-          let usePanStart: number = instrument.phaseShiftPan;
-          let usePanEnd: number = instrument.phaseShiftPan;
+          let usePanStart: number = instrument.flangerPan;
+          let usePanEnd: number = instrument.flangerPan;
           // Check for pan mods
-          if (synth.isModActive(Config.modulators.dictionary["phase shift pan"].index, channelIndex, instrumentIndex)) {
-              usePanStart = synth.getModValue(Config.modulators.dictionary["phase shift pan"].index, channelIndex, instrumentIndex, false);
-              usePanEnd = synth.getModValue(Config.modulators.dictionary["phase shift pan"].index, channelIndex, instrumentIndex, true);
+          if (synth.isModActive(Config.modulators.dictionary["flanger pan"].index, channelIndex, instrumentIndex)) {
+              usePanStart = synth.getModValue(Config.modulators.dictionary["flanger pan"].index, channelIndex, instrumentIndex, false);
+              usePanEnd = synth.getModValue(Config.modulators.dictionary["flanger pan"].index, channelIndex, instrumentIndex, true);
           }
 
-          const panEnvelopeStart: number = envelopeStarts[EnvelopeComputeIndex.phaseShiftPan] * 2.0 - 1.0;
-          const panEnvelopeEnd: number = envelopeEnds[EnvelopeComputeIndex.phaseShiftPan] * 2.0 - 1.0;
+          const panEnvelopeStart: number = envelopeStarts[EnvelopeComputeIndex.flangerPan] * 2.0 - 1.0;
+          const panEnvelopeEnd: number = envelopeEnds[EnvelopeComputeIndex.flangerPan] * 2.0 - 1.0;
 
           start.panning = Math.max(-1.0, Math.min(1.0, (usePanStart - Config.panCenter) / Config.panCenter * panEnvelopeStart));
           end.panning = Math.max(-1.0, Math.min(1.0, (usePanEnd - Config.panCenter) / Config.panCenter * panEnvelopeEnd));
@@ -9879,12 +9893,12 @@ class InstrumentState {
             ];
           }
           
-          [start.delay, end.delay] = getModifiedValues("phase shift delay", EnvelopeComputeIndex.phaseShiftDelay, instrument.phaseShiftDelay);
-          [start.mix, end.mix] = getModifiedValues("phase shift mix", EnvelopeComputeIndex.phaseShiftMix, instrument.phaseShiftMix);
-          [start.feedmix, end.feedmix] = getModifiedValues("phase shift feedmix", EnvelopeComputeIndex.phaseShiftFeedmix, instrument.phaseShiftFeedmix);
+          [start.delay, end.delay] = getModifiedValues("flanger delay", EnvelopeComputeIndex.flangerDelay, instrument.flangerDelay);
+          [start.mix, end.mix] = getModifiedValues("flanger mix", EnvelopeComputeIndex.flangerMix, instrument.flangerMix);
+          [start.feedmix, end.feedmix] = getModifiedValues("flanger feedmix", EnvelopeComputeIndex.flangerFeedmix, instrument.flangerFeedmix);
           
-          this.phaseShifter.start = start;
-          this.phaseShifter.end = end;
+          this.flanger.start = start;
+          this.flanger.end = end;
           
         }
       
@@ -9956,9 +9970,9 @@ class InstrumentState {
             if (usesEcho) totalDelaySamples += this.echoDelayLineL!.length;
             if (usesReverb) totalDelaySamples += Config.reverbDelayBufferSize;
             if (usesGranular) totalDelaySamples += this.granularMaximumDelayTimeInSeconds;
-            if (usesPhaseShift) {
+            if (usesFlanger) {
               // copied from rust_dsp/src/phase_shift/mod.rs
-              let delay = instrument.phaseShiftDelay * 0.000024414063 * synth.samplesPerSecond;
+              let delay = instrument.flangerDelay * 0.000024414063 * synth.samplesPerSecond;
               totalDelaySamples += (delay | 0) + 328;
             }
 
@@ -14399,7 +14413,7 @@ export class Synth {
         const usesGranular: boolean = effectsIncludeGranular(instrumentState.effects);
         const usesRingModulation: boolean = effectsIncludeRingModulation(instrumentState.effects);
         const usesPhaser: boolean = effectsIncludePhaser(instrumentState.effects);
-        const usesPhaseShift: boolean = effectsIncludePhaseShift(instrumentState.effects);
+        const usesFlanger: boolean = effectsIncludeFlanger(instrumentState.effects);
         const usesInvertWave: boolean = effectsIncludeInvertWave(instrumentState.effects) && instrumentState.invertWave;
         const usesCompressor: boolean = effectsIncludeCompressor(instrumentState.effects);
         let signature: number = 0; if (usesDistortion) signature = signature | 1;
@@ -14412,12 +14426,11 @@ export class Synth {
         signature = signature << 1; if (usesGranular) signature = signature | 1;
         signature = signature << 1; if (usesRingModulation) signature = signature | 1;
         signature = signature << 1; if (usesPhaser) signature = signature | 1;
-        signature = signature << 1; if (usesPhaseShift) signature = signature | 1;
         signature = signature << 1; if (usesInvertWave) signature = signature | 1;
         signature = signature << 1; if (usesCompressor) signature = signature | 1;
-        signature = signature << 1; if (usesPhaseShift) signature = signature | 1;
+        signature = signature << 1; if (usesFlanger) signature = signature | 1;
 
-        const usesRustDsp = usesCompressor || usesPhaseShift;
+        const usesRustDsp = usesCompressor || usesFlanger;
         if (usesRustDsp) {
           if (rustDsp && !instrumentState.dspBuffer)
             instrumentState.dspBuffer = new rustDsp.DspBuffer(4096); // max frame size is currently 4096
@@ -15043,8 +15056,8 @@ export class Synth {
         if (usesRustDsp) {
           effectsSource += "if(usesRustDsp) {"
           
-          if (usesPhaseShift) {
-            effectsSource += "instrumentState.phaseShifter?.process(instrumentState.dspBuffer);";
+          if (usesFlanger) {
+            effectsSource += "instrumentState.flanger?.process(instrumentState.dspBuffer);";
           }
           if (usesCompressor) {
             effectsSource += "instrumentState.compressor?.process(instrumentState.dspBuffer);";

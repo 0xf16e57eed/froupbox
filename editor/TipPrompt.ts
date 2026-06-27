@@ -714,28 +714,28 @@ export class TipPrompt implements Prompt {
 					p(`Makes the phaser act as a disperser.`),
 				);
 			} break;
-			case "phaseShiftMix": {
+			case "flangerMix": {
 				message = div(
-					h2("Phase Shift Mix"),
+					h2("Flanger Mix"),
 					p(`This setting controls the volume of the phase shifted wave and the original wave. The higher it is, the more phase shifted wave and original wave.`),
 				);
 			} break;
-			case "phaseShiftDelay": {
+			case "flangerDelay": {
 				message = div(
-					h2("Phase Shift Delay"),
+					h2("Flanger Delay"),
 					p(`This setting controls how much phase shift is applied.`),
 				);
 			} break;
-			case "phaseShiftPan": {
+			case "flangerPan": {
 				message = div(
-					h2("Phase Shift Pan"),
-					p(`This setting controls the delay between the left and right channels. The amount of phase shift is distributed among the left and right channel evenly.`),
-					p(`For example, if we have a phase shift of 100 and a pan of 25, the left channel will be given a phase shift of 75, and the right channel will be given a phase shift of 25.`),
+					h2("Flanger Pan"),
+					p(`This setting controls the delay between the left and right channels. The amount of delay is distributed among the left and right channel evenly.`),
+					p(`For example, if we have a delay of 100 and a pan of 25, the left channel will be given a delay of 75, and the right channel will be given a delay of 25.`),
 				);
 			} break;
-			case "phaseShiftFeedmix": {
+			case "flangerFeedmix": {
 				message = div(
-					h2("Phase Shift Feedmix"),
+					h2("Flanger Feedmix"),
 					p(`This setting controls whether the phase shift uses feedback or feedforward, and can interpolate between the two.`),
 				);
 			} break;

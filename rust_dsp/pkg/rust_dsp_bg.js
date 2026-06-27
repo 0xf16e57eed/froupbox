@@ -353,35 +353,21 @@ export class DspBuffer {
 }
 if (Symbol.dispose) DspBuffer.prototype[Symbol.dispose] = DspBuffer.prototype.free;
 
-export class PhaseShiftInstance {
+export class FlangerInstance {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        PhaseShiftInstanceFinalization.unregister(this);
+        FlangerInstanceFinalization.unregister(this);
         return ptr;
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_phaseshiftinstance_free(ptr, 0);
-    }
-    /**
-     * @returns {PhaseShiftInstanceParams}
-     */
-    get end() {
-        const ret = wasm.__wbg_get_phaseshiftinstance_end(this.__wbg_ptr);
-        return PhaseShiftInstanceParams.__wrap(ret);
-    }
-    /**
-     * @returns {PhaseShiftInstanceParams}
-     */
-    get start() {
-        const ret = wasm.__wbg_get_phaseshiftinstance_start(this.__wbg_ptr);
-        return PhaseShiftInstanceParams.__wrap(ret);
+        wasm.__wbg_flangerinstance_free(ptr, 0);
     }
     constructor() {
-        const ret = wasm.phaseshiftinstance_new();
+        const ret = wasm.flangerinstance_new();
         this.__wbg_ptr = ret;
-        PhaseShiftInstanceFinalization.register(this, this.__wbg_ptr, this);
+        FlangerInstanceFinalization.register(this, this.__wbg_ptr, this);
         return this;
     }
     /**
@@ -389,98 +375,112 @@ export class PhaseShiftInstance {
      */
     process(buffer) {
         _assertClass(buffer, DspBuffer);
-        wasm.phaseshiftinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
+        wasm.flangerinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
     }
     /**
-     * @param {PhaseShiftInstanceParams} arg0
+     * @returns {FlangerInstanceParams}
+     */
+    get end() {
+        const ret = wasm.__wbg_get_flangerinstance_end(this.__wbg_ptr);
+        return FlangerInstanceParams.__wrap(ret);
+    }
+    /**
+     * @returns {FlangerInstanceParams}
+     */
+    get start() {
+        const ret = wasm.__wbg_get_flangerinstance_start(this.__wbg_ptr);
+        return FlangerInstanceParams.__wrap(ret);
+    }
+    /**
+     * @param {FlangerInstanceParams} arg0
      */
     set end(arg0) {
-        _assertClass(arg0, PhaseShiftInstanceParams);
+        _assertClass(arg0, FlangerInstanceParams);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_phaseshiftinstance_end(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_flangerinstance_end(this.__wbg_ptr, ptr0);
     }
     /**
-     * @param {PhaseShiftInstanceParams} arg0
+     * @param {FlangerInstanceParams} arg0
      */
     set start(arg0) {
-        _assertClass(arg0, PhaseShiftInstanceParams);
+        _assertClass(arg0, FlangerInstanceParams);
         var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_phaseshiftinstance_start(this.__wbg_ptr, ptr0);
+        wasm.__wbg_set_flangerinstance_start(this.__wbg_ptr, ptr0);
     }
 }
-if (Symbol.dispose) PhaseShiftInstance.prototype[Symbol.dispose] = PhaseShiftInstance.prototype.free;
+if (Symbol.dispose) FlangerInstance.prototype[Symbol.dispose] = FlangerInstance.prototype.free;
 
-export class PhaseShiftInstanceParams {
+export class FlangerInstanceParams {
     static __wrap(ptr) {
-        const obj = Object.create(PhaseShiftInstanceParams.prototype);
+        const obj = Object.create(FlangerInstanceParams.prototype);
         obj.__wbg_ptr = ptr;
-        PhaseShiftInstanceParamsFinalization.register(obj, obj.__wbg_ptr, obj);
+        FlangerInstanceParamsFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        PhaseShiftInstanceParamsFinalization.unregister(this);
+        FlangerInstanceParamsFinalization.unregister(this);
         return ptr;
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_phaseshiftinstanceparams_free(ptr, 0);
+        wasm.__wbg_flangerinstanceparams_free(ptr, 0);
     }
     /**
      * @returns {number}
      */
     get delay() {
-        const ret = wasm.__wbg_get_phaseshiftinstanceparams_delay(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_flangerinstanceparams_delay(this.__wbg_ptr);
         return ret;
     }
     /**
      * @returns {number}
      */
     get feedmix() {
-        const ret = wasm.__wbg_get_phaseshiftinstanceparams_feedmix(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_flangerinstanceparams_feedmix(this.__wbg_ptr);
         return ret;
     }
     /**
      * @returns {number}
      */
     get mix() {
-        const ret = wasm.__wbg_get_phaseshiftinstanceparams_mix(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_flangerinstanceparams_mix(this.__wbg_ptr);
         return ret;
     }
     /**
      * @returns {number}
      */
     get panning() {
-        const ret = wasm.__wbg_get_phaseshiftinstanceparams_panning(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_flangerinstanceparams_panning(this.__wbg_ptr);
         return ret;
     }
     /**
      * @param {number} arg0
      */
     set delay(arg0) {
-        wasm.__wbg_set_phaseshiftinstanceparams_delay(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_flangerinstanceparams_delay(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
      */
     set feedmix(arg0) {
-        wasm.__wbg_set_phaseshiftinstanceparams_feedmix(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_flangerinstanceparams_feedmix(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
      */
     set mix(arg0) {
-        wasm.__wbg_set_phaseshiftinstanceparams_mix(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_flangerinstanceparams_mix(this.__wbg_ptr, arg0);
     }
     /**
      * @param {number} arg0
      */
     set panning(arg0) {
-        wasm.__wbg_set_phaseshiftinstanceparams_panning(this.__wbg_ptr, arg0);
+        wasm.__wbg_set_flangerinstanceparams_panning(this.__wbg_ptr, arg0);
     }
 }
-if (Symbol.dispose) PhaseShiftInstanceParams.prototype[Symbol.dispose] = PhaseShiftInstanceParams.prototype.free;
+if (Symbol.dispose) FlangerInstanceParams.prototype[Symbol.dispose] = FlangerInstanceParams.prototype.free;
 
 export class PhaserInstance {
     __destroy_into_raw() {
@@ -701,12 +701,12 @@ const CompressorParamsFinalization = (typeof FinalizationRegistry === 'undefined
 const DspBufferFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_dspbuffer_free(ptr, 1));
-const PhaseShiftInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
+const FlangerInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_phaseshiftinstance_free(ptr, 1));
-const PhaseShiftInstanceParamsFinalization = (typeof FinalizationRegistry === 'undefined')
+    : new FinalizationRegistry(ptr => wasm.__wbg_flangerinstance_free(ptr, 1));
+const FlangerInstanceParamsFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_phaseshiftinstanceparams_free(ptr, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_flangerinstanceparams_free(ptr, 1));
 const PhaserInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_phaserinstance_free(ptr, 1));

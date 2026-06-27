@@ -47,16 +47,16 @@ export class DspBuffer {
     sample_rate: number;
 }
 
-export class PhaseShiftInstance {
+export class FlangerInstance {
     free(): void;
     [Symbol.dispose](): void;
     constructor();
     process(buffer: DspBuffer): void;
-    end: PhaseShiftInstanceParams;
-    start: PhaseShiftInstanceParams;
+    end: FlangerInstanceParams;
+    start: FlangerInstanceParams;
 }
 
-export class PhaseShiftInstanceParams {
+export class FlangerInstanceParams {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
