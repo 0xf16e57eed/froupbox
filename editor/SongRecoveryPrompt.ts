@@ -5,7 +5,7 @@ import { RecoveredSong, RecoveredVersion, SongRecovery, versionToKey } from "./S
 import { Prompt } from "./Prompt";
 import { HTML } from "imperative-html/dist/esm/elements-strict";
 
-const { button, div, h2, p, select, option, iframe } = HTML;
+const { button, div, h2, p, select, option, iframe, a } = HTML;
 
 export class SongRecoveryPrompt implements Prompt {
 	private readonly _songContainer: HTMLDivElement = div();
@@ -38,8 +38,12 @@ export class SongRecoveryPrompt implements Prompt {
 			}
 				
 				const player: HTMLIFrameElement = iframe({style: "width: 100%; height: 60px; border: none; display: block;"});
-			player.src = "player/" + (OFFLINE ? "index.html" : "") + "#song=" + window.localStorage.getItem(versionToKey(song.versions[0]));
-				const container: HTMLDivElement = div({style: "margin: 4px 0;"}, div({class: "selectContainer", style: "width: 100%; margin: 2px 0;"}, versionMenu), player);
+				player.src = "player/" + (OFFLINE ? "index.html" : "") + "#song=" + window.localStorage.getItem(versionToKey(song.versions[0]));
+
+				const editLink: HTMLAnchorElement = a({target: "_top", style: "margin: 0 4px;"}, "Edit");
+				editLink.href = "player/" + (OFFLINE ? "index.html" : "") + "#song=" + window.localStorage.getItem(versionToKey(song.versions[0]));
+				
+				const container: HTMLDivElement = div({style: "margin: 4px 0;"}, div({class: "selectContainer", style: "width: 100%; margin: 2px 0;"}, versionMenu), player, editLink);
 			this._songContainer.appendChild(container);
 				
 			versionMenu.addEventListener("change", () => {
