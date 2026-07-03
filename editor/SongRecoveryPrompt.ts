@@ -41,7 +41,7 @@ export class SongRecoveryPrompt implements Prompt {
 				player.src = "player/" + (OFFLINE ? "index.html" : "") + "#song=" + window.localStorage.getItem(versionToKey(song.versions[0]));
 
 				const editLink: HTMLAnchorElement = a({target: "_top", style: "margin: 0 4px;"}, "Edit");
-				editLink.href = (OFFLINE ? "index.html" : "") + window.localStorage.getItem(versionToKey(song.versions[0]));
+				editLink.href = (OFFLINE ? "index.html" : "") + "#" + window.localStorage.getItem(versionToKey(song.versions[0]));
 				
 				const container: HTMLDivElement = div({style: "margin: 4px 0;"}, div({class: "selectContainer", style: "width: 100%; margin: 2px 0;"}, versionMenu), player, editLink);
 			this._songContainer.appendChild(container);
