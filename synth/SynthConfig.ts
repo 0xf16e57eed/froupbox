@@ -99,6 +99,7 @@ export const enum DropdownID {
     Envelope = 7,
     EnvelopeSettings = 8,
     PhaserStages = 9,
+    FlangerMix = 10,
 }
 
 export const enum EffectType {
@@ -177,6 +178,7 @@ export const enum EnvelopeComputeIndex {
     compressorHiGain,
 
     flangerMix,
+    flangerVoices,
     flangerDelay,
     flangerPan,
     flangerFeedmix,
@@ -1000,6 +1002,8 @@ export class Config {
     public static readonly phaserMinStages:             number = 0; 
     public static readonly phaserMaxStages:             number = 1024; 
     public static readonly flangerMixRange:             number = 64; 
+    public static readonly flangerMinVoices:            number = 1; 
+    public static readonly flangerMaxVoices:            number = 64; 
     public static readonly flangerDelayMin:             number = 0;
     public static readonly flangerDelayMax:             number = 8191;
     public static readonly flangerPanCenter:            number = 50;
@@ -1930,10 +1934,11 @@ export class Config {
         { name: "compressorLoGain",       computeIndex: EnvelopeComputeIndex.compressorLoGain,          displayName: "comp. low gain",   perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.compressor, compatibleInstruments: null },
         { name: "compressorMidGain",      computeIndex: EnvelopeComputeIndex.compressorMidGain,         displayName: "comp. mid gain",   perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.compressor, compatibleInstruments: null },
         { name: "compressorHiGain",       computeIndex: EnvelopeComputeIndex.compressorHiGain,          displayName: "comp. high gain",  perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.compressor, compatibleInstruments: null },
-        { name: "flangerMix",          computeIndex: EnvelopeComputeIndex.flangerMix,             displayName: "flanger mix",        perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
-        { name: "flangerDelay",        computeIndex: EnvelopeComputeIndex.flangerDelay,           displayName: "flanger delay",      perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
-        { name: "flangerPan",          computeIndex: EnvelopeComputeIndex.flangerPan,             displayName: "flanger pan",        perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
-        { name: "flangerFeedmix",      computeIndex: EnvelopeComputeIndex.flangerFeedmix,         displayName: "flanger feedmix",    perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
+        { name: "flangerMix",             computeIndex: EnvelopeComputeIndex.flangerMix,                displayName: "flanger mix",      perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
+        { name: "flangerDelay",           computeIndex: EnvelopeComputeIndex.flangerDelay,              displayName: "flanger delay",    perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
+        { name: "flangerPan",             computeIndex: EnvelopeComputeIndex.flangerPan,                displayName: "flanger pan",      perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
+        { name: "flangerFeedmix",         computeIndex: EnvelopeComputeIndex.flangerFeedmix,            displayName: "flanger feedmix",  perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
+        { name: "flangerVoices",          computeIndex: EnvelopeComputeIndex.flangerVoices,             displayName: "flanger voices",   perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null }, 
     ]);
     public static readonly operatorWaves: DictionaryArray<OperatorWave> = toNameMap([
 		{ name: "sine", samples: Config.sineWave },
@@ -2295,6 +2300,11 @@ export class Config {
             maxRawVol: Config.flangerFeedmixRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.flanger, maxIndex: 0,
             promptName: "Flanger Feedmix", 
             promptDesc: [ "This setting controls the flanger feedmix.", "[OVERWRITING] [$LO - $HI]"] },      
+        { name: "flanger voices", 
+            pianoName: "Flanger Voices", 
+            maxRawVol: Config.flangerMaxVoices - Config.flangerMinVoices, newNoteVol: 0, forSong: false, convertRealFactor: Config.flangerMinVoices, associatedEffect: EffectType.flanger, maxIndex: 0,
+            promptName: "Flanger Voices", 
+            promptDesc: [ "This setting controls the flanger voices.", "[OVERWRITING] [$LO - $HI]"] }, 
         ]);
 }
 

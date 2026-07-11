@@ -721,6 +721,12 @@ export class TipPrompt implements Prompt {
 					p(`In the middle of the slider, both waves are equal volume. When the slider is all the way to the left only the original wave plays, and when the slider is all the way to the right, only the phase shifted wave plays.`),
 				);
 			} break;
+			case "flangerVoices": {
+				message = div(
+					h2("Flanger Voices"),
+					p(`This setting controls the amount of phase-shifted voices.`),
+				);
+			} break;
 			case "flangerDelay": {
 				message = div(
 					h2("Flanger Delay"),
