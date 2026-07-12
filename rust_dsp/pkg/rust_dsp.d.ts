@@ -64,6 +64,7 @@ export class FlangerInstanceParams {
     feedmix: number;
     mix: number;
     panning: number;
+    voices: number;
 }
 
 export class PhaserInstance {

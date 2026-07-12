@@ -9892,10 +9892,10 @@ class InstrumentState {
           [start.delay, end.delay] = getModifiedValues("flanger delay", EnvelopeComputeIndex.flangerDelay, instrument.flangerDelay);
           [start.mix, end.mix] = getModifiedValues("flanger mix", EnvelopeComputeIndex.flangerMix, instrument.flangerMix);
           [start.feedmix, end.feedmix] = getModifiedValues("flanger feedmix", EnvelopeComputeIndex.flangerFeedmix, instrument.flangerFeedmix);
+          [start.voices, end.voices] = getModifiedValues("flanger voices", EnvelopeComputeIndex.flangerVoices, instrument.flangerVoices);
           
           this.flanger.start = start;
           this.flanger.end = end;
-          
         }
       
 

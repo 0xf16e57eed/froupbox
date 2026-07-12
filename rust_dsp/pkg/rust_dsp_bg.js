@@ -456,6 +456,13 @@ export class FlangerInstanceParams {
         return ret;
     }
     /**
+     * @returns {number}
+     */
+    get voices() {
+        const ret = wasm.__wbg_get_flangerinstanceparams_voices(this.__wbg_ptr);
+        return ret;
+    }
+    /**
      * @param {number} arg0
      */
     set delay(arg0) {
@@ -478,6 +485,12 @@ export class FlangerInstanceParams {
      */
     set panning(arg0) {
         wasm.__wbg_set_flangerinstanceparams_panning(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set voices(arg0) {
+        wasm.__wbg_set_flangerinstanceparams_voices(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) FlangerInstanceParams.prototype[Symbol.dispose] = FlangerInstanceParams.prototype.free;
