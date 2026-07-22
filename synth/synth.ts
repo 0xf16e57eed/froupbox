@@ -4092,9 +4092,71 @@ export class Song {
                     buffer.push(base64IntToCharCode[instrument.lowerNoteLimit >> 6], base64IntToCharCode[instrument.lowerNoteLimit & 0x3f]);
                 }
                 if (effectsIncludeCompressor(instrument.effects)) {
-                  const encoded = encodeURIComponent(JSON.stringify(instrument.compressor));
-                  buffer.push(base64IntToCharCode[encoded.length >> 6], base64IntToCharCode[encoded.length & 0x3f]);
-                  buffer.push(...Array.from(encoded, ch => ch.charCodeAt(0)))
+                    buffer.push(base64IntToCharCode[+(instrument.compressor.mode == "advanced")]);
+
+                    // attack: 0.001 - 9999.000
+                    const convertedAttack = Math.round(instrument.compressor.attack * 1000); // 1 - 9999000
+                    buffer.push(base64IntToCharCode[convertedAttack >> 18]);
+                    buffer.push(base64IntToCharCode[convertedAttack >> 12 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedAttack >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedAttack & 0x3f]);
+
+                    // decay: 0.001 - 9999.000
+                    const convertedDecay = Math.round(instrument.compressor.decay * 1000); // 1 - 9999000
+                    buffer.push(base64IntToCharCode[convertedDecay >> 18]);
+                    buffer.push(base64IntToCharCode[convertedDecay >> 12 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedDecay >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedDecay & 0x3f]);
+
+                    // threshold: -10.000 - -5.000
+                    const convertedThreshold = Math.round(-instrument.compressor.threshold * 1000); // 10000 - 5000
+                    buffer.push(base64IntToCharCode[convertedThreshold >> 12]);
+                    buffer.push(base64IntToCharCode[convertedThreshold >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedThreshold & 0x3f]);
+
+                    // ratioDown: 1.000 - 99.000
+                    const convertedRatioDown = Math.round(instrument.compressor.ratioDown * 1000); // 1000 - 99000
+                    buffer.push(base64IntToCharCode[convertedRatioDown >> 12]);
+                    buffer.push(base64IntToCharCode[convertedRatioDown >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedRatioDown & 0x3f]);
+
+                    // ratioUp: 1.000 - 99.000
+                    const convertedRatioUp = Math.round(instrument.compressor.ratioUp * 1000); // 1000 - 99000
+                    buffer.push(base64IntToCharCode[convertedRatioUp >> 12]);
+                    buffer.push(base64IntToCharCode[convertedRatioUp >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedRatioUp & 0x3f]);
+
+                    // freqLoMid: 100.000 - 9999.000
+                    const convertedFreqLoMid = Math.round(instrument.compressor.freqLoMid * 1000); // 100000 - 9999000
+                    buffer.push(base64IntToCharCode[convertedFreqLoMid >> 18]);
+                    buffer.push(base64IntToCharCode[convertedFreqLoMid >> 12 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedFreqLoMid >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedFreqLoMid & 0x3f]);
+
+                    // freqMidHi: 100.000 - 9999.000
+                    const convertedFreqMidHi = Math.round(instrument.compressor.freqMidHi * 1000); // 100000 - 9999000
+                    buffer.push(base64IntToCharCode[convertedFreqMidHi >> 18]);
+                    buffer.push(base64IntToCharCode[convertedFreqMidHi >> 12 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedFreqMidHi >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedFreqMidHi & 0x3f]);
+
+                    // gainLo: -20.000 - 20.000
+                    const convertedGainLo = Math.round((instrument.compressor.gainLo + 20) * 1000); // 0 - 40000
+                    buffer.push(base64IntToCharCode[convertedGainLo >> 12]);
+                    buffer.push(base64IntToCharCode[convertedGainLo >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedGainLo & 0x3f]);
+
+                    // gainMid: -20.000 - 20.000
+                    const convertedGainMid = Math.round((instrument.compressor.gainMid + 20) * 1000); // 0 - 40000
+                    buffer.push(base64IntToCharCode[convertedGainMid >> 12]);
+                    buffer.push(base64IntToCharCode[convertedGainMid >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedGainMid & 0x3f]);
+
+                    // gainHi: -20.000 - 20.000
+                    const convertedGainHi = Math.round((instrument.compressor.gainHi + 20) * 1000); // 0 - 40000
+                    buffer.push(base64IntToCharCode[convertedGainHi >> 12]);
+                    buffer.push(base64IntToCharCode[convertedGainHi >> 6 & 0x3f]);
+                    buffer.push(base64IntToCharCode[convertedGainHi & 0x3f]);
                 }
 
                 if (instrument.type != InstrumentType.drumset) {
@@ -6003,8 +6065,77 @@ export class Song {
                         instrument.lowerNoteLimit = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                     }
                     if (effectsIncludeCompressor(instrument.effects)) {
-                      const length = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
-                      instrument.compressor = JSON.parse(decodeURIComponent(compressed.substring(charIndex, charIndex += length)));
+                        if (beforeSeven) {
+                            const length = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                            instrument.compressor = JSON.parse(decodeURIComponent(compressed.substring(charIndex, charIndex += length)));
+                            instrument.compressor.hidden = false;
+                        } else {
+                            instrument.compressor.mode = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] ? "advanced" : "simple";
+
+                            instrument.compressor.attack = (
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 18) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000;
+
+                            instrument.compressor.decay = (
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 18) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000;
+
+                            instrument.compressor.threshold = -(
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000;
+
+                            instrument.compressor.ratioDown = (
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000;
+
+                            instrument.compressor.ratioUp = (
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000;
+
+                            instrument.compressor.freqLoMid = (
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 18) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000;
+
+                            instrument.compressor.freqMidHi = (
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 18) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000;
+
+                            instrument.compressor.gainLo = ((
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000) - 20;
+
+                            instrument.compressor.gainMid = ((
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000) - 20;
+
+                            instrument.compressor.gainHi = ((
+                                (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) 
+                                + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) 
+                                + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ) / 1000) - 20;
+                        }
                     }
                 }
                 // Clamp the range.
