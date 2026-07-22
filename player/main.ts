@@ -711,7 +711,8 @@ import { SongPlayerLayout } from "./Layout";
 							var element: SVGPathElement = currentNoteFlashElements[i];
 							const noteStart: number = Number(element.getAttribute("note-start")) / partsPerBar;
 							const noteEnd: number = Number(element.getAttribute("note-end")) / partsPerBar;
-							const noteBar: number = Number(element.getAttribute("note-bar"));const p = Number(element.getAttribute("note-pitch"));
+							const noteBar: number = Number(element.getAttribute("note-bar"));
+							const p = Math.round(Number(element.getAttribute("note-pitch")));
 							const isNoise = element.getAttribute("note-noise") === "true";
 							const k = piano.children[p];
 							//const kf = k?.getAttribute("original-fill");
@@ -858,7 +859,7 @@ import { SongPlayerLayout } from "./Layout";
 								noteFlashElement.setAttribute('note-end', String(
 									note.end
 									));
-								noteFlashElement.setAttribute('note-pitch', String(pitch));
+								noteFlashElement.setAttribute('note-pitch', String(correctedPitch));
 	                           	noteFlashElement.setAttribute('note-noise', String(isNoise));
 								noteFlashElement.setAttribute('note-bar', String(bar));
 								noteFlashElement.setAttribute('note-color', String(noteElement.getAttribute("fill")));
@@ -905,7 +906,7 @@ import { SongPlayerLayout } from "./Layout";
 		const kw = width / kc;
 		const kh = height;
 		for (let i = 0; i < kc; i++) {
-			const pitchNameIndex = (i + Config.keys[song.key].basePitch) % Config.pitchesPerOctave;
+			const pitchNameIndex = (i + Config.keys[song.key].basePitch) % 12;
 			const isWhiteKey = Config.keys[pitchNameIndex].isWhiteKey;
 			const color = isWhiteKey ? "white" : "black";
 			element.appendChild(rect({
