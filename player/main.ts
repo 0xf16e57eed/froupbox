@@ -265,7 +265,7 @@ import { SongPlayerLayout } from "./Layout";
 	const timelineBarProgress: HTMLDivElement = div({ class:`timeline-bar-progress`, style: `overflow: hidden; width: 5%; height: 100%; z-index: 5;`});
 	const timelineBar: HTMLDivElement = div({ style:  `overflow: hidden; height: 100%; margin: auto; background: var(--ui-widget-background);`},timelineBarProgress);
 	const timelineBarContainer: HTMLDivElement = div({ style: `overflow: hidden; height: 4px; `}, timelineBar);
-	const volumeBarContainerDiv: HTMLDivElement = div({class:`volBarContainer`, style:"display:flex; flex-direction:column;"}, volumeBarContainer, sampleLoadingStatusContainer);
+	const volumeBarContainerDiv: HTMLDivElement = div({class:`volBarContainer`, style:"display:flex; flex-direction:column; overflow: hidden; margin: auto"}, volumeBarContainer, sampleLoadingStatusContainer);
 	const promptContainer: HTMLDivElement = div({class:"promptContainer",style:"display:none; backdrop-filter: saturate(1.5) blur(4px); width: 100%; height: 100%; position: fixed; z-index: 999; display: flex; justify-content: center; align-items: center;"});
 	promptContainer.style.display = "none";
 	const songPlayerContainer: HTMLDivElement = div({class:"songPlayerContainer"});
@@ -553,6 +553,7 @@ import { SongPlayerLayout } from "./Layout";
 		} else {
 			synth.loopRepeatCount = -1;
 		}
+		setLocalStorage("loopMode", synth.loopRepeatCount + "");
 		renderLoopIcon();
 	}
 	
@@ -563,6 +564,7 @@ import { SongPlayerLayout } from "./Layout";
 	
 	function onToggleZoom(): void {
 		zoomEnabled = !zoomEnabled;
+		setLocalStorage("zoomMode", zoomEnabled + "");
 		renderZoomIcon();
 		renderTimeline();
 	}
@@ -966,16 +968,47 @@ import { SongPlayerLayout } from "./Layout";
 				renderPlayhead();
 				event.preventDefault();
 				break;
-				case 80: // p
-			if (event.shiftKey) {
-				hashUpdatedExternally();
-				location.href ="../#" + synth.song!.toBase64String();
-				event.preventDefault();
-			}
-			break;	
+			case 80: // p
+				if (event.shiftKey) {
+					hashUpdatedExternally();
+					location.href ="../#" + synth.song!.toBase64String();
+					event.preventDefault();
+				}
+				break;	
+			case 90: // z
+			case 187: // +
+			case 61: // Firefox +
+			case 171: // Some users have this as +? Hmm.
+			case 189: // -
+			case 173: // Firefox -
+				onToggleZoom();
+				break;
+			case 76: // l
+				onToggleLoop();
+				break;
+			case 83: // s
+				if (event.ctrlKey || event.metaKey) {
+					shortenUrl();
+					event.preventDefault();
+				}
+				break;
+			case 67: // c
+				if (!event.ctrlKey && !event.metaKey) onCopyClicked();
+				break;
 		}
 	}
 	
+	function shortenUrl() {
+		hashUpdatedExternally();
+		let shortenerStrategy: string = "https://tinyurl.com/api-create.php?url=";
+		const localShortenerStrategy: string | null = window.localStorage.getItem("shortenerStrategySelect");
+
+		// if (localShortenerStrategy == "beepboxnet") shortenerStrategy = "https://www.beepbox.net/api-create.php?url=";
+		if (localShortenerStrategy == "isgd") shortenerStrategy = "https://is.gd/create.php?format=simple&url=";
+
+		window.open(shortenerStrategy + encodeURIComponent(new URL("#" + synth.song!.toBase64String(), location.href).href));
+	}	
+
 	function onCopyClicked(): void {
 		// Set as any to allow compilation without clipboard types (since, uh, I didn't write this bit and don't know the proper types library) -jummbus
 		let nav: any;
@@ -1012,6 +1045,12 @@ import { SongPlayerLayout } from "./Layout";
 	
 	if (getLocalStorage("volume") != null) {
 		volumeSlider.value = getLocalStorage("volume")!;
+	}
+	if (getLocalStorage("loopMode") != null) {
+		synth.loopRepeatCount = parseInt(getLocalStorage("loopMode")!);
+	}
+	if (getLocalStorage("zoomMode") != null) {
+		zoomEnabled = getLocalStorage("zoomMode")! == "true";
 	}
 	setSynthVolume();
 	
