@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Algorithm, Dictionary, FilterType, SustainType, InstrumentType, EffectType, AutomationTarget, Config, effectsIncludeDistortion, LFOEnvelopeTypes, RandomEnvelopeTypes } from "../synth/SynthConfig";
+import { Algorithm, Dictionary, FilterType, SustainType, InstrumentType, EffectType, AutomationTarget, Config, effectsIncludeDistortion, LFOEnvelopeTypes, RandomEnvelopeTypes, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { NotePin, Note, makeNotePin, Pattern, FilterSettings, FilterControlPoint, SpectrumWave, HarmonicsWave, Instrument, Channel, Song, Synth, clamp, JsCompressorParams } from "../synth/synth";
 import { Preset, PresetCategory, EditorConfig } from "./EditorConfig";
 import { Change, ChangeGroup, ChangeSequence, UndoableChange } from "./Change";
@@ -32,11 +32,11 @@ export function discardInvalidPatternInstruments(instruments: number[], song: So
     }
 }
 
-export function unionOfUsedNotes(pattern: Pattern, flags: boolean[]): void {
+export function unionOfUsedNotes(pattern: Pattern, flags: boolean[], equaveDivisions: number): void {
     for (const note of pattern.notes) {
         for (const pitch of note.pitches) {
             for (const pin of note.pins) {
-                const key: number = (pitch + pin.interval) % 12;
+                const key: number = (pitch + pin.interval) % equaveDivisions;
                 if (!flags[key]) {
                     flags[key] = true;
                 }
@@ -45,11 +45,11 @@ export function unionOfUsedNotes(pattern: Pattern, flags: boolean[]): void {
     }
 }
 
-export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, newScaleValue: number, customScaleFlags: ReadonlyArray<boolean>): number[] {
-    const newScaleFlags: ReadonlyArray<boolean> = newScaleValue == Config.scales["dictionary"]["Custom"].index ? customScaleFlags : Config.scales[newScaleValue].flags;
+export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, song: Song, equaveDivisions: number, equaveNumerator: number, equaveDenominator: number): number[] {
+    const newScaleFlags: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(song), equaveDivisions, equaveNumerator, equaveDenominator);
     const oldScale: number[] = [];
     const newScale: number[] = [];
-    for (let i: number = 0; i < 12; i++) {
+    for (let i: number = 0; i < equaveDivisions; i++) {
         if (oldScaleFlags[i]) oldScale.push(i);
         if (newScaleFlags[i]) newScale.push(i);
     }
@@ -99,12 +99,12 @@ export function generateScaleMap(oldScaleFlags: ReadonlyArray<boolean>, newScale
     }
 
     // To make it easier to wrap around.
-    sparsePitchMap.push([12, 12]);
-    newScale.push(12);
+    sparsePitchMap.push([equaveDivisions, equaveDivisions]);
+    newScale.push(equaveDivisions);
 
     let sparseIndex: number = 0;
     const fullPitchMap: number[] = [];
-    for (let i: number = 0; i < 12; i++) {
+    for (let i: number = 0; i < equaveDivisions; i++) {
         const oldLow: number = sparsePitchMap[sparseIndex][0];
         const newLow: number = sparsePitchMap[sparseIndex][1];
         const oldHigh: number = sparsePitchMap[sparseIndex + 1][0];
@@ -407,7 +407,7 @@ export class ChangeMoveAndOverflowNotes extends ChangeGroup {
 
         for (let channelIndex: number = 0; channelIndex < doc.song.getChannelCount(); channelIndex++) {
             const oldChannel: Channel = doc.song.channels[channelIndex];
-            const newChannel: Channel = new Channel();
+            const newChannel: Channel = new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator);
 
             if (channelIndex < doc.song.pitchChannelCount) {
                 pitchChannels.push(newChannel);
@@ -2010,12 +2010,10 @@ export class ChangeChannelOrder extends Change {
 }
 
 export class ChangeCustomScale extends Change {
-    constructor(doc: SongDocument, flags: boolean[]) {
+    constructor(doc: SongDocument, intervals: string) {
         super();
 
-        for (let i: number = 0; i < Config.pitchesPerOctave; i++) {
-            doc.song.scaleCustom[i] = flags[i];
-        }
+        doc.song.scaleCustom = intervals;
 
         doc.notifier.changed();
         this._didSomething();
@@ -2035,7 +2033,7 @@ export class ChangeChannelCount extends Change {
                     if (i < oldCount) {
                         newChannels[channelIndex] = doc.song.channels[oldChannel];
                     } else {
-                        newChannels[channelIndex] = new Channel();
+                        newChannels[channelIndex] = new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator);
                         newChannels[channelIndex].octave = octave;
                         for (let j: number = 0; j < Config.instrumentCountMin; j++) {
                             const instrument: Instrument = new Instrument(isNoise, isMod);
@@ -2647,6 +2645,49 @@ export class ChangePitchShift extends ChangeInstrumentSlider {
         if (oldValue != newValue) this._didSomething();
     }
 }
+
+export class ChangePitchShiftEquaveDivisions extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.pitchShiftEquaveDivisions = clamp(1, Config.equaveDivisionsMax + 1, newValue);
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangePitchShiftEquaveNumerator extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number, min: number) {
+        super(doc);
+        this._instrument.pitchShiftEquaveNumerator = Math.max(min + 1, clamp(2, Config.equaveNumeratorMax, newValue));
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangePitchShiftEquaveDenominator extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number, max: number) {
+        super(doc);
+        this._instrument.pitchShiftEquaveDenominator = Math.min(Config.equaveDenominatorMax, clamp(1, max, newValue));
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangePitchShiftFiveLimit extends Change {
+    constructor(doc: SongDocument, newValue: boolean) {
+        super();
+        const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
+        const oldValue = instrument.pitchShiftFiveLimit;
+
+        doc.notifier.changed();
+        if (oldValue != newValue) {
+            instrument.pitchShiftFiveLimit = newValue;
+            instrument.preset = instrument.type;
+            this._didSomething();
+        }
+    }
+}
+
 
 export class ChangeDetune extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
@@ -4057,6 +4098,28 @@ export class ChangePatternsPerChannel extends Change {
     }
 }
 
+export class ChangeDefaultTuning extends Change {
+    constructor(doc: SongDocument, newEquaveDivisions: number, newEquaveNumerator: number, newEquaveDenominator: number) {
+        super();
+        newEquaveDivisions = clamp(1, Config.equaveDivisionsMax + 1, newEquaveDivisions);
+        newEquaveNumerator = Math.max(2, clamp(2, Config.equaveNumeratorMax, newEquaveNumerator));
+        newEquaveDenominator = Math.min(Config.equaveDenominatorMax, clamp(1, newEquaveNumerator, newEquaveDenominator));
+
+        if (
+            doc.song.defaultEquaveDivisions != newEquaveDivisions
+            || doc.song.defaultEquaveNumerator != newEquaveNumerator
+            || doc.song.defaultEquaveDenominator != newEquaveDenominator
+        ) {
+            doc.song.defaultEquaveDivisions = newEquaveDivisions;
+            doc.song.defaultEquaveNumerator = newEquaveNumerator;
+            doc.song.defaultEquaveDenominator = newEquaveDenominator;
+
+            doc.notifier.changed();
+            this._didSomething();
+        }
+    }
+}
+
 export class ChangeEnsurePatternExists extends UndoableChange {
     private _doc: SongDocument;
     private _bar: number;
@@ -4445,65 +4508,6 @@ export class ChangeScale extends ChangeGroup {
     }
 }
 
-export class ChangeDetectKey extends ChangeGroup {
-    constructor(doc: SongDocument) {
-        super();
-        const song: Song = doc.song;
-        const basePitch: number = Config.keys[song.key].basePitch;
-        const keyWeights: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        for (let channelIndex: number = 0; channelIndex < song.pitchChannelCount; channelIndex++) {
-            for (let barIndex: number = 0; barIndex < song.barCount; barIndex++) {
-                const pattern: Pattern | null = song.getPattern(channelIndex, barIndex);
-                if (pattern != null) {
-                    for (const note of pattern.notes) {
-                        const prevPin: NotePin = note.pins[0];
-                        for (let pinIndex: number = 1; pinIndex < note.pins.length; pinIndex++) {
-                            const nextPin: NotePin = note.pins[pinIndex];
-                            if (prevPin.interval == nextPin.interval) {
-                                let weight: number = nextPin.time - prevPin.time;
-                                weight += Math.max(0, Math.min(Config.partsPerBeat, nextPin.time + note.start) - (prevPin.time + note.start));
-                                weight *= nextPin.size + prevPin.size;
-                                for (const pitch of note.pitches) {
-                                    const key = (basePitch + prevPin.interval + pitch) % 12;
-                                    keyWeights[key] += weight;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        let bestKey: number = 0;
-        let bestKeyWeight: number = 0;
-        for (let key: number = 0; key < 12; key++) {
-            // Look for the root of the most prominent major or minor chord.
-            const keyWeight: number = keyWeights[key] * (3 * keyWeights[(key + 7) % 12] + keyWeights[(key + 4) % 12] + keyWeights[(key + 3) % 12]);
-            if (bestKeyWeight < keyWeight) {
-                bestKeyWeight = keyWeight;
-                bestKey = key;
-            }
-        }
-
-        if (bestKey != song.key) {
-            const diff: number = song.key - bestKey;
-            const absoluteDiff: number = Math.abs(diff);
-
-            for (let channelIndex: number = 0; channelIndex < song.pitchChannelCount; channelIndex++) {
-                for (const pattern of song.channels[channelIndex].patterns) {
-                    for (let i: number = 0; i < absoluteDiff; i++) {
-                        this.append(new ChangeTranspose(doc, channelIndex, pattern, diff > 0, true));
-                    }
-                }
-            }
-
-            song.key = bestKey;
-            doc.notifier.changed();
-            this._didSomething();
-        }
-    }
-}
-
 export function pickRandomPresetValue(isNoise: boolean,rollNoveltyPresets: boolean): number {
     const eligiblePresetValues: number[] = [];
     for (let categoryIndex: number = 0; categoryIndex < EditorConfig.presetCategories.length; categoryIndex++) {
@@ -4606,9 +4610,9 @@ export class ChangeReplacePatterns extends ChangeGroup {
         removeExtraSparseChannels(noiseChannels, Config.noiseChannelCountMax);
         removeExtraSparseChannels(modChannels, Config.modChannelCountMax);
 
-        while (pitchChannels.length < Config.pitchChannelCountMin) pitchChannels.push(new Channel());
-        while (noiseChannels.length < Config.noiseChannelCountMin) noiseChannels.push(new Channel());
-        while (modChannels.length < Config.modChannelCountMin) modChannels.push(new Channel());
+        while (pitchChannels.length < Config.pitchChannelCountMin) pitchChannels.push(new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator));
+        while (noiseChannels.length < Config.noiseChannelCountMin) noiseChannels.push(new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator));
+        while (modChannels.length < Config.modChannelCountMin) modChannels.push(new Channel(doc.song.defaultEquaveDivisions, doc.song.defaultEquaveNumerator, doc.song.defaultEquaveDenominator));
 
         // Set minimum counts.
         song.barCount = 1;
@@ -4964,28 +4968,28 @@ class ChangeTransposeNote extends UndoableChange {
         // Can't transpose mods
         if (doc.song.getChannelIsMod(doc.channel)) return;
 
-        const maxPitch: number = (isNoise ? Config.drumCount - 1 : Config.maxPitch);
+        const maxPitch: number = (isNoise ? Config.drumCount - 1 : doc.song.channels[doc.channel].equaveDivisions * Config.pitchOctaves);
 
         for (let i: number = 0; i < this._oldPitches.length; i++) {
             let pitch: number = this._oldPitches[i];
             if (octave && !isNoise) {
                 if (upward) {
-                    pitch = Math.min(maxPitch, pitch + 12);
+                    pitch = Math.min(maxPitch, pitch + doc.song.channels[doc.channel].equaveDivisions);
                 } else {
-                    pitch = Math.max(0, pitch - 12);
+                    pitch = Math.max(0, pitch - doc.song.channels[doc.channel].equaveDivisions);
                 }
             } else {
-                let scale = doc.song.scale == Config.scales.dictionary["Custom"].index ? doc.song.scaleCustom : Config.scales[doc.song.scale].flags;
+                let scale = scaleToBools(getScaleIntervals(doc.song), doc.song.channels[channelIndex].equaveDivisions, doc.song.channels[channelIndex].equaveNumerator, doc.song.channels[channelIndex].equaveDenominator);
                 if (upward) {
                     for (let j: number = pitch + 1; j <= maxPitch; j++) {
-                        if (isNoise || ignoreScale || scale[j % 12]) {
+                        if (isNoise || ignoreScale || scale[j % doc.song.channels[doc.channel].equaveDivisions]) {
                             pitch = j;
                             break;
                         }
                     }
                 } else {
                     for (let j: number = pitch - 1; j >= 0; j--) {
-                        if (isNoise || ignoreScale || scale[j % 12]) {
+                        if (isNoise || ignoreScale || scale[j % doc.song.channels[doc.channel].equaveDivisions]) {
                             pitch = j;
                             break;
                         }
@@ -5019,22 +5023,22 @@ class ChangeTransposeNote extends UndoableChange {
             if (interval > max) interval = max;
             if (octave && !isNoise) {
                 if (upward) {
-                    interval = Math.min(max, interval + 12);
+                    interval = Math.min(max, interval + doc.song.channels[doc.channel].equaveDivisions);
                 } else {
-                    interval = Math.max(min, interval - 12);
+                    interval = Math.max(min, interval - doc.song.channels[doc.channel].equaveDivisions);
                 }
             } else {
-                let scale = doc.song.scale == Config.scales.dictionary["Custom"].index ? doc.song.scaleCustom : Config.scales[doc.song.scale].flags;
+                let scale = scaleToBools(getScaleIntervals(doc.song), doc.song.channels[channelIndex].equaveDivisions, doc.song.channels[channelIndex].equaveNumerator, doc.song.channels[channelIndex].equaveDenominator);
                 if (upward) {
                     for (let i: number = interval + 1; i <= max; i++) {
-                        if (isNoise || ignoreScale || scale[i % 12]) {
+                        if (isNoise || ignoreScale || scale[i % doc.song.channels[doc.channel].equaveDivisions]) {
                             interval = i;
                             break;
                         }
                     }
                 } else {
                     for (let i: number = interval - 1; i >= min; i--) {
-                        if (isNoise || ignoreScale || scale[i % 12]) {
+                        if (isNoise || ignoreScale || scale[i % doc.song.channels[doc.channel].equaveDivisions]) {
                             interval = i;
                             break;
                         }
@@ -5271,7 +5275,7 @@ export class ChangePatternScale extends Change {
         if (doc.selection.patternSelectionActive) {
             new ChangeSplitNotesAtSelection(doc, pattern);
         }
-        const maxPitch: number = Config.maxPitch;
+        const maxPitch: number = doc.song.channels[doc.channel].equaveDivisions * Config.pitchOctaves;
         for (const note of pattern.notes) {
             if (doc.selection.patternSelectionActive && (note.end <= doc.selection.patternSelectionStart || note.start >= doc.selection.patternSelectionEnd)) {
                 continue;
@@ -5281,7 +5285,7 @@ export class ChangePatternScale extends Change {
             const newPins: NotePin[] = [];
             for (let i: number = 0; i < note.pitches.length; i++) {
                 const pitch: number = note.pitches[i];
-                const transformedPitch: number = scaleMap[pitch % 12] + (pitch - (pitch % 12));
+                const transformedPitch: number = scaleMap[pitch % doc.song.channels[doc.channel].equaveDivisions] + (pitch - (pitch % doc.song.channels[doc.channel].equaveDivisions));
                 if (newPitches.indexOf(transformedPitch) == -1) {
                     newPitches.push(transformedPitch);
                 }
@@ -5300,7 +5304,7 @@ export class ChangePatternScale extends Change {
                 let interval: number = oldPin.interval + note.pitches[0];
                 if (interval < min) interval = min;
                 if (interval > max) interval = max;
-                const transformedInterval: number = scaleMap[interval % 12] + (interval - (interval % 12));
+                const transformedInterval: number = scaleMap[interval % doc.song.channels[doc.channel].equaveDivisions] + (interval - (interval % doc.song.channels[doc.channel].equaveDivisions));
                 newPins.push(makeNotePin(transformedInterval - newPitches[0], oldPin.time, oldPin.size));
             }
 
@@ -5331,6 +5335,24 @@ export class ChangeVolume extends Change {
         doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()].volume = newValue;
         // Not used currently as mod is implemented as multiplicative.
         //doc.synth.unsetMod(ModSetting.mstInsVolume, doc.channel, doc.getCurrentInstrument());
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeVolumePitchCompensation extends Change {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super();
+        doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()].volumePitchCompensation = newValue;
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeVolumeChordCompensation extends Change {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super();
+        doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()].volumeChordCompensation = newValue;
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
     }
@@ -5511,6 +5533,47 @@ export class ChangeChannelName extends Change {
 
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeChannelTuning extends Change {
+    constructor(doc: SongDocument, newEquaveDivisions: number, newEquaveNumerator: number, newEquaveDenominator: number) {
+        super();
+        newEquaveDivisions = clamp(Config.equaveDivisionsMin, Config.equaveDivisionsMax + 1, newEquaveDivisions);
+        newEquaveNumerator = clamp(2, Config.equaveNumeratorMax, newEquaveNumerator);
+        newEquaveDenominator = Math.min(Config.equaveDenominatorMax, clamp(1, newEquaveNumerator, newEquaveDenominator));
+
+        const channel = doc.song.channels[doc.channel];
+
+        const oldEquaveDivisions = channel.equaveDivisions;
+
+        channel.equaveDivisions = newEquaveDivisions;
+        channel.equaveNumerator = newEquaveNumerator;
+        channel.equaveDenominator = newEquaveDenominator;
+
+        for (let i = 0; i < channel.patterns.length; i++) {
+            for (let j = 0; j < channel.patterns[i].notes.length; j++) {
+                let pitches = channel.patterns[i].notes[j].pitches;
+                let newPitches: number[] = [];
+                let pins = channel.patterns[i].notes[j].pins;
+
+                for (let k: number = 0; k < pitches.length; k++) {
+                    const newPitch = Math.round(pitches[k] * (newEquaveDivisions / oldEquaveDivisions));
+                    if (newPitch <= newEquaveDivisions * Config.pitchOctaves && newPitch >= 0) {
+                        newPitches.push(newPitch);
+                    }
+                }
+
+                for (let k: number = 0; k < pins.length; k++) {
+                    channel.patterns[i].notes[j].pins[k].interval = Math.round(pins[k].interval * (newEquaveDivisions / oldEquaveDivisions));
+                }
+
+                channel.patterns[i].notes[j].pitches = newPitches;
+            }
+        }
+
+        doc.notifier.changed();
+        this._didSomething();
     }
 }
 
@@ -5711,7 +5774,7 @@ export class ChangeAddEnvelope extends Change {
     constructor(doc: SongDocument) {
         super();
         const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
-        instrument.addEnvelope(0, 0, 0, true, 0, instrument.isNoiseInstrument ? Config.drumCount : Config.maxPitch, false, 1, 0);
+        instrument.addEnvelope(0, 0, 0, true, 0, instrument.isNoiseInstrument ? Config.drumCount : (doc.song.channels[doc.channel].equaveDivisions * Config.pitchOctaves), false, 1, 0);
         instrument.preset = instrument.type;
         doc.notifier.changed();
         this._didSomething();

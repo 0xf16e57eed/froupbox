@@ -226,7 +226,7 @@ export class EuclideanRhythmPrompt implements Prompt {
     // Keep in mind this counts from 1 (to match the rest of the UI).
     private readonly _channelStepper: HTMLInputElement = input({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: this._maxChannel + 1, value: "1", step: "1" });
 
-    private readonly _pitchStepper: HTMLInputElement = input({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: Config.maxPitch, value: "0", step: "1" });
+    private readonly _pitchStepper: HTMLInputElement = input({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves), value: "0", step: "1" });
     private readonly _barAmountStepper: HTMLInputElement = input({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: Config.barCountMax, value: "1", step: "1" });
 
     private readonly _extendUntilLoopButton: HTMLButtonElement = button({ style: "height: auto; min-height: var(--button-size); margin-left: 1em;" }, "Extend until loop");
@@ -413,7 +413,7 @@ export class EuclideanRhythmPrompt implements Prompt {
                         const channel: number = Math.max(0, Math.min(this._maxChannel, this._doc.channel));
                         sequence.channel = channel;
 
-                        const maxPitch: number = this._doc.song.getChannelIsNoise(channel) ? (Config.drumCount - 1) : Config.maxPitch;
+                        const maxPitch: number = this._doc.song.getChannelIsNoise(channel) ? (Config.drumCount - 1) : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves);
                         sequence.pitch = Math.max(0, Math.min(maxPitch, sequence.pitch));
                     }
                 }
@@ -1066,7 +1066,7 @@ export class EuclideanRhythmPrompt implements Prompt {
 
     private _whenPitchChanges = (event: Event): void => {
         const sequence: Sequence = this._sequences[this._sequenceIndex];
-        const maxPitch: number = this._doc.song.getChannelIsNoise(sequence.channel) ? (Config.drumCount - 1) : Config.maxPitch;
+        const maxPitch: number = this._doc.song.getChannelIsNoise(sequence.channel) ? (Config.drumCount - 1) : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves);
         const pitch: number = Math.max(0, Math.min(maxPitch, +this._pitchStepper.value));
         sequence.pitch = pitch;
 
@@ -1146,7 +1146,7 @@ export class EuclideanRhythmPrompt implements Prompt {
     private _reconfigurePitchStepper = (): void => {
         const sequence: Sequence = this._sequences[this._sequenceIndex];
         const channel: number = sequence.channel;
-        const maxPitch: number = this._doc.song.getChannelIsNoise(channel) ? (Config.drumCount - 1) : Config.maxPitch;
+        const maxPitch: number = this._doc.song.getChannelIsNoise(channel) ? (Config.drumCount - 1) : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves);
         this._pitchStepper.value = Math.max(0, Math.min(maxPitch, +this._pitchStepper.value)) + "";
         this._pitchStepper.max = maxPitch + "";
 
@@ -1225,20 +1225,20 @@ export class EuclideanRhythmPrompt implements Prompt {
         const sequence: Sequence = this._sequences[this._sequenceIndex];
         const sequencePitch: number = sequence.pitch;
 
-        const pitchNameIndex: number = (sequencePitch + Config.keys[this._doc.song.key].basePitch) % Config.pitchesPerOctave;
+        const pitchNameIndex: number = (sequencePitch + Config.keys[this._doc.song.key].basePitch) % this._doc.song.channels[this._doc.channel].equaveDivisions;
         let pitch: string = "";
         if (Config.keys[pitchNameIndex].isWhiteKey) {
             pitch = Config.keys[pitchNameIndex].name;
         } else {
-            const shiftDir: number = Config.blackKeyNameParents[sequencePitch % Config.pitchesPerOctave];
-            pitch = Config.keys[(pitchNameIndex + Config.pitchesPerOctave + shiftDir) % Config.pitchesPerOctave].name;
+            const shiftDir: number = Config.blackKeyNameParents[sequencePitch % this._doc.song.channels[this._doc.channel].equaveDivisions];
+            pitch = Config.keys[(pitchNameIndex + this._doc.song.channels[this._doc.channel].equaveDivisions + shiftDir) % this._doc.song.channels[this._doc.channel].equaveDivisions].name;
             if (shiftDir == 1) {
                 pitch += "♭";
             } else if (shiftDir == -1) {
                 pitch += "♯";
             }
         }
-        pitch += Math.floor(sequencePitch / Config.pitchesPerOctave);
+        pitch += Math.floor(sequencePitch / this._doc.song.channels[this._doc.channel].equaveDivisions);
 
         this._barPreviewLabel.innerText = `Bar ${this._barPreviewBarIndex + 1}, ${pitch}`;
     }

@@ -47,7 +47,7 @@ import { CustomThemePrompt } from "./CustomThemePrompt";
 import { CustomPresetsPrompt } from "./CustomPresetsPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeDetectKey, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -830,6 +830,8 @@ export class SongEditor {
             option({ value: "showOscilloscope" }, "Show Oscilloscope"),
             option({ value: "showSampleLoadingStatus" }, "Show Sample Loading Status"),
             option({ value: "bisectionalModNotes" }, "Use Bisectional Mod Notes"),
+            option({ value: "showChannelName" }, "Show Channel Name"),
+            option({ value: "showChannelTuning" }, "Show Channel Tuning"),
             option({ value: "showDescription" }, "Show Description"),
             option({ value: "layout" }, "Set Layout..."),
             option({ value: "colorTheme" }, "Set Theme..."),
@@ -1008,13 +1010,29 @@ export class SongEditor {
     private readonly _instrumentRemoveButton: HTMLButtonElement = button({ type: "button", class: "remove-instrument" });
     private readonly _instrumentsButtonBar: HTMLDivElement = div({ class: "instrument-bar" }, this._instrumentRemoveButton, this._instrumentAddButton);
     private readonly _instrumentsButtonRow: HTMLDivElement = div({ class: "selectRow", style: "display: none;" }, span({ class: "tip", onclick: () => this._openPrompt("instrumentIndex") }, "Instrument:"), this._instrumentsButtonBar);
+
     private readonly _instrumentVolumeSlider: Slider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: Math.floor(-Config.volumeRange / 2), max: Math.floor(Config.volumeRange / 2), value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeVolume(this.doc, oldValue, newValue), true);
+    private readonly _instrumentVolumeDropdown: HTMLButtonElement = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(DropdownID.InstrumentVolume) }, "▼");
     private readonly _instrumentVolumeSliderInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%", id: "volumeSliderInputBox", type: "number", step: "1", min: Math.floor(-Config.volumeRange / 2), max: Math.floor(Config.volumeRange / 2), value: "0" });
     private readonly _instrumentVolumeSliderTip: HTMLDivElement = div({ class: "selectRow", style: "height: 1em" }, span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("instrumentVolume") }, "Volume: "));
     private readonly _instrumentVolumeSliderRow: HTMLDivElement = div({ class: "selectRow" }, div({},
         div({ style: `color: ${ColorConfig.secondaryText};` }, span({ class: "tip" }, this._instrumentVolumeSliderTip)),
         div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._instrumentVolumeSliderInputBox),
-    ), this._instrumentVolumeSlider.container);
+    ), this._instrumentVolumeDropdown, this._instrumentVolumeSlider.container);
+    private readonly _volumePitchCompensationSlider: Slider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: "50", value: "25", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeVolumePitchCompensation(this.doc, oldValue, newValue), false);
+    private readonly _volumePitchCompensationSliderInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "volumePitchCompensationSliderInputBox", type: "number", step: "1", min: "0", max: "50", value: "25" });
+    private readonly _volumePitchCompensationRow: HTMLDivElement = div({ class: "selectRow" }, div({},
+        span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("volumePitchCompensation") }, "‣ Pitch: "),
+        div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._volumePitchCompensationSliderInputBox),
+    ), this._volumePitchCompensationSlider.container);
+    private readonly _volumeChordCompensationSlider: Slider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: "50", value: "25", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeVolumeChordCompensation(this.doc, oldValue, newValue), false);
+    private readonly _volumeChordCompensationSliderInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "volumeChordCompensationSliderInputBox", type: "number", step: "1", min: "0", max: "50", value: "25" });
+    private readonly _volumeChordCompensationRow: HTMLDivElement = div({ class: "selectRow" }, div({},
+        span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("volumeChordCompensation") }, "‣ Chord: "),
+        div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._volumeChordCompensationSliderInputBox),
+    ), this._volumeChordCompensationSlider.container);
+    private readonly _instrumentVolumeDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._volumePitchCompensationRow, this._volumeChordCompensationRow);
+
     private readonly _panSlider: Slider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.panMax, value: Config.panCenter, step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePan(this.doc, oldValue, newValue), true);
     private readonly _panDropdown: HTMLButtonElement = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(DropdownID.Pan) }, "▼");
     private readonly _panSliderInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "panSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
@@ -1025,6 +1043,7 @@ export class SongEditor {
     private readonly _panDelaySlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["pan delay"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePanDelay(this.doc, oldValue, newValue), false);
     private readonly _panDelayRow: HTMLElement = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("panDelay") }, "‣ Delay:"), this._panDelaySlider.container);
     private readonly _panDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._panDelayRow);
+
     private readonly _chipWaveSelect: HTMLSelectElement = buildOptions(select(), Config.chipWaves.map(wave => wave.name));
     private readonly _chipNoiseSelect: HTMLSelectElement = buildOptions(select(), Config.chipNoises.map(wave => wave.name));
     // advloop addition
@@ -1104,7 +1123,18 @@ export class SongEditor {
     private readonly _pitchShiftTonicMarkers: HTMLDivElement[] = [div({ class: "pitchShiftMarker", style: { color: ColorConfig.tonic } }), div({ class: "pitchShiftMarker", style: { color: ColorConfig.tonic, left: "50%" } }), div({ class: "pitchShiftMarker", style: { color: ColorConfig.tonic, left: "100%" } })];
     private readonly _pitchShiftFifthMarkers: HTMLDivElement[] = [div({ class: "pitchShiftMarker", style: { color: ColorConfig.fifthNote, left: (100 * 7 / 24) + "%" } }), div({ class: "pitchShiftMarker", style: { color: ColorConfig.fifthNote, left: (100 * 19 / 24) + "%" } })];
     private readonly _pitchShiftMarkerContainer: HTMLDivElement = div({ style: "display: flex; position: relative;" }, this._pitchShiftSlider.container, div({ class: "pitchShiftMarkerContainer" }, this._pitchShiftTonicMarkers, this._pitchShiftFifthMarkers));
-    private readonly _pitchShiftRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("pitchShift") }, "Pitch Shift:"), this._pitchShiftMarkerContainer);
+    private readonly _pitchShiftDropdown: HTMLButtonElement = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(DropdownID.PitchShift) }, "▼");
+    private readonly _pitchShiftRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", style: "max-width: 3.5em; font-size: small;", onclick: () => this._openPrompt("pitchShift") }, "Pitch Shift:"), this._pitchShiftDropdown, this._pitchShiftMarkerContainer);
+    private readonly _pitchShiftEquaveDivisionsInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "pitchShiftEquaveDivisionsInputBox", type: "number", step: "1", min: Config.equaveDivisionsMin, max: Config.equaveDivisionsMax, value: this.doc.song.defaultEquaveDivisions });
+    private readonly _pitchShiftEquaveNumeratorInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "pitchShiftEquaveNumeratorInputBox", type: "number", step: "1", min: 1, max: Config.equaveNumeratorMax, value: this.doc.song.defaultEquaveNumerator });
+    private readonly _pitchShiftEquaveDenominatorInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "pitchShiftEquaveDenominatorInputBox", type: "number", step: "1", min: 1, max: Config.equaveDenominatorMax, value: this.doc.song.defaultEquaveDenominator });
+    private readonly _pitchShiftTuningRow: HTMLDivElement = div({ id: "pitchShiftTuning", style: `padding: 3px 0; max-width: 15em; text-align: center;` },
+        this._pitchShiftEquaveDivisionsInputBox,"ED",this._pitchShiftEquaveNumeratorInputBox,"/",this._pitchShiftEquaveDenominatorInputBox
+    );
+    private readonly _pitchShiftFiveLimitBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
+    private readonly _pitchShiftFiveLimitRow: HTMLElement = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("pitchShiftFiveLimit") }, "‣ 5-limit:"), this._pitchShiftFiveLimitBox);
+    private readonly _pitchShiftDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, /*this._pitchShiftTuningRow,*/ this._pitchShiftFiveLimitRow); //custom pitch shift tuning currently not functional, but is planned to be added in the future
+
     private readonly _detuneSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: Config.detuneMin - Config.detuneCenter, max: Config.detuneMax - Config.detuneCenter, value: 0, step: "4" }), this.doc, (oldValue: number, newValue: number) => new ChangeDetune(this.doc, oldValue, newValue), true);
     private readonly _detuneSliderInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "detuneSliderInputBox", type: "number", step: "1", min: Config.detuneMin - Config.detuneCenter, max: Config.detuneMax - Config.detuneCenter, value: 0 });
     private readonly _detuneSliderRow: HTMLDivElement = div({ class: "selectRow" }, div({},
@@ -1223,9 +1253,9 @@ export class SongEditor {
     private readonly _modEnvelopeBoxes: HTMLSelectElement[];
     private readonly _modTargetIndicators: SVGElement[];
 
-    private readonly _upperNoteLimitInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "upperNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
+    private readonly _upperNoteLimitInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "upperNoteLimitInputBox", type: "number", step: "1", min: 0, max: 96, value: 60 });
     private readonly _upperNoteLimitRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("upperNoteLimit") }, "Upper Note Limit:"), this._upperNoteLimitInputBox);
-    private readonly _lowerNoteLimitInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "lowerNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
+    private readonly _lowerNoteLimitInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "lowerNoteLimitInputBox", type: "number", step: "1", min: 0, max: 96, value: 60 });
     private readonly _lowerNoteLimitRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("lowerNoteLimit") }, "Lower Note Limit:"), this._lowerNoteLimitInputBox);
 
     private readonly _feedback6OpTypeSelect: HTMLSelectElement = buildOptions(select(), Config.feedbacks6Op.map(feedback => feedback.name));
@@ -1344,6 +1374,7 @@ export class SongEditor {
         this._chordSelectRow,
         this._chordDropdownGroup,
         this._pitchShiftRow,
+        this._pitchShiftDropdownGroup,
         this._detuneSliderRow,
         this._vibratoSelectRow,
         this._vibratoDropdownGroup,
@@ -1401,6 +1432,18 @@ export class SongEditor {
     private readonly _instrumentSettingsTextRow: HTMLDivElement = div({ id: "instrumentSettingsText", style: `padding: 3px 0; max-width: 15em; text-align: center; color: ${ColorConfig.secondaryText};` },
         "Instrument Settings"
     );
+    private readonly _channelTuningInfoRow: HTMLDivElement = div({ id: "channelTuning", style: `padding: 3px 0; max-width: 15em; text-align: center; color: ${ColorConfig.secondaryText};` },
+        "1ED2/1"
+    );
+    private readonly _channelEquaveDivisionsInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "channelEquaveDivisionsInputBox", type: "number", step: "1", min: Config.equaveDivisionsMin, max: Config.equaveDivisionsMax, value: this.doc.song.defaultEquaveDivisions });
+    private readonly _channelEquaveNumeratorInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "channelEquaveNumeratorInputBox", type: "number", step: "1", min: 2, max: Config.equaveNumeratorMax, value: this.doc.song.defaultEquaveNumerator });
+    private readonly _channelEquaveDenominatorInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", id: "channelEquaveDenominatorInputBox", type: "number", step: "1", min: 1, max: Config.equaveDenominatorMax, value: this.doc.song.defaultEquaveDenominator });
+    private readonly _channelTuningRow: HTMLDivElement = div({ id: "channelTuning", style: `padding: 3px 0; max-width: 15em; text-align: center;` },
+        this._channelEquaveDivisionsInputBox,"ED",this._channelEquaveNumeratorInputBox,"/",this._channelEquaveDenominatorInputBox
+    );
+    private readonly _applyTuningButton: HTMLButtonElement = button({type: "button", style: "margin: 2px 0"},
+        "Apply Tuning",
+    );
     private readonly _instrumentTypeSelectRow: HTMLDivElement = div({ class: "selectRow", id: "typeSelectRow" },
         span({ class: "tip", onclick: () => this._openPrompt("instrumentType") }, "Type:"),
         div( 
@@ -1410,12 +1453,16 @@ export class SongEditor {
     );
     private readonly _instrumentSettingsGroup: HTMLDivElement = div({ class: "editor-controls" },
         this._instrumentSettingsTextRow,
+        this._channelTuningInfoRow,
+        this._channelTuningRow,
+        this._applyTuningButton,
         this._instrumentsButtonRow,
         // these could've been put into _instrumentSettingsGroup as well but I decided not to
         // this._instrumentCopyGroup,
         // this._instrumentExportGroup,
         this._instrumentTypeSelectRow,
         this._instrumentVolumeSliderRow,
+        this._instrumentVolumeDropdownGroup,
         //this._customizeInstrumentButton,
         this._customInstrumentSettingsGroup,
     );
@@ -1604,6 +1651,8 @@ export class SongEditor {
     private _openFlangerMixDropdown: boolean = false;
     private _openOperatorDropdowns: boolean[] = [];
     private _openPulseWidthDropdown: boolean = false;
+    private _openPitchShiftDropdown: boolean = false;
+    private _openInstrumentVolumeDropdown: boolean = false;
     private _openUnisonDropdown: boolean = false;
 
     private outVolumeHistoricTimer: number = 0;
@@ -1628,9 +1677,6 @@ export class SongEditor {
         this._scaleSelect.appendChild(optgroup({ label: "Edit" },
             option({ value: "forceScale" }, "Snap Notes To Scale"),
             option({ value: "customize" }, "Edit Custom Scale"),
-        ));
-        this._keySelect.appendChild(optgroup({ label: "Edit" },
-            option({ value: "detectKey" }, "Detect Key"),
         ));
         this._rhythmSelect.appendChild(optgroup({ label: "Edit" },
             option({ value: "forceRhythm" }, "Snap Notes To Rhythm"),
@@ -1896,9 +1942,24 @@ export class SongEditor {
         this._instrumentImportButton.addEventListener("click", this._importInstruments.bind(this));
 
         sampleLoadEvents.addEventListener("sampleloaded", this._updateSampleLoadingBar.bind(this));
+        
+        this._channelEquaveDivisionsInputBox.addEventListener("input", this.updateApplyTuningButton);
+        this._channelEquaveNumeratorInputBox.addEventListener("input", this.updateApplyTuningButton);
+        this._channelEquaveDenominatorInputBox.addEventListener("input", this.updateApplyTuningButton);
+        
+        this._applyTuningButton.addEventListener("click", () => { this.doc.record(new ChangeChannelTuning(
+            this.doc, 
+            Math.round(+this._channelEquaveDivisionsInputBox.value),
+            Math.round(+this._channelEquaveNumeratorInputBox.value),
+            Math.round(+this._channelEquaveDenominatorInputBox.value)
+        )) });
 
         this._instrumentVolumeSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeVolume(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].volume, Math.min(25.0, Math.max(-25.0, Math.round(+this._instrumentVolumeSliderInputBox.value))))) });
+        this._volumePitchCompensationSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeVolumePitchCompensation(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].volumePitchCompensation, Math.min(50.0, Math.max(0.0, Math.round(+this._volumePitchCompensationSliderInputBox.value))))) });
+        this._volumeChordCompensationSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeVolumeChordCompensation(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].volumeChordCompensation, Math.min(50.0, Math.max(0.0, Math.round(+this._volumeChordCompensationSliderInputBox.value))))) });
+
         this._panSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangePan(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pan, Math.min(100.0, Math.max(0.0, Math.round(+this._panSliderInputBox.value))))) });
+
         this._pwmSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangePulseWidth(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pulseWidth, Math.min(Config.pulseWidthRange, Math.max(1.0, Math.round(+this._pwmSliderInputBox.value))))) });
         this._detuneSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeDetune(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].detune, Math.min(Config.detuneMax - Config.detuneCenter, Math.max(Config.detuneMin - Config.detuneCenter, Math.round(+this._detuneSliderInputBox.value))))) });
         this._rmHzOffsetSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeRmHzOffset(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].ringModHzOffset, Math.min(Config.rmHzOffsetMax - Config.rmHzOffsetCenter, Math.max(Config.rmHzOffsetMin - Config.rmHzOffsetCenter, Math.round(+this._rmHzOffsetSliderInputBox.value))))) });
@@ -1914,8 +1975,13 @@ export class SongEditor {
         this._clicklessTransitionBox.addEventListener("input", () => { this.doc.record(new ChangeClicklessTransition(this.doc, this._clicklessTransitionBox.checked)) });
         this._aliasingBox.addEventListener("input", () => { this.doc.record(new ChangeAliasing(this.doc, this._aliasingBox.checked)) });
 
-        this._upperNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeUpperLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].upperNoteLimit, (Math.min(Config.maxPitch, Math.max(0.0, Math.round(+this._upperNoteLimitInputBox.value)))))) });
-        this._lowerNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeLowerLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].lowerNoteLimit, (Math.min(Config.maxPitch, Math.max(0.0, Math.round(+this._lowerNoteLimitInputBox.value)))))) });
+        this._upperNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeUpperLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].upperNoteLimit, (Math.min(this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves, Math.max(0.0, Math.round(+this._upperNoteLimitInputBox.value)))))) });
+        this._lowerNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeLowerLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].lowerNoteLimit, (Math.min(this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves, Math.max(0.0, Math.round(+this._lowerNoteLimitInputBox.value)))))) });
+
+        this._pitchShiftEquaveDivisionsInputBox.addEventListener("input", () => { this.doc.record(new ChangePitchShiftEquaveDivisions(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pitchShiftEquaveDivisions, (Math.min(Config.equaveDivisionsMax, Math.max(1, Math.round(+this._pitchShiftEquaveDivisionsInputBox.value)))))) });
+        this._pitchShiftEquaveNumeratorInputBox.addEventListener("input", () => { this.doc.record(new ChangePitchShiftEquaveNumerator(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pitchShiftEquaveNumerator, (Math.min(Config.equaveNumeratorMax, Math.max(1, Math.round(+this._pitchShiftEquaveNumeratorInputBox.value)))), Math.max(1, Math.round(+this._pitchShiftEquaveDenominatorInputBox.value)))) });
+        this._pitchShiftEquaveDenominatorInputBox.addEventListener("input", () => { this.doc.record(new ChangePitchShiftEquaveDenominator(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pitchShiftEquaveDenominator, (Math.min(Config.equaveDenominatorMax, Math.max(1, Math.round(+this._pitchShiftEquaveDenominatorInputBox.value)))), Math.max(1, Math.round(+this._pitchShiftEquaveNumeratorInputBox.value)))) });
+        this._pitchShiftFiveLimitBox.addEventListener("input", () => { this.doc.record(new ChangePitchShiftFiveLimit(this.doc, this._pitchShiftFiveLimitBox.checked)) });
 
         this._invertWaveBox.addEventListener("input", () => { this.doc.record(new ChangeInvertWave(this.doc, this._invertWaveBox.checked)) });
         
@@ -2045,6 +2111,18 @@ export class SongEditor {
                 this._openPulseWidthDropdown = this._openPulseWidthDropdown ? false : true;
                 group = this._pulseWidthDropdownGroup;
                 shouldOpen = this._openPulseWidthDropdown;
+                break;
+            case DropdownID.PitchShift:
+                target = this._pitchShiftDropdown;
+                this._openPitchShiftDropdown = this._openPitchShiftDropdown ? false : true;
+                group = this._pitchShiftDropdownGroup;
+                shouldOpen = this._openPitchShiftDropdown;
+                break;
+            case DropdownID.InstrumentVolume:
+                target = this._instrumentVolumeDropdown;
+                this._openInstrumentVolumeDropdown = this._openInstrumentVolumeDropdown ? false : true;
+                group = this._instrumentVolumeDropdownGroup;
+                shouldOpen = this._openInstrumentVolumeDropdown;
                 break;
             case DropdownID.Unison:
                 target = this._unisonDropdown;
@@ -2519,6 +2597,21 @@ export class SongEditor {
         this._barScrollBar.changePos(offset);
     }
 
+    public updateApplyTuningButton = (): void => {
+        if (
+            ((this.doc.song.channels[this.doc.channel].equaveDivisions != Math.round(+this._channelEquaveDivisionsInputBox.value))
+            || (this.doc.song.channels[this.doc.channel].equaveNumerator != Math.round(+this._channelEquaveNumeratorInputBox.value))
+            || (this.doc.song.channels[this.doc.channel].equaveDenominator != Math.round(+this._channelEquaveDenominatorInputBox.value)))
+            && !this.doc.song.getChannelIsNoise(this.doc.channel)
+            && !this.doc.song.getChannelIsMod(this.doc.channel)
+            && this.doc.prefs.showChannelTuning
+        ) {
+            this._applyTuningButton.style.setProperty("display", "");
+        } else {
+            this._applyTuningButton.style.setProperty("display", "none");
+        }
+    }
+
     public whenUpdated = (): void => {
         const prefs: Preferences = this.doc.prefs;
         this._muteEditor.container.style.display = prefs.enableChannelMuting ? "" : "none";
@@ -2549,6 +2642,7 @@ export class SongEditor {
         this._globalOscscopeContainer.style.display = this.doc.prefs.showOscilloscope ? "" : "none";
         this.doc.synth.oscEnabled = this.doc.prefs.showOscilloscope;
         this._sampleLoadingStatusContainer.style.display = this.doc.prefs.showSampleLoadingStatus ? "" : "none";
+        this._instrumentSettingsTextRow.style.display = this.doc.prefs.showChannelName ? "" : "none";
         this._instrumentCopyGroup.style.display = this.doc.prefs.instrumentCopyPaste ? "" : "none";
         this._instrumentExportGroup.style.display = this.doc.prefs.instrumentImportExport ? "" : "none";
         this._instrumentSettingsArea.style.scrollbarWidth = this.doc.prefs.showInstrumentScrollbars ? "" : "none";
@@ -2596,6 +2690,7 @@ export class SongEditor {
             this._zoomOutButton.style.display = "none";
         }
         this._patternEditor.render();
+        this._piano.forceRender();
 
         // make the names of these two variables as short as possible for readability
         // also, these two variables are used for the effects tab as well, should they be renamed?
@@ -2633,6 +2728,8 @@ export class SongEditor {
             (prefs.showOscilloscope ? textOnIcon : textOffIcon) + "Show Oscilloscope",
             (prefs.showSampleLoadingStatus ? textOnIcon : textOffIcon) + "Show Sample Loading Status",
             (prefs.bisectionalModNotes ? textOnIcon : textOffIcon) + "Use Bisectional Mod Notes",
+            (prefs.showChannelName ? textOnIcon : textOffIcon) + "Show Channel Name",
+            (prefs.showChannelTuning ? textOnIcon : textOffIcon) + "Show Channel Tuning",
             (prefs.showDescription ? textOnIcon : textOffIcon) + "Show Description",
             textSpacingIcon + "Set Layout...",
             textSpacingIcon + "Set Theme...",
@@ -2674,7 +2771,7 @@ export class SongEditor {
         }
 
         setSelectedValue(this._scaleSelect, this.doc.song.scale);
-        this._scaleSelect.title = Config.scales[this.doc.song.scale].realName;
+        this._scaleSelect.title = Config.scales[this.doc.song.scale].realName + " " + Config.scales[this.doc.song.scale].intervals;
         setSelectedValue(this._keySelect, Config.keys.length - 1 - this.doc.song.key);
         this._octaveStepper.value = Math.round(this.doc.song.octave).toString();
         this._tempoSlider.updateValue(Math.max(0, Math.round(this.doc.song.tempo)));
@@ -2707,6 +2804,11 @@ export class SongEditor {
 
         setSelectedValue(this._rhythmSelect, this.doc.song.rhythm);
 
+        this.updateApplyTuningButton();
+
+        this._upperNoteLimitInputBox.max = this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves + "";
+        this._lowerNoteLimitInputBox.max = this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves + "";
+
         if (!this.doc.song.getChannelIsMod(this.doc.channel)) {
 
             this._customInstrumentSettingsGroup.style.display = "";
@@ -2714,7 +2816,19 @@ export class SongEditor {
             this._panDropdownGroup.style.display = (this._openPanDropdown ? "" : "none");
             this._detuneSliderRow.style.display = "";
             this._instrumentVolumeSliderRow.style.display = "";
+            if (this._openInstrumentVolumeDropdown) {
+                this._instrumentVolumeDropdownGroup.style.display = "";
+            }
             this._instrumentTypeSelectRow.style.setProperty("display", "");
+
+            if (!this.doc.song.getChannelIsNoise(this.doc.channel) && this.doc.prefs.showChannelTuning) {
+                this._channelTuningRow.style.setProperty("display", "");
+                this._channelTuningInfoRow.style.setProperty("display", "");
+            } else {
+                this._channelTuningRow.style.setProperty("display", "none");
+                this._channelTuningInfoRow.style.setProperty("display", "none");
+            }
+
             if (prefs.instrumentButtonsAtTop) {
                 this._instrumentSettingsGroup.insertBefore(this._instrumentExportGroup, this._instrumentSettingsGroup.firstChild);
                 this._instrumentSettingsGroup.insertBefore(this._instrumentCopyGroup, this._instrumentSettingsGroup.firstChild);
@@ -2723,6 +2837,9 @@ export class SongEditor {
                 this._instrumentSettingsGroup.appendChild(this._instrumentExportGroup);
             }
             this._instrumentSettingsGroup.insertBefore(this._instrumentsButtonRow, this._instrumentSettingsGroup.firstChild);
+            this._instrumentSettingsGroup.insertBefore(this._applyTuningButton, this._instrumentSettingsGroup.firstChild);
+            this._instrumentSettingsGroup.insertBefore(this._channelTuningRow, this._instrumentSettingsGroup.firstChild);
+            this._instrumentSettingsGroup.insertBefore(this._channelTuningInfoRow, this._instrumentSettingsGroup.firstChild);
             this._instrumentSettingsGroup.insertBefore(this._instrumentSettingsTextRow, this._instrumentSettingsGroup.firstChild);
 
             if (this.doc.song.channels[this.doc.channel].name == "") {
@@ -3053,8 +3170,19 @@ export class SongEditor {
                 for (const marker of this._pitchShiftFifthMarkers) {
                     marker.style.display = prefs.showFifth ? "" : "none";
                 }
+                if (this._openPitchShiftDropdown)
+                    this._pitchShiftDropdownGroup.style.display = "";
+                this._pitchShiftTuningRow.style.display = "";
+                this._pitchShiftEquaveDivisionsInputBox.value = String(instrument.pitchShiftEquaveDivisions);
+                this._pitchShiftEquaveNumeratorInputBox.value = String(instrument.pitchShiftEquaveNumerator);
+                this._pitchShiftEquaveDenominatorInputBox.value = String(instrument.pitchShiftEquaveDenominator);
+                this._pitchShiftFiveLimitBox.checked = instrument.pitchShiftFiveLimit;
+                this._pitchShiftFiveLimitRow.style.display = "";
             } else {
                 this._pitchShiftRow.style.display = "none";
+                this._pitchShiftDropdownGroup.style.display = "none";
+                this._pitchShiftTuningRow.style.display = "none";
+                this._pitchShiftFiveLimitRow.style.display = "none";
             }
 
             if (effectsIncludeDetune(instrument.effects)) {
@@ -3327,6 +3455,8 @@ export class SongEditor {
             setSelectedValue(this._vibratoSelect, instrument.vibrato);
             setSelectedValue(this._vibratoTypeSelect, instrument.vibratoType);
             setSelectedValue(this._chordSelect, instrument.chord);
+            
+            this._channelTuningInfoRow.innerHTML = channel.equaveDivisions + "ED" + channel.equaveNumerator + "/" + channel.equaveDenominator;
             this._panSliderInputBox.value = instrument.pan + "";
             this._pwmSliderInputBox.value = instrument.pulseWidth + "";
             this._detuneSliderInputBox.value = (instrument.detune - Config.detuneCenter) + "";
@@ -3341,6 +3471,10 @@ export class SongEditor {
             this.grainRangeNum.innerHTML = " (" + instrument.grainRange * Config.grainSizeStep + ")";
             this._instrumentVolumeSlider.updateValue(instrument.volume);
             this._instrumentVolumeSliderInputBox.value = "" + (instrument.volume);
+            this._volumePitchCompensationSlider.updateValue(instrument.volumePitchCompensation);
+            this._volumePitchCompensationSliderInputBox.value = "" + (instrument.volumePitchCompensation);
+            this._volumeChordCompensationSlider.updateValue(instrument.volumeChordCompensation);
+            this._volumeChordCompensationSliderInputBox.value = "" + (instrument.volumeChordCompensation);
             this._vibratoDepthSlider.updateValue(Math.round(instrument.vibratoDepth * 25));
             this._vibratoDelaySlider.updateValue(Math.round(instrument.vibratoDelay));
             this._vibratoSpeedSlider.updateValue(instrument.vibratoSpeed);
@@ -3365,16 +3499,14 @@ export class SongEditor {
             this._envelopeSpeedSlider.input.title = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);
             this._envelopeSpeedDisplay.textContent = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);
 
-            this._upperNoteLimitRow.firstChild!.textContent = "Upper Note Limit [" + Piano.getPitchNameAlwaysOctave(
-                (instrument.upperNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave,
-                instrument.upperNoteLimit,
-                this.doc.song.octave)
-                + "]:"
-            this._lowerNoteLimitRow.firstChild!.textContent = "Lower Note Limit [" + Piano.getPitchNameAlwaysOctave(
-                (instrument.lowerNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave,
-                instrument.lowerNoteLimit,
-                this.doc.song.octave)
-                 + "]:"
+            const doc: SongDocument = this.doc;
+            const key: number = doc.song.key;
+            const divisions: number = doc.song.channels[doc.channel].equaveDivisions;
+            const equave: number = doc.song.channels[doc.channel].equaveNumerator / doc.song.channels[doc.channel].equaveDenominator;
+            const octaveOffset: number = doc.song.octave;
+            const noteRangePiano = Piano.getPianoNotes(key, divisions, equave, octaveOffset, true);
+            this._upperNoteLimitRow.firstChild!.textContent = "Upper Note Limit [" + noteRangePiano[instrument.upperNoteLimit] + "]:";
+            this._lowerNoteLimitRow.firstChild!.textContent = "Lower Note Limit [" + noteRangePiano[instrument.lowerNoteLimit] + "]:";
 
             if (instrument.type == InstrumentType.customChipWave) {
                 this._customWaveDrawCanvas.redrawCanvas();
@@ -3447,6 +3579,7 @@ export class SongEditor {
             this._panSliderRow.style.display = "none";
             this._panDropdownGroup.style.display = "none";
             this._pulseWidthDropdownGroup.style.display = "none";
+            this._pitchShiftDropdownGroup.style.display = "none";
             this._unisonDropdownGroup.style.display = "none";
 
             this._modulatorGroup.style.display = "";
@@ -3582,7 +3715,7 @@ export class SongEditor {
                             anyInstrumentRingMods:     boolean = false,
                             anyInstrumentGranulars:    boolean = false,
                             anyInstrumentPhasers:      boolean = false,
-                            anyInstrumentFlanger:   boolean = false,
+                            anyInstrumentFlanger:      boolean = false,
                             anyInstrumentHasEnvelopes: boolean = false;
                         let allInstrumentPitchShifts:  boolean = true,
                             allInstrumentNoteFilters:  boolean = true,
@@ -4088,7 +4221,10 @@ export class SongEditor {
             this._panSliderRow.style.display = "none";
             this._panDropdownGroup.style.display = "none";
             this._instrumentVolumeSliderRow.style.display = "none";
+            this._instrumentVolumeDropdownGroup.style.display = "none";
             this._instrumentTypeSelectRow.style.setProperty("display", "none");
+            this._channelTuningInfoRow.style.setProperty("display", "none");
+            this._channelTuningRow.style.setProperty("display", "none");
 
             this._instrumentSettingsGroup.style.color = ColorConfig.getChannelColor(this.doc.song, this.doc.channel).primaryNote;
 
@@ -4477,13 +4613,21 @@ export class SongEditor {
         // Defer to actively editing volume/pan rows
         if (
             document.activeElement == this._panSliderInputBox
+            || document.activeElement == this._channelEquaveDivisionsInputBox
+            || document.activeElement == this._channelEquaveNumeratorInputBox
+            || document.activeElement == this._channelEquaveDenominatorInputBox
             || document.activeElement == this._pwmSliderInputBox
             || document.activeElement == this._detuneSliderInputBox
             || document.activeElement == this._phaserStagesInputBox
             || document.activeElement == this._flangerVoicesInputBox
             || document.activeElement == this._flangerDelayInputBox
             || document.activeElement == this._flangerPanSliderInputBox
+            || document.activeElement == this._pitchShiftEquaveDivisionsInputBox
+            || document.activeElement == this._pitchShiftEquaveNumeratorInputBox
+            || document.activeElement == this._pitchShiftEquaveDenominatorInputBox
             || document.activeElement == this._instrumentVolumeSliderInputBox
+            || document.activeElement == this._volumePitchCompensationSliderInputBox
+            || document.activeElement == this._volumeChordCompensationSliderInputBox
             // advloop addition
             || document.activeElement == this._chipWaveLoopStartStepper
             || document.activeElement == this._chipWaveLoopEndStepper
@@ -5542,9 +5686,7 @@ export class SongEditor {
     private _whenSetKey = (): void => {
         if (isNaN(<number><unknown>this._keySelect.value)) {
             switch (this._keySelect.value) {
-                case "detectKey":
-                    this.doc.record(new ChangeDetectKey(this.doc));
-                    break;
+                
             }
             this.doc.notifier.changed();
         } else {
@@ -6021,6 +6163,12 @@ export class SongEditor {
                 break;
             case "showSampleLoadingStatus":
                 this.doc.prefs.showSampleLoadingStatus = !this.doc.prefs.showSampleLoadingStatus;
+                break;
+            case "showChannelName":
+                this.doc.prefs.showChannelName = !this.doc.prefs.showChannelName;
+                break;
+            case "showChannelTuning":
+                this.doc.prefs.showChannelTuning = !this.doc.prefs.showChannelTuning;
                 break;
             case "closePromptByClickoff":
                 this.doc.prefs.closePromptByClickoff = !this.doc.prefs.closePromptByClickoff;

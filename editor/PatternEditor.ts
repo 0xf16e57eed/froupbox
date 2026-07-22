@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { getLocalStorageItem, Chord, Transition, Config, effectsIncludeNoteRange } from "../synth/SynthConfig";
+import { getLocalStorageItem, Chord, Transition, Config, effectsIncludeNoteRange, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { NotePin, Note, makeNotePin, FilterSettings, Channel, Pattern, Instrument, FilterControlPoint } from "../synth/synth";
 import { ColorConfig } from "./ColorConfig";
 import { SongDocument } from "./SongDocument";
@@ -77,7 +77,7 @@ class PatternCursor {
 export class PatternEditor {
     public controlMode: boolean = false;
     public shiftMode: boolean = false;
-    private readonly _svgNoteBackground: SVGPatternElement;
+    private _svgNoteBackground: SVGPatternElement;
     private readonly _svgDrumBackground: SVGPatternElement;
     private readonly _svgModBackground: SVGPatternElement;
     private readonly _svgBackground: SVGRectElement;
@@ -92,7 +92,7 @@ export class PatternEditor {
     public readonly container: HTMLDivElement;
 
     private readonly _defaultModBorder: number = 34;
-    private readonly _backgroundPitchRows: SVGRectElement[] = [];
+    private _backgroundPitchRows: SVGRectElement[] = [];
     private readonly _backgroundDrumRow: SVGRectElement = SVG.rect();
     private readonly _backgroundModRow: SVGRectElement = SVG.rect();
     private readonly _maximumNoteRanges: number = Math.max(Config.layeredInstrumentCountMax, Config.patternInstrumentCountMax);
@@ -146,9 +146,6 @@ export class PatternEditor {
     private _octaveOffset: number = 0;
     private _renderedWidth: number = -1;
     private _renderedHeight: number = -1;
-    private _renderedBeatWidth: number = -1;
-    private _renderedPitchHeight: number = -1;
-    private _renderedFifths: boolean = false;
     private _renderedDrums: boolean = false;
     private _renderedMod: boolean = false;
     private _renderedRhythm: number = -1;
@@ -190,7 +187,7 @@ export class PatternEditor {
         );
         this.container = HTML.div({ style: "height: 100%; overflow:hidden; position: relative; flex-grow: 1;" }, this._svg, this.modDragValueLabel);
 
-        for (let i: number = 0; i < Config.pitchesPerOctave; i++) {
+        for (let i: number = 0; i < _doc.song.channels[_doc.channel].equaveDivisions; i++) {
             const rectangle: SVGRectElement = SVG.rect();
             rectangle.setAttribute("x", "1");
             rectangle.setAttribute("fill", (i == 0) ? ColorConfig.tonic : ColorConfig.pitchBackground);
@@ -225,7 +222,7 @@ export class PatternEditor {
     }
 
     private _getMaxPitch(): number {
-        return this._doc.song.getChannelIsMod(this._doc.channel) ? Config.modCount - 1 : (this._doc.song.getChannelIsNoise(this._doc.channel) ? Config.drumCount - 1 : Config.maxPitch);
+        return this._doc.song.getChannelIsMod(this._doc.channel) ? Config.modCount - 1 : (this._doc.song.getChannelIsNoise(this._doc.channel) ? Config.drumCount - 1 : this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves);
     }
 
     private _validateModDragLabelInput = (event: Event): void => {
@@ -585,17 +582,17 @@ export class PatternEditor {
     private _snapToPitch(guess: number, min: number, max: number): number {
         if (guess < min) guess = min;
         if (guess > max) guess = max;
-        const scale: ReadonlyArray<boolean> = this._doc.prefs.notesOutsideScale ? Config.scales.dictionary["Free"].flags : this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
-        if (scale[Math.floor(guess) % Config.pitchesPerOctave] || this._doc.song.getChannelIsNoise(this._doc.channel) || this._doc.song.getChannelIsMod(this._doc.channel)) {
+        const scale: ReadonlyArray<boolean> = this._doc.prefs.notesOutsideScale ? scaleToBools(Config.scales.dictionary["Free"].intervals, this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator) : scaleToBools(getScaleIntervals(this._doc.song), this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator);
+        if (scale[Math.floor(guess) % this._doc.song.channels[this._doc.channel].equaveDivisions] || this._doc.song.getChannelIsNoise(this._doc.channel) || this._doc.song.getChannelIsMod(this._doc.channel)) {
 
             return Math.floor(guess);
         } else {
             let topPitch: number = Math.floor(guess) + 1;
             let bottomPitch: number = Math.floor(guess) - 1;
-            while (!scale[topPitch % Config.pitchesPerOctave]) {
+            while (!scale[topPitch % this._doc.song.channels[this._doc.channel].equaveDivisions]) {
                 topPitch++;
             }
-            while (!scale[(bottomPitch) % Config.pitchesPerOctave]) {
+            while (!scale[(bottomPitch) % this._doc.song.channels[this._doc.channel].equaveDivisions]) {
                 bottomPitch--;
             }
             if (topPitch > max) {
@@ -609,10 +606,10 @@ export class PatternEditor {
             }
             let topRange: number = topPitch;
             let bottomRange: number = bottomPitch + 1;
-            if (topPitch % Config.pitchesPerOctave == 0 || topPitch % Config.pitchesPerOctave == 7) {
+            if (topPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 0 || topPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 7) {
                 topRange -= 0.5;
             }
-            if (bottomPitch % Config.pitchesPerOctave == 0 || bottomPitch % Config.pitchesPerOctave == 7) {
+            if (bottomPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 0 || bottomPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 7) {
                 bottomRange += 0.5;
             }
             return guess - bottomRange > topRange - guess ? topPitch : bottomPitch;
@@ -1989,9 +1986,9 @@ export class PatternEditor {
                     this._dragChange = sequence;
                     this._doc.setProspectiveChange(this._dragChange);
 
-                    let scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+                    let scale = scaleToBools(getScaleIntervals(this._doc.song), this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator);
                     const notesInScale: number = scale.filter(x => x).length;
-                    const pitchRatio: number = this._doc.song.getChannelIsNoise(this._doc.channel) ? 1 : 12 / notesInScale;
+                    const pitchRatio: number = this._doc.song.getChannelIsNoise(this._doc.channel) ? 1 : this._doc.song.channels[this._doc.channel].equaveDivisions / notesInScale;
                     const draggedParts: number = Math.round((this._mouseX - this._mouseXStart) / (this._partWidth * minDivision)) * minDivision;
                     const draggedTranspose: number = Math.round((this._mouseYStart - this._mouseY) / (this._pitchHeight * pitchRatio));
                     sequence.append(new ChangeDragSelectedNotes(this._doc, this._doc.channel, pattern, draggedParts, draggedTranspose));
@@ -2564,7 +2561,7 @@ export class PatternEditor {
                             // instrument object, because they may be different
                             // from this range, even if note range is off.
                             newLowerNoteLimit = 0;
-                            newUpperNoteLimit = Config.maxPitch;
+                            newUpperNoteLimit = this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves;
                         }
                     }
 
@@ -2648,7 +2645,7 @@ export class PatternEditor {
             }
 
             const baseVisibleOctave: number = this._doc.getBaseVisibleOctave(this._doc.channel);
-            const pitchesPerOctave: number = Config.pitchesPerOctave;
+            const pitchesPerOctave: number = this._doc.song.channels[this._doc.channel].equaveDivisions;
             const lowestNoteVisible: number = baseVisibleOctave * pitchesPerOctave;
             const highestNoteVisible: number = lowestNoteVisible + (this._pitchCount - 1);
 
@@ -2805,6 +2802,7 @@ export class PatternEditor {
     }
 
     public render(): void {
+        this._redrawNoteBackground();
         const nextPattern: Pattern | null = this._doc.getCurrentPattern(this._barOffset);
 
         if (this._pattern != nextPattern) {
@@ -2822,7 +2820,7 @@ export class PatternEditor {
         this._editorWidth = this.container.clientWidth;
         this._editorHeight = this.container.clientHeight;
         this._partWidth = this._editorWidth / (this._doc.song.beatsPerBar * Config.partsPerBeat);
-        this._octaveOffset = (this._doc.channel >= this._doc.song.pitchChannelCount) ? 0 : this._doc.song.channels[this._doc.channel].octave * Config.pitchesPerOctave;
+        this._octaveOffset = (this._doc.channel >= this._doc.song.pitchChannelCount) ? 0 : this._doc.song.channels[this._doc.channel].octave * this._doc.song.channels[this._doc.channel].equaveDivisions;
 
         if (this._doc.song.getChannelIsNoise(this._doc.channel)) {
             this._pitchBorder = 0;
@@ -2856,7 +2854,7 @@ export class PatternEditor {
         }
 
         this._pitchHeight = this._editorHeight / this._pitchCount;
-        this._octaveOffset = (this._doc.channel >= this._doc.song.pitchChannelCount) ? 0 : this._doc.getBaseVisibleOctave(this._doc.channel) * Config.pitchesPerOctave;
+        this._octaveOffset = (this._doc.channel >= this._doc.song.pitchChannelCount) ? 0 : this._doc.getBaseVisibleOctave(this._doc.channel) * this._doc.song.channels[this._doc.channel].equaveDivisions;
 
         if (this._renderedRhythm != this._doc.song.rhythm ||
             this._renderedPitchChannelCount != this._doc.song.pitchChannelCount ||
@@ -2871,9 +2869,7 @@ export class PatternEditor {
 
         this._copiedPins = this._copiedPinChannels[this._doc.channel];
 
-        let wasResized: boolean = false;
         if (this._renderedWidth != this._editorWidth || this._renderedHeight != this._editorHeight) {
-            wasResized = true;
             this._renderedWidth = this._editorWidth;
             this._renderedHeight = this._editorHeight;
             this._svgBackground.setAttribute("width", "" + this._editorWidth);
@@ -2884,33 +2880,27 @@ export class PatternEditor {
         }
 
         const beatWidth = this._editorWidth / this._doc.song.beatsPerBar;
-        if (this._renderedBeatWidth != beatWidth || this._renderedPitchHeight != this._pitchHeight) {
-            wasResized = true;
-            this._renderedBeatWidth = beatWidth;
-            this._renderedPitchHeight = this._pitchHeight;
-            this._svgNoteBackground.setAttribute("width", "" + beatWidth);
-            this._svgNoteBackground.setAttribute("height", "" + (this._pitchHeight * Config.pitchesPerOctave));
-            this._svgDrumBackground.setAttribute("width", "" + beatWidth);
-            this._svgDrumBackground.setAttribute("height", "" + this._pitchHeight);
-            this._svgModBackground.setAttribute("width", "" + beatWidth);
-            this._svgModBackground.setAttribute("height", "" + (this._pitchHeight));
-            this._svgModBackground.setAttribute("y", "" + (this._pitchBorder / 2));
-            this._backgroundDrumRow.setAttribute("width", "" + (beatWidth - 2));
-            this._backgroundDrumRow.setAttribute("height", "" + (this._pitchHeight - 2));
-            if (this._pitchHeight > this._pitchBorder) {
-                this._backgroundModRow.setAttribute("width", "" + (beatWidth - 2));
-                this._backgroundModRow.setAttribute("height", "" + (this._pitchHeight - this._pitchBorder));
-            }
 
+        this._svgNoteBackground.setAttribute("width", "" + beatWidth);
+        this._svgNoteBackground.setAttribute("height", "" + (this._pitchHeight * this._doc.song.channels[this._doc.channel].equaveDivisions));
+        this._svgDrumBackground.setAttribute("width", "" + beatWidth);
+        this._svgDrumBackground.setAttribute("height", "" + this._pitchHeight);
+        this._svgModBackground.setAttribute("width", "" + beatWidth);
+        this._svgModBackground.setAttribute("height", "" + (this._pitchHeight));
+        this._svgModBackground.setAttribute("y", "" + (this._pitchBorder / 2));
+        this._backgroundDrumRow.setAttribute("width", "" + (beatWidth - 2));
+        this._backgroundDrumRow.setAttribute("height", "" + (this._pitchHeight - 2));
+        if (this._pitchHeight > this._pitchBorder) {
+            this._backgroundModRow.setAttribute("width", "" + (beatWidth - 2));
+            this._backgroundModRow.setAttribute("height", "" + (this._pitchHeight - this._pitchBorder));
+        }
 
-
-            for (let j: number = 0; j < Config.pitchesPerOctave; j++) {
-                const rectangle: SVGRectElement = this._backgroundPitchRows[j];
-                const y: number = (Config.pitchesPerOctave - j) % Config.pitchesPerOctave;
-                rectangle.setAttribute("width", "" + (beatWidth - 2));
-                rectangle.setAttribute("y", "" + (y * this._pitchHeight + 1));
-                rectangle.setAttribute("height", "" + (this._pitchHeight - 2));
-            }
+        for (let j: number = 0; j < this._doc.song.channels[this._doc.channel].equaveDivisions; j++) {
+            const rectangle: SVGRectElement = this._backgroundPitchRows[j];
+            const y: number = (this._doc.song.channels[this._doc.channel].equaveDivisions - j) % this._doc.song.channels[this._doc.channel].equaveDivisions;
+            rectangle.setAttribute("width", "" + (beatWidth - 2));
+            rectangle.setAttribute("y", "" + (y * this._pitchHeight + 1));
+            rectangle.setAttribute("height", "" + (this._pitchHeight - 2));
         }
 
         if (this._interactive) {
@@ -2919,13 +2909,8 @@ export class PatternEditor {
             this._updateSelection();
         }
 
-        if (this._renderedFifths != this._doc.prefs.showFifth) {
-            this._renderedFifths = this._doc.prefs.showFifth;
-            this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
-        }
-
-        for (let j: number = 0; j < Config.pitchesPerOctave; j++) {
-            let scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+        for (let j: number = 0; j < this._doc.song.channels[this._doc.channel].equaveDivisions; j++) {
+            let scale = scaleToBools(getScaleIntervals(this._doc.song), this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator);  
 
             this._backgroundPitchRows[j].style.visibility = scale[j] ? "visible" : "hidden";
         }
@@ -2951,7 +2936,29 @@ export class PatternEditor {
         }
 
         this._redrawNotePatterns();
-        this._redrawNoteRangeIndicator(wasResized);
+        this._redrawNoteRangeIndicator(true);
+    }
+
+    private _redrawNoteBackground(): void {
+        const divisions = this._doc.song.channels[this._doc.channel].equaveDivisions;
+
+        while (this._svgNoteBackground.lastChild) {
+            this._svgNoteBackground.removeChild(this._svgNoteBackground.lastChild);
+        }
+        this._backgroundPitchRows = [];
+
+        for (let i: number = 0; i < divisions; i++) {
+            const rectangle: SVGRectElement = SVG.rect();
+            rectangle.setAttribute("x", "1");
+            rectangle.setAttribute("fill", (i == 0) ? ColorConfig.tonic : ColorConfig.pitchBackground);
+            this._svgNoteBackground.appendChild(rectangle);
+            this._backgroundPitchRows[i] = rectangle;
+        }
+
+        const fifthLocation: number = Math.round(this._doc.song.channels[this._doc.channel].equaveDivisions * Math.log(3 / 2) / Math.log(this._doc.song.channels[this._doc.channel].equaveNumerator / this._doc.song.channels[this._doc.channel].equaveDenominator));
+        if (fifthLocation < divisions) {
+            this._backgroundPitchRows[fifthLocation].setAttribute("fill", this._doc.prefs.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
+        }
     }
 
     private _redrawNotePatterns(): void {
@@ -2968,13 +2975,21 @@ export class PatternEditor {
                     const pattern2: Pattern | null = this._doc.song.getPattern(channel, this._doc.bar + this._barOffset);
                     if (pattern2 == null) continue;
 
-                    const octaveOffset: number = this._doc.getBaseVisibleOctave(channel) * Config.pitchesPerOctave;
+                    const octaveOffset: number = this._doc.getBaseVisibleOctave(channel) * 12;
+                    const currentChannel = this._doc.song.channels[this._doc.channel];
+                    const loopedChannel = this._doc.song.channels[channel];
+                    if (loopedChannel.equaveNumerator != currentChannel.equaveNumerator || loopedChannel.equaveDenominator != currentChannel.equaveDenominator) continue;
                     for (const note of pattern2.notes) {
                         for (const pitch of note.pitches) {
+                            const correctedPitch = pitch * (currentChannel.equaveDivisions / loopedChannel.equaveDivisions);
                             let notePath: SVGPathElement = SVG.path();
                             notePath.setAttribute("fill", ColorConfig.getChannelColor(this._doc.song, channel).secondaryNote);
                             notePath.setAttribute("pointer-events", "none");
-                            this._drawNote(notePath, pitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset);
+                            /*let visualPins: NotePin[] = note.pins.concat(); console.log("stuff");
+                            for (let i: number = 0; i < visualPins.length; i++) {
+                                visualPins[i].interval = Math.round(visualPins[i].interval * (loopedChannel.equaveDivisions / currentChannel.equaveDivisions));
+                            }*/
+                            this._drawNote(notePath, correctedPitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset * (currentChannel.equaveDivisions / loopedChannel.equaveDivisions));
                             this._svgNoteContainer.appendChild(notePath);
 
                             if (this._doc.prefs.notesFlashWhenPlayed && (this._barOffset == 0)) {
@@ -2982,7 +2997,7 @@ export class PatternEditor {
                                 // const noteFlashColor = ColorConfig.getComputed("--note-flash-secondary") !== "" ? "var(--note-flash-secondary)" : "#ffffff77";
                                 notePath.setAttribute("fill", noteFlashColor);
                                 notePath.setAttribute("pointer-events", "none");
-                                this._drawNote(notePath, pitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset);
+                                this._drawNote(notePath, correctedPitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset * (currentChannel.equaveDivisions / loopedChannel.equaveDivisions));
                                 this._svgNoteContainer.appendChild(notePath);
                                 notePath.classList.add('note-flash');
                                 notePath.style.opacity = "0";

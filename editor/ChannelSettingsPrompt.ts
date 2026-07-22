@@ -5,11 +5,14 @@ import { HTML } from "imperative-html/dist/esm/elements-strict";
 import { SongDocument } from "./SongDocument";
 import { Prompt } from "./Prompt";
 import { ChangeGroup } from "./Change";
-import { ChangePatternsPerChannel, ChangeInstrumentsFlags, ChangeChannelCount } from "./changes";
+import { ChangePatternsPerChannel, ChangeInstrumentsFlags, ChangeChannelCount, ChangeDefaultTuning } from "./changes";
 
 const { button, div, label, br, h2, input } = HTML;
 
 export class ChannelSettingsPrompt implements Prompt {
+    private readonly _defaultEquaveDivisionsInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", type: "number", step: "1" });
+    private readonly _defaultEquaveNumeratorInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", type: "number", step: "1" });
+    private readonly _defaultEquaveDenominatorInputBox: HTMLInputElement = input({ style: "width: 4em; font-size: 80%; ", type: "number", step: "1" });
     private readonly _patternsStepper: HTMLInputElement = input({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
     private readonly _pitchChannelStepper: HTMLInputElement = input({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
     private readonly _drumChannelStepper: HTMLInputElement = input({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
@@ -39,6 +42,18 @@ export class ChannelSettingsPrompt implements Prompt {
             this._patternsStepper,
         ),
         label({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" },
+            "Default channel tuning divisions:",
+            this._defaultEquaveDivisionsInputBox,
+        ),
+        label({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" },
+            "Default channel equave numerator:",
+            this._defaultEquaveNumeratorInputBox,
+        ),
+        label({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" },
+            "Default channel equave denominator:",
+            this._defaultEquaveDenominatorInputBox,
+        ),
+        label({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" },
             "Simultaneous instruments",
             br(),
             "per channel:",
@@ -57,10 +72,22 @@ export class ChannelSettingsPrompt implements Prompt {
     );
 
     constructor(private _doc: SongDocument) {
+
+        this._defaultEquaveDivisionsInputBox.value = this._doc.song.defaultEquaveDivisions + "";
+        this._defaultEquaveDivisionsInputBox.min = Config.equaveDivisionsMin + "";
+        this._defaultEquaveDivisionsInputBox.max = Config.equaveDivisionsMax + "";
+
+        this._defaultEquaveNumeratorInputBox.value = this._doc.song.defaultEquaveNumerator + "";
+        this._defaultEquaveNumeratorInputBox.min = 2 + "";
+        this._defaultEquaveNumeratorInputBox.max = Config.equaveNumeratorMax + "";
+
+        this._defaultEquaveDenominatorInputBox.value = this._doc.song.defaultEquaveDenominator + "";
+        this._defaultEquaveDenominatorInputBox.min = 1 + "";
+        this._defaultEquaveDenominatorInputBox.max = Config.equaveDenominatorMax + "";
+
         this._patternsStepper.value = this._doc.song.patternsPerChannel + "";
         this._patternsStepper.min = "1";
         this._patternsStepper.max = Config.barCountMax + "";
-
 
         this._pitchChannelStepper.value = this._doc.song.pitchChannelCount + "";
         this._pitchChannelStepper.min = Config.pitchChannelCountMin + "";
@@ -85,10 +112,16 @@ export class ChannelSettingsPrompt implements Prompt {
         this._pitchChannelStepper.addEventListener("keypress", ChannelSettingsPrompt._validateKey);
         this._drumChannelStepper.addEventListener("keypress", ChannelSettingsPrompt._validateKey);
         this._modChannelStepper.addEventListener("keypress", ChannelSettingsPrompt._validateKey);
+        this._defaultEquaveDivisionsInputBox.addEventListener("keypress", ChannelSettingsPrompt._validateKey);
+        this._defaultEquaveNumeratorInputBox.addEventListener("keypress", ChannelSettingsPrompt._validateKey);
+        this._defaultEquaveDenominatorInputBox.addEventListener("keypress", ChannelSettingsPrompt._validateKey);
         this._patternsStepper.addEventListener("blur", this._validateNumber);
         this._pitchChannelStepper.addEventListener("blur", this._validateNumber);
         this._drumChannelStepper.addEventListener("blur", this._validateNumber);
         this._modChannelStepper.addEventListener("blur", this._validateNumber);
+        this._defaultEquaveDivisionsInputBox.addEventListener("blur", this._validateNumber);
+        this._defaultEquaveNumeratorInputBox.addEventListener("blur", this._validateNumber);
+        this._defaultEquaveDenominatorInputBox.addEventListener("blur", this._validateNumber);
         this.container.addEventListener("keydown", this._whenKeyPressed);
     }
 
@@ -103,10 +136,16 @@ export class ChannelSettingsPrompt implements Prompt {
         this._pitchChannelStepper.removeEventListener("keypress", ChannelSettingsPrompt._validateKey);
         this._drumChannelStepper.removeEventListener("keypress", ChannelSettingsPrompt._validateKey);
         this._modChannelStepper.removeEventListener("keypress", ChannelSettingsPrompt._validateKey);
+        this._defaultEquaveDivisionsInputBox.removeEventListener("keypress", ChannelSettingsPrompt._validateKey);
+        this._defaultEquaveNumeratorInputBox.removeEventListener("keypress", ChannelSettingsPrompt._validateKey);
+        this._defaultEquaveDenominatorInputBox.removeEventListener("keypress", ChannelSettingsPrompt._validateKey);
         this._patternsStepper.removeEventListener("blur", this._validateNumber);
         this._pitchChannelStepper.removeEventListener("blur", this._validateNumber);
         this._drumChannelStepper.removeEventListener("blur", this._validateNumber);
         this._modChannelStepper.removeEventListener("blur", this._validateNumber);
+        this._defaultEquaveDivisionsInputBox.removeEventListener("blur", this._validateNumber);
+        this._defaultEquaveNumeratorInputBox.removeEventListener("blur", this._validateNumber);
+        this._defaultEquaveDenominatorInputBox.removeEventListener("blur", this._validateNumber);
         this.container.removeEventListener("keydown", this._whenKeyPressed);
     }
 
@@ -136,6 +175,7 @@ export class ChannelSettingsPrompt implements Prompt {
 
     private _saveChanges = (): void => {
         const group: ChangeGroup = new ChangeGroup();
+        group.append(new ChangeDefaultTuning(this._doc, ChannelSettingsPrompt._validate(this._defaultEquaveDivisionsInputBox), ChannelSettingsPrompt._validate(this._defaultEquaveNumeratorInputBox), ChannelSettingsPrompt._validate(this._defaultEquaveDenominatorInputBox)));
         group.append(new ChangeInstrumentsFlags(this._doc, this._layeredInstrumentsBox.checked, this._patternInstrumentsBox.checked));
         group.append(new ChangePatternsPerChannel(this._doc, ChannelSettingsPrompt._validate(this._patternsStepper)));
         group.append(new ChangeChannelCount(this._doc, ChannelSettingsPrompt._validate(this._pitchChannelStepper), ChannelSettingsPrompt._validate(this._drumChannelStepper), ChannelSettingsPrompt._validate(this._modChannelStepper)));

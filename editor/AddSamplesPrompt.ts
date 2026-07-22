@@ -48,7 +48,7 @@ export class AddSamplesPrompt {
     private readonly _instructionsLink: HTMLAnchorElement = a({ href: "#" }, "Here's more information and some instructions on how to use custom samples in froupbox.");
     private readonly _description: HTMLDivElement = div(
         div({ style: "margin-bottom: 0.5em; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; cursor: text;" },
-            "In order to use the old froupbx samples, you should add ",
+            "In order to use the old samples, you should add ",
             code("legacySamples"),
             " as an URL. You can also use ",
             code("nintariboxSamples"),
@@ -629,14 +629,14 @@ export class AddSamplesPrompt {
             return (x % b + b) % b;
         }
         n = Math.floor(n) - 12;
-        const pitchNameIndex: number = wrap(n + Config.keys[this._doc.song.key].basePitch, Config.pitchesPerOctave);
+        const pitchNameIndex: number = wrap(n + Config.keys[this._doc.song.key].basePitch, 12);
         let pitch: string = "";
         if (Config.keys[pitchNameIndex].isWhiteKey) {
             pitch = Config.keys[pitchNameIndex].name;
         }
         else {
-            const shiftDir: number = Config.blackKeyNameParents[wrap(n, Config.pitchesPerOctave)];
-            pitch = Config.keys[wrap(pitchNameIndex + Config.pitchesPerOctave + shiftDir, Config.pitchesPerOctave)].name;
+            const shiftDir: number = Config.blackKeyNameParents[wrap(n, 12)];
+            pitch = Config.keys[wrap(pitchNameIndex + 12 + shiftDir, 12)].name;
             if (shiftDir == 1) {
                 pitch += "♭";
             }
@@ -644,7 +644,7 @@ export class AddSamplesPrompt {
                 pitch += "♯";
             }
         }
-        pitch += Math.floor(n / Config.pitchesPerOctave);
+        pitch += Math.floor(n / 12);
         return pitch;
     }
 
@@ -661,7 +661,7 @@ export class AddSamplesPrompt {
             const optionsVisible: boolean = Boolean(this._entryOptionsDisplayStates[entryIndex]);
             const urlInput: HTMLInputElement = input({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", value: entry.url });
             const sampleRateStepper: HTMLInputElement = input({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + entry.sampleRate, min: "8000", max: "96000", step: "1" });
-            const rootKeyStepper: HTMLInputElement = input({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + entry.rootKey, min: "0", max: Config.maxPitch + Config.pitchesPerOctave, step: "1" });
+            const rootKeyStepper: HTMLInputElement = input({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + entry.rootKey, min: "0", max: this._doc.song.defaultEquaveDivisions * Config.pitchOctaves + this._doc.song.defaultEquaveDivisions, step: "1" });
             const rootKeyDisplay: HTMLSpanElement = span({ class: "add-sample-prompt-root-key-display", style: "margin-left: 0.4em; width: 3em; text-align: left; text-overflow: ellipsis; overflow: hidden; flex-shrink: 0;" }, `(${this._noteNameFromPitchNumber(entry.rootKey)})`);
             const percussionBox: HTMLInputElement = input({ style: "width: 1em; margin-left: 1em;", type: "checkbox" });
             const chipWaveLoopStartStepper: HTMLInputElement = input({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + (entry.chipWaveLoopStart != null ? entry.chipWaveLoopStart : ""), min: "0", step: "1" });

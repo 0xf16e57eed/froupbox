@@ -19,8 +19,7 @@ export class TipPrompt implements Prompt {
 			case "scale": {
 				message = div(
 					h2("Scale"),
-					p("This setting limits the available pitches for adding notes. You may think that there's no point in limiting your choices, but the set of pitches you use has a strong influence on the mood and feel of your song, and these scales serve as guides to help you choose appropriate pitches. Don't worry, you can change the scale at any time, so you're not locked into it. Try making little melodies using all the available pitches of a scale to get a sense for how it sounds."),
-					p("The most common scales are major and minor. Assuming your song uses all pitches in the scale and especially \"tonic\" pitches (the purple rows in the pattern editor) then major scales tend to sound more playful or optimistic, whereas minor scales sound more serious or sad."),
+					p("This setting limits the available pitches for adding notes. The set of pitches you use has a strong influence on the mood and feel of your song, and these scales serve as guides to help you choose appropriate pitches. Don't worry, you can change the scale at any time, so you're not locked into it. Try making little melodies using all the available pitches of a scale to get a sense for how it sounds."),
 				);
 			} break;
 			case "key": {
@@ -71,6 +70,20 @@ export class TipPrompt implements Prompt {
 					h2("Instrument Volume"),
 					p("This setting controls the volume of the selected instrument without affecting the volume of the other instruments. This allows you to balance the loudness of each instrument relative to each other."),
 					p("Please be careful when using volume settings above 0. This indicates amplification and too much of that can trip the audio limiter built into this tool. This can lead to your song sounding muffled if overused. But when used carefully, amplification can be a powerful tool!"),
+				);
+			} break;
+			case "volumePitchCompensation": {
+				message = div(
+					h2("Volume-Pitch Compensation"),
+					p("This setting controls how much volume is adjusted to compensate for the pitch."),
+					p("25 is the default value."),
+				);
+			} break;
+			case "volumeChordCompensation": {
+				message = div(
+					h2("Volume-Chord Compensation"),
+					p("This setting controls how much volume is adjusted to compensate for the amount of notes in the chord."),
+					p("25 is the default value."),
 				);
 			} break;
 			case "pan": {
@@ -340,7 +353,13 @@ export class TipPrompt implements Prompt {
 					h2("Pitch Shift"),
 					p("This setting makes instruments play higher or lower pitches than the ones displayed in the pattern editor. Be careful that you don't confuse yourself!"),
 					p("You can combine this with envelopes to bend pitch over time, or play multiple simultaneous instruments with different pitch shifts for interesting layered sounds."),
-					p("The intervals created by this setting are in \"just intonation\" which means they stay in phase with the original pitch instead of shifting in and out of phase over time. If you want the shifting, add the detune effect!"),
+				);
+			} break;
+			case "pitchShiftFiveLimit": {
+				message = div(
+					h2("Pitch Shift 5-limit"),
+					p("When pitch shift is not being modulated, this setting makes pitch shift snap to the closest use 5-limit just intonation intervals from the following list: "),
+					p("\"1/1, 16/15, 9/8, 6/5, 5/4, 4/3, 45/32, 3/2, 8/5, 5/3, 16/9, 15/8\""),
 				);
 			} break;
 			// case "detune": {

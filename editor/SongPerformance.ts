@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Config } from "../synth/SynthConfig";
+import { Config, scaleToBools } from "../synth/SynthConfig";
 import { Note, Pattern } from "../synth/synth";
 import { SongDocument } from "./SongDocument";
 import { ChangeGroup } from "./Change";
@@ -390,7 +390,7 @@ export class SongPerformance {
                 this.clearAllPitches();
                 this._pitchesAreTemporary = false;
             }
-            if (this._doc.prefs.ignorePerformedNotesNotInScale && !Config.scales[this._doc.song.scale].flags[pitch % Config.pitchesPerOctave]) {
+            if (this._doc.prefs.ignorePerformedNotesNotInScale && !scaleToBools(Config.scales[this._doc.song.scale].intervals, this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator)[pitch % this._doc.song.channels[this._doc.channel].equaveDivisions]) {
                 return;
             }
             if (this._doc.synth.liveInputPitches.indexOf(pitch) == -1) {
@@ -420,7 +420,7 @@ export class SongPerformance {
                 this.clearAllBassPitches();
                 this._bassPitchesAreTemporary = false;
             }
-            if (this._doc.prefs.ignorePerformedNotesNotInScale && !Config.scales[this._doc.song.scale].flags[pitch % Config.pitchesPerOctave]) {
+            if (this._doc.prefs.ignorePerformedNotesNotInScale && !scaleToBools(Config.scales[this._doc.song.scale].intervals, this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator)[pitch % this._doc.song.channels[this._doc.channel].equaveDivisions]) {
                 return;
             }
             if (this._doc.synth.liveBassInputPitches.indexOf(pitch) == -1) {

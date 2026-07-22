@@ -17,6 +17,7 @@ interface ChannelCopy {
     isMod: boolean;
     patterns: Dictionary<PatternCopy>;
     bars: number[];
+    divisions: number;
 }
 
 interface SelectionCopy {
@@ -287,7 +288,7 @@ export class Selection {
         return true;
     }
 
-    public copy(): void {
+    public copy(): void {  
         const channels: ChannelCopy[] = [];
 
         for (const channelIndex of this._eachSelectedChannel()) {
@@ -328,6 +329,7 @@ export class Selection {
                 "isMod": this._doc.song.getChannelIsMod(channelIndex),
                 "patterns": patterns,
                 "bars": bars,
+                "divisions": this._doc.song.channels[channelIndex].equaveDivisions,
             };
             channels.push(channelCopy);
         }
@@ -411,7 +413,7 @@ export class Selection {
     // elsewhere in the song (unless we're just pasting a single pattern) but I'm
     // also trying to reuse patterns where it makes sense to do so, especially 
     // in the same channel it was copied from.
-    public pasteNotes(): void {
+    public pasteNotes(): void {  
         const selectionCopy: SelectionCopy | null = JSON.parse(String(window.localStorage.getItem("selectionCopy")));
         if (selectionCopy == null) return;
         const channelCopies: ChannelCopy[] = selectionCopy["channels"] || [];
@@ -454,6 +456,29 @@ export class Selection {
                 let pastedNotes: Note[] = patternCopy["notes"];
                 if (isPitch && channelIsNoise) {
                     pastedNotes = this._convertCopiedPitchNotesToNoiseNotes(pastedNotes);
+                } else {
+                    const oldEquaveDivisions = channelCopy.divisions;
+                    const newEquaveDivisions = this._doc.song.channels[channelIndex].equaveDivisions;
+
+                    for (let i = 0; i < pastedNotes.length; i++) {
+
+                        let pitches = pastedNotes[i].pitches;
+                        let newPitches: number[] = [];
+                        let pins = pastedNotes[i].pins;
+
+                        for (let j: number = 0; j < pitches.length; j++) {
+                            const newPitch = Math.round(pitches[j] * (newEquaveDivisions / oldEquaveDivisions));
+                            if (newPitch <= newEquaveDivisions * Config.pitchOctaves && newPitch >= 0) {
+                                newPitches.push(newPitch);
+                            }
+                        }
+
+                        for (let j: number = 0; j < pins.length; j++) {
+                            pastedNotes[i].pins[j].interval = Math.round(pins[j].interval * (newEquaveDivisions / oldEquaveDivisions));
+                        }
+
+                        pastedNotes[i].pitches = newPitches;
+                    }
                 }
 
                 if (currentPatternIndex == 0) {
@@ -513,7 +538,7 @@ export class Selection {
                             const newPattern: Pattern | null = this._doc.song.getPattern(channelIndex, bar);
                             if (newPattern == null) throw new Error();
                             for (const note of pattern.cloneNotes()) {
-                                if (isPitch && channelIsNoise) {
+                                if (isPitch && channelIsNoise) {  
                                     note.pitches = this._remapToNoisePitches(note.pitches);
                                 }
                                 group.append(new ChangeNoteAdded(this._doc, newPattern, note, newPattern.notes.length, false));
@@ -532,6 +557,29 @@ export class Selection {
                         let pastedNotes: Note[] = patternCopy["notes"];
                         if (isPitch && channelIsNoise) {
                             pastedNotes = this._convertCopiedPitchNotesToNoiseNotes(pastedNotes);
+                        } else {
+                            const oldEquaveDivisions = channelCopy.divisions;
+                            const newEquaveDivisions = this._doc.song.channels[channelIndex].equaveDivisions;
+
+                            for (let i = 0; i < pastedNotes.length; i++) {
+
+                                let pitches = pastedNotes[i].pitches;
+                                let newPitches: number[] = [];
+                                let pins = pastedNotes[i].pins;
+
+                                for (let j: number = 0; j < pitches.length; j++) {
+                                    const newPitch = Math.round(pitches[j] * (newEquaveDivisions / oldEquaveDivisions));
+                                    if (newPitch <= newEquaveDivisions * Config.pitchOctaves && newPitch >= 0) {
+                                        newPitches.push(newPitch);
+                                    }
+                                }
+
+                                for (let j: number = 0; j < pins.length; j++) {
+                                    pastedNotes[i].pins[j].interval = Math.round(pins[j].interval * (newEquaveDivisions / oldEquaveDivisions));
+                                }
+
+                                pastedNotes[i].pitches = newPitches;
+                            }
                         }
                         group.append(new ChangePaste(this._doc, pattern, pastedNotes, this.patternSelectionStart, this.patternSelectionEnd, copiedPartDuration));
                     }
@@ -562,6 +610,29 @@ export class Selection {
                     let pastedNotes: Note[] = patternCopy["notes"];
                     if (isPitch && channelIsNoise) {
                         pastedNotes = this._convertCopiedPitchNotesToNoiseNotes(pastedNotes);
+                    } else {
+                        const oldEquaveDivisions = channelCopy.divisions;
+                        const newEquaveDivisions = this._doc.song.channels[channelIndex].equaveDivisions;
+
+                        for (let i = 0; i < pastedNotes.length; i++) {
+
+                            let pitches = pastedNotes[i].pitches;
+                            let newPitches: number[] = [];
+                            let pins = pastedNotes[i].pins;
+
+                            for (let j: number = 0; j < pitches.length; j++) {
+                                const newPitch = Math.round(pitches[j] * (newEquaveDivisions / oldEquaveDivisions));
+                                if (newPitch <= newEquaveDivisions * Config.pitchOctaves && newPitch >= 0) {
+                                    newPitches.push(newPitch);
+                                }
+                            }
+
+                            for (let j: number = 0; j < pins.length; j++) {
+                                pastedNotes[i].pins[j].interval = Math.round(pins[j].interval * (newEquaveDivisions / oldEquaveDivisions));
+                            }
+
+                            pastedNotes[i].pitches = newPitches;
+                        }
                     }
 
                     if (existingPattern != undefined &&
@@ -784,11 +855,11 @@ export class Selection {
         for (const channelIndex of this._eachSelectedChannel()) {
             if (this._doc.song.getChannelIsNoise(channelIndex) || this._doc.song.getChannelIsMod(channelIndex)) continue;
             for (const pattern of this._eachSelectedPattern(channelIndex)) {
-                unionOfUsedNotes(pattern, scaleFlags);
+                unionOfUsedNotes(pattern, scaleFlags, this._doc.song.channels[this._doc.channel].equaveDivisions);
             }
         }
 
-        const scaleMap: number[] = generateScaleMap(scaleFlags, this._doc.song.scale, this._doc.song.scaleCustom);
+        const scaleMap: number[] = generateScaleMap(scaleFlags, this._doc.song, this._doc.song.channels[this._doc.channel].equaveDivisions, 2, 1);
 
         for (const channelIndex of this._eachSelectedChannel()) {
             if (this._doc.song.getChannelIsNoise(channelIndex) || this._doc.song.getChannelIsMod(channelIndex)) continue;

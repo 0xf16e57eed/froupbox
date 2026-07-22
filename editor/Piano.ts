@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Config } from "../synth/SynthConfig";
+import { Config, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { SongDocument } from "./SongDocument";
 import { HTML, SVG } from "imperative-html/dist/esm/elements-strict";
 import { ColorConfig } from "./ColorConfig";
@@ -49,7 +49,7 @@ export class Piano {
     // Bass cutoff pitch is roughly half of the viewed window and below, though on odd-numbered octave counts the lead has priority for the middle octave.
     public static getBassCutoffPitch(doc: SongDocument): number {
         const octaveOffset: number = doc.getBaseVisibleOctave(doc.channel);
-        return octaveOffset * Config.pitchesPerOctave + Math.floor(doc.getVisiblePitchCount() / (Config.pitchesPerOctave * 2)) * Config.pitchesPerOctave;
+        return octaveOffset * doc.song.channels[doc.channel].equaveDivisions + Math.floor(doc.getVisiblePitchCount() / (doc.song.channels[doc.channel].equaveDivisions * 2)) * doc.song.channels[doc.channel].equaveDivisions;
     }
 
     constructor(private _doc: SongDocument) {
@@ -116,25 +116,25 @@ export class Piano {
     }
 
     private _updateCursorPitch(): void {
-        const scale: ReadonlyArray<boolean> = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+        const scale: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(this._doc.song), this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator);
         const mousePitch: number = Math.max(0, Math.min(this._pitchCount - 1, this._pitchCount - (this._mouseY / this._pitchHeight)));
-        if (scale[Math.floor(mousePitch) % Config.pitchesPerOctave] || this._doc.song.getChannelIsNoise(this._doc.channel)) {
+        if (scale[Math.floor(mousePitch) % this._doc.song.channels[this._doc.channel].equaveDivisions] || this._doc.song.getChannelIsNoise(this._doc.channel)) {
             this._cursorPitch = Math.floor(mousePitch);
         } else {
             let topPitch: number = Math.floor(mousePitch) + 1;
             let bottomPitch: number = Math.floor(mousePitch) - 1;
-            while (!scale[topPitch % Config.pitchesPerOctave]) {
+            while (!scale[topPitch % this._doc.song.channels[this._doc.channel].equaveDivisions]) {
                 topPitch++;
             }
-            while (!scale[(bottomPitch) % Config.pitchesPerOctave]) {
+            while (!scale[(bottomPitch) % this._doc.song.channels[this._doc.channel].equaveDivisions]) {
                 bottomPitch--;
             }
             let topRange: number = topPitch;
             let bottomRange: number = bottomPitch + 1;
-            if (topPitch % Config.pitchesPerOctave == 0 || topPitch % Config.pitchesPerOctave == 7) {
+            if (topPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 0 || topPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 7) {
                 topRange -= 0.5;
             }
-            if (bottomPitch % Config.pitchesPerOctave == 0 || bottomPitch % Config.pitchesPerOctave == 7) {
+            if (bottomPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 0 || bottomPitch % this._doc.song.channels[this._doc.channel].equaveDivisions == 7) {
                 bottomRange += 0.5;
             }
             this._cursorPitch = mousePitch - bottomRange > topRange - mousePitch ? topPitch : bottomPitch;
@@ -142,7 +142,7 @@ export class Piano {
     }
 
     private _playLiveInput(): void {
-        const octaveOffset: number = this._doc.getBaseVisibleOctave(this._doc.channel) * Config.pitchesPerOctave;
+        const octaveOffset: number = this._doc.getBaseVisibleOctave(this._doc.channel) * this._doc.song.channels[this._doc.channel].equaveDivisions;
         const currentPitch: number = this._cursorPitch + octaveOffset;
         if (this._playedPitch == currentPitch) return;
         this._doc.performance.removePerformedPitch(this._playedPitch);
@@ -266,7 +266,7 @@ export class Piano {
             this._preview.style.height = pitchHeight + "px";
         }
 
-        const octaveOffset: number = this._doc.getBaseVisibleOctave(this._doc.channel) * Config.pitchesPerOctave;
+        const octaveOffset: number = this._doc.getBaseVisibleOctave(this._doc.channel) * this._doc.song.channels[this._doc.channel].equaveDivisions;
         const container: HTMLDivElement = this._doc.song.getChannelIsNoise(this._doc.channel) ? this._drumContainer : this._pianoContainer;
         const children: HTMLCollection = container.children;
         for (let i: number = 0; i < children.length; i++) {
@@ -316,12 +316,18 @@ export class Piano {
                 this._renderedPitchCount = this._pitchCount;
             }
 
+            const doc: SongDocument = this._doc;
+            const key: number = doc.song.key;
+            const divisions: number = doc.song.channels[doc.channel].equaveDivisions;
+            const equave: number = doc.song.channels[doc.channel].equaveNumerator / doc.song.channels[doc.channel].equaveDenominator;
+            const octaveOffset: number = doc.song.octave;
+            const notes: string[] = Piano.getPianoNotes(key, divisions, equave, octaveOffset, false);
+
             for (let j: number = 0; j < this._pitchCount; j++) {
-                const pitchNameIndex: number = (j + Config.keys[this._doc.song.key].basePitch) % Config.pitchesPerOctave;
-                const isWhiteKey: boolean = Config.keys[pitchNameIndex].isWhiteKey;
+                const isWhiteKey: boolean = !(notes[j + this._doc.getBaseVisibleOctave(this._doc.channel) * divisions].includes("♯") || notes[j + this._doc.getBaseVisibleOctave(this._doc.channel) * divisions].includes("♭"));
                 this._pianoKeys[j].style.background = isWhiteKey ? ColorConfig.whitePianoKey : ColorConfig.blackPianoKey;
-                let scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
-                if (!scale[j % Config.pitchesPerOctave]) {
+                const scale: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(this._doc.song), this._doc.song.channels[this._doc.channel].equaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator);
+                if (!scale[j % this._doc.song.channels[this._doc.channel].equaveDivisions]) {
                     this._pianoKeys[j].classList.add("disabled");
                     this._pianoLabels[j].style.display = "none";
                 } else {
@@ -330,25 +336,15 @@ export class Piano {
 
                     const label: HTMLDivElement = this._pianoLabels[j];
 
-                    if ((j % 12) == 0) {
+                    if ((j % this._doc.song.channels[this._doc.channel].equaveDivisions) == 0) {
                         label.style.transform = "translate(-5px, 0px)";
                     }
                     else {
                         label.style.transform = "translate(0px, 0px)";
                     }
 
-                    /* @jummbus - Visual distinciton for bass notes during live input. Axed for now... maybe needs new colors?
-                    I want to do filter: hue-shift(60deg) but keys are usually grayscale, and filter: is used already anyway for displaying played notes as pressed.
-                    if ( j + octaveOffset <= Piano.getBassCutoffPitch(this._doc) && this._doc.prefs.bassOffset != 0) {
-                        label.style.setProperty("font-style", "italic");
-                    }
-                    else {
-                        this._pianoKeys[j].style.setProperty("font-style", "");
-                    }
-                    */
-
-                    label.style.color = Config.keys[pitchNameIndex].isWhiteKey ? ColorConfig.whitePianoKeyText : ColorConfig.blackPianoKeyText;
-                    label.textContent = Piano.getPitchName(pitchNameIndex, j, this._doc.getBaseVisibleOctave(this._doc.channel) + this._doc.song.octave);
+                    label.style.color = isWhiteKey ? ColorConfig.whitePianoKeyText : ColorConfig.blackPianoKeyText;
+                    label.textContent = notes[j + this._doc.getBaseVisibleOctave(this._doc.channel) * divisions];
 
                 }
             }
@@ -558,49 +554,134 @@ export class Piano {
         this._updatePreview();
     }
 
-    public static getPitchName(pitchNameIndex: number, scaleIndex: number, baseVisibleOctave: number): string {
-        let text: string;
+    public static getPianoNotes(key: number, divisions: number, equave: number, octaveOffset: number, alwaysOctave: boolean): string[] {
+        const keysToNumsArray: {[index: string]: number} = {
+            "C": 0,
+            "C♯": 1,
+            "D": 2,
+            "D♯": 3,
+            "E": 4,
+            "F": 5,
+            "F♯": 6,
+            "G": 7,
+            "G♯": 8,
+            "A": 9,
+            "A♯": 10,
+            "B": 11
+        };
+        const keys = Config.keys;
+        const blackKeyNameParents = Config.blackKeyNameParents;
+        const pitchOctaves = Config.pitchOctaves;
 
-        // May wanna adjust this a little bit so a key and both it's sharp/flat won't all 
-        // appear on the piano at once, which often happens when the song key is a sharp.
-        // E.g: Piano Labels: D♯ E F G♭ G "A♭ A A♯" B C "D♭ D D♯", Song Key: D♯
-        // "" = incorrect
-        if (Config.keys[pitchNameIndex].isWhiteKey) {
-            text = Config.keys[pitchNameIndex].name;
+        const basePitch = keys[key].name;
+        
+        let twelveEdoNotes: string[] = [];
+        for (let pitch = 0; pitch < 12; pitch++) {
+            let offsetPitch = (pitch + keysToNumsArray[basePitch]) % 12
+            let note;
+
+            if (keys[offsetPitch].isWhiteKey) {
+                note = keys[offsetPitch].name;
+            } else {
+                const shiftDir = blackKeyNameParents[pitch % 12];
+                note = keys[(offsetPitch + 12 + shiftDir) % 12].name;
+                if (shiftDir == 1) {
+                    note += "♭";
+                } else if (shiftDir == -1) {
+                    note += "♯";
+                }
+            }
+            twelveEdoNotes.push(note);
+        }
+        const pitchOffset = 9 - keysToNumsArray[basePitch]
+        if (pitchOffset > 0) {
+            for (let i = 0; i < pitchOffset; i++) {
+                twelveEdoNotes.push(twelveEdoNotes[0]);
+                twelveEdoNotes.shift();
+            }
         } else {
-            const shiftDir: number = Config.blackKeyNameParents[scaleIndex % Config.pitchesPerOctave];
-            text = Config.keys[(pitchNameIndex + Config.pitchesPerOctave + shiftDir) % Config.pitchesPerOctave].name;
-            if (shiftDir == 1) {
-                text += "♭";
-            } else if (shiftDir == -1) {
-                text += "♯";
+            for (let i = 0; i < -pitchOffset; i++) {
+                twelveEdoNotes.unshift(twelveEdoNotes[twelveEdoNotes.length - 1]);
+                twelveEdoNotes.pop();
             }
         }
 
-        if (scaleIndex % 12 == 0) {
-            text += Math.floor(scaleIndex / 12) + baseVisibleOctave;
+        const twelveEdoFreqs: {[index: string]: number} = {
+            "A": 440 * Math.pow(2, 0 / 12),
+            "A♯": 440 * Math.pow(2, 1 / 12),
+            "B♭": 440 * Math.pow(2, 1 / 12),
+            "B": 440 * Math.pow(2, 2 / 12),
+            "C": 440 * Math.pow(2, 3 / 12),
+            "C♯": 440 * Math.pow(2, 4 / 12),
+            "D♭": 440 * Math.pow(2, 4 / 12),
+            "D": 440 * Math.pow(2, 5 / 12),
+            "D♯": 440 * Math.pow(2, 6 / 12),
+            "E♭": 440 * Math.pow(2, 6 / 12),
+            "E": 440 * Math.pow(2, 7 / 12),
+            "F": 440 * Math.pow(2, 8 / 12),
+            "F♯": 440 * Math.pow(2, 9 / 12),
+            "G♭": 440 * Math.pow(2, 9 / 12),
+            "G": 440 * Math.pow(2, 10 / 12),
+            "G♯": 440 * Math.pow(2, 11 / 12),
+            "A♭": 440 * Math.pow(2, 11 / 12),
+        };
+        const totalNotes = pitchOctaves * divisions;
+
+        let notes = new Array(totalNotes + 1);
+        let freq = twelveEdoFreqs[basePitch] * Math.pow(equave, -pitchOctaves / 2);
+        while (freq < 440) freq *= 2;
+
+        let baseFreq = twelveEdoFreqs[basePitch];
+
+        let count = 0;
+        let last = notes[0];
+
+        for (let i = 0; i < notes.length; i++, freq *= Math.pow(equave, 1 / divisions)) {
+            notes[i] = twelveEdoNotes[Math.round(12 * Math.log2(freq / 440)) % 12];
+
+            if (last == notes[i]) {
+                count++;
+            } else {
+                if (count > 1) {
+                    let twelveEdoFreq = twelveEdoFreqs[last];
+                    let center;
+
+                    for (let j = 0; j < count; j++) {
+                        let tempFreq = baseFreq * Math.pow(equave, ((j + i - count) % divisions) / divisions);
+                        while (tempFreq > 440 * Math.pow(2, 21 / 24)) tempFreq /= 2;
+                        while ((twelveEdoFreq - tempFreq) / twelveEdoFreq > 0.3) tempFreq *= 2;
+
+                        if (tempFreq >= twelveEdoFreq - 0.001) {
+                            let previousTempFreq = baseFreq * Math.pow(equave, (((j - 1) + i - count) % divisions) / divisions);
+                            while (previousTempFreq > 440 * Math.pow(2, 21 / 24)) previousTempFreq /= 2;
+                            while ((twelveEdoFreq - previousTempFreq) / twelveEdoFreq > 0.3) previousTempFreq *= 2;
+
+                            if (Math.abs(twelveEdoFreq - tempFreq) < Math.abs(twelveEdoFreq - previousTempFreq)) {
+                                center = j;
+                            } else {
+                                center = j - 1;
+                            }
+                            break;
+                        }
+                    }
+
+                    for (let j = 0 - center!; j < count - center!; j++) {
+                        for (let k = 0; k < Math.abs(j); k++) notes[i - count + center! + j] += ((j < 0) ? "-" : "+")
+                    }
+                }
+
+                count = 1;
+                last = notes[i];
+            }
         }
 
-        return text;
+        while (baseFreq >= 440 * Math.pow(2, 3 / 12)) baseFreq /= 2;
+        while (baseFreq < 440 * Math.pow(2, (3 - 12) / 12)) baseFreq *= 2;
+        for (let i = 0; i < (alwaysOctave ? notes.length : pitchOctaves + 1); i++) {
+            let pitchFreq = baseFreq * Math.pow(equave, ((i * (alwaysOctave ? 1 : divisions)) - (divisions * pitchOctaves) / 2) / divisions) * Math.pow(2, (12 * octaveOffset) / 12);
+            notes[i * (alwaysOctave ? 1 : divisions)] += Math.floor(Math.log2((pitchFreq) / (440 * Math.pow(2, -9 / 12))) + 4 + (1 / 24));
+        }
+
+        return notes;
     }
-
-    public static getPitchNameAlwaysOctave(pitchNameIndex: number, scaleIndex: number, baseVisibleOctave: number): string {
-		let text: string;
-
-		if (Config.keys[pitchNameIndex].isWhiteKey) {
-			text = Config.keys[pitchNameIndex].name;
-		} else {
-			const shiftDir: number = Config.blackKeyNameParents[scaleIndex % Config.pitchesPerOctave];
-			text = Config.keys[(pitchNameIndex + Config.pitchesPerOctave + shiftDir) % Config.pitchesPerOctave].name;
-			if (shiftDir == 1) {
-				text += "♭";
-			} else if (shiftDir == -1) {
-				text += "♯";
-			}
-		}
-
-		text += Math.floor(scaleIndex / 12) + baseVisibleOctave;
-
-		return text;
-	}
 }

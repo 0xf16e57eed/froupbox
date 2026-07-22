@@ -94,7 +94,7 @@ export class MidiInputHandler {
             }
         } else {
             key -= Config.keys[this._doc.song.key].basePitch; // The basePitch of the song key is implicit so don't include it.
-            if (key < 0 || key > Config.maxPitch) return;
+            if (key < 0 || key > this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves) return;
         }
 
         if (eventType == MidiEventType.noteOn && velocity == 0) {

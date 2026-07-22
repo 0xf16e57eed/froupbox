@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Config } from "../synth/SynthConfig";
+import { Config, getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { SongDocument } from "./SongDocument";
 
 export class KeyboardLayout {
@@ -25,9 +25,9 @@ export class KeyboardLayout {
 				pitchOffset = y * 5 + x * 2 - 2;
 				break;
 			case "songScale":
-				const scaleFlags: ReadonlyArray<boolean> = doc.song.scale == Config.scales.dictionary["Custom"].index ? doc.song.scaleCustom : Config.scales[doc.song.scale].flags;
+				const scaleFlags: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(doc.song), doc.song.channels[doc.channel].equaveDivisions, doc.song.channels[doc.channel].equaveNumerator, doc.song.channels[doc.channel].equaveDenominator);
 				const scaleIndices: number[] = <number[]> scaleFlags.map((flag, index) => flag ? index : null).filter((index) => index != null);
-				pitchOffset = (y - 1 + Math.floor(x / scaleIndices.length)) * Config.pitchesPerOctave + scaleIndices[(x + scaleIndices.length) % scaleIndices.length];
+				pitchOffset = (y - 1 + Math.floor(x / scaleIndices.length)) * doc.song.channels[doc.channel].equaveDivisions + scaleIndices[(x + scaleIndices.length) % scaleIndices.length];
 				break;
 			case "pianoAtC":
 				pitchOffset = KeyboardLayout._pianoAtC[y][x];
@@ -47,16 +47,16 @@ export class KeyboardLayout {
 		
 		if (pitchOffset == null) return null;
 		
-		const octaveOffset: number = Math.max(0, doc.song.channels[doc.channel].octave - 1) * Config.pitchesPerOctave;
+		const octaveOffset: number = Math.max(0, doc.song.channels[doc.channel].octave - 1) * doc.song.channels[doc.channel].equaveDivisions;
 		let keyOffset: number = 0; // The basePitch of the song key is implicit.
 		
 		if (forcedKey != null) {
 			const keyBasePitch: number = Config.keys[doc.song.key].basePitch;
-			keyOffset = (forcedKey - keyBasePitch + 144) % 12;
+			keyOffset = (forcedKey - keyBasePitch + 144) % doc.song.channels[doc.channel].equaveDivisions;
 		}
 		
 		const pitch = octaveOffset + keyOffset + pitchOffset;
-		if (pitch < 0 || pitch > Config.maxPitch) return null;
+		if (pitch < 0 || pitch > doc.song.channels[doc.channel].equaveDivisions * Config.pitchOctaves) return null;
 			
 		return pitch;
 	}

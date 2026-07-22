@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { Config } from "../synth/SynthConfig";
+import { getScaleIntervals, scaleToBools } from "../synth/SynthConfig";
 import { EditorConfig } from "./EditorConfig";
 import { SongDocument } from "./SongDocument";
 import { Prompt } from "./Prompt";
@@ -152,22 +152,22 @@ export class RecordingSetupPrompt implements Prompt {
             this._keyboardLayoutPreview.removeChild(this._keyboardLayoutPreview.firstChild);
         }
         const rowLengths: number[] = [12, 12, 11, 10];
-        const scale: ReadonlyArray<boolean> = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
+        const scale: ReadonlyArray<boolean> = scaleToBools(getScaleIntervals(this._doc.song), this._doc.song.defaultEquaveDivisions, this._doc.song.channels[this._doc.channel].equaveNumerator, this._doc.song.channels[this._doc.channel].equaveDenominator);
         for (let rowIndex: number = 0; rowIndex < 4; rowIndex++) {
             const row: HTMLDivElement = div({ style: "display: flex;" });
             this._keyboardLayoutPreview.appendChild(row);
-            const spacer: HTMLDivElement = div({ style: "width: " + (rowIndex * 12) + "px; height: 20px; flex-shrink: 0;" });
+            const spacer: HTMLDivElement = div({ style: "width: " + (rowIndex * this._doc.song.defaultEquaveDivisions) + "px; height: 20px; flex-shrink: 0;" });
             row.appendChild(spacer);
             for (let colIndex: number = 0; colIndex < rowLengths[rowIndex]; colIndex++) {
                 const key: HTMLDivElement = div({ style: `width: 20px; height: 20px; margin: 0 2px; box-sizing: border-box; flex-shrink: 0; display: flex; justify-content: center; align-items: center;` });
                 row.appendChild(key);
                 const pitch: number | null = KeyboardLayout.keyPosToPitch(this._doc, colIndex, 3 - rowIndex, this._keyboardLayout.value);
                 if (pitch != null) {
-                    const scalePitch: number = pitch % 12;
+                    const scalePitch: number = pitch % this._doc.song.defaultEquaveDivisions;
                     if (scale[scalePitch]) {
                         if (scalePitch == 0) {
                             key.style.background = ColorConfig.tonic;
-                        } else if (scalePitch == 7 && this._doc.prefs.showFifth) {
+                        } else if (scalePitch == Math.round(this._doc.song.defaultEquaveDivisions * Math.log2(3 / 2)) && this._doc.prefs.showFifth) {
                             key.style.background = ColorConfig.fifthNote;
                         } else {
                             key.style.background = ColorConfig.pitchBackground;
@@ -183,8 +183,7 @@ export class RecordingSetupPrompt implements Prompt {
                         key.style.setProperty("filter", "");
                     }
 
-                    const pitchNameIndex: number = (scalePitch + Config.keys[this._doc.song.key].basePitch) % Config.pitchesPerOctave;
-                    key.textContent = Piano.getPitchName(pitchNameIndex, scalePitch, Math.floor(pitch / 12));
+                    key.textContent = "";
                 }
             }
         }

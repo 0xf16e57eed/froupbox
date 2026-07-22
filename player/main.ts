@@ -763,7 +763,7 @@ import { SongPlayerLayout } from "./Layout";
 				} else {
 					timelineWidth = boundingRect.width;
 					const targetSemitoneHeight: number = Math.max(1, timelineWidth / (synth.song.barCount * synth.song.beatsPerBar) / 6.0);
-					timelineHeight = Math.min(boundingRect.height, targetSemitoneHeight * (Config.maxPitch + 1) + 1);
+					timelineHeight = Math.min(boundingRect.height, targetSemitoneHeight * (Config.pitchOctaves * 12 + 1) + 1);
 					windowOctaves = Math.max(3, Math.min(Config.pitchOctaves, Math.round(timelineHeight / (12 * targetSemitoneHeight))));
 					windowPitchCount = windowOctaves * 12 + 1;
 					if (useVertical) {
@@ -837,13 +837,17 @@ import { SongPlayerLayout } from "./Layout";
 						const note: Note = pattern.notes[i];
 							
 						for (const pitch of note.pitches) {
-							const d: string = drawNote(pitch, note.start, note.pins, (pitchHeight + 1) / 2, offsetX, offsetY, partWidth, pitchHeight);
+							const loopedChannel = synth.song.channels[channel];
+							const songDivisions = synth.song.defaultEquaveDivisions
+							const channelDivisions = loopedChannel.equaveDivisions;
+							const correctedPitch = pitch * (12 / channelDivisions) * (Math.log(loopedChannel.equaveNumerator / loopedChannel.equaveDenominator) / Math.log(synth.song.defaultEquaveNumerator / synth.song.defaultEquaveDenominator));
+							const d: string = drawNote(correctedPitch, note.start, note.pins, (12 / songDivisions) * (pitchHeight + 1) / 2, offsetX, offsetY, partWidth, pitchHeight);
 								const noteElement: SVGPathElement = path({d: d, fill: ColorConfig.getChannelColor(synth.song, channel).primaryChannel});
 							if (isNoise) noteElement.style.opacity = String(0.6);
 							timeline.appendChild(noteElement);
 
 								if (notesFlashWhenPlayed) {
-								const dflash: string = drawNote(pitch, note.start, note.pins, (pitchHeight + 1) / 2, offsetX, offsetY, partWidth, pitchHeight);
+								const dflash: string = drawNote(correctedPitch, note.start, note.pins, (12 / songDivisions) * (pitchHeight + 1) / 2, offsetX, offsetY, partWidth, pitchHeight);
 								//const noteFlashColorSecondary = ColorConfig.getComputed("--note-flash-secondary") !== "" ? "var(--note-flash-secondary)" : "#ffffff77";
 								//const noteFlashColor = ColorConfig.getComputed("--note-flash") !== "" ? "var(--note-flash)" : "#ffffff77";
 								const noteFlashElement: SVGPathElement = path({d: dflash, fill: (isNoise ? noteFlashColorSecondary : noteFlashColor)});

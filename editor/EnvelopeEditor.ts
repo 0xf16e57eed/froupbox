@@ -8,6 +8,7 @@ import { HTML, SVG } from "imperative-html/dist/esm/elements-strict";
 import { Change } from "./Change";
 import { prettyNumber } from "./EditorConfig";
 import { Slider } from "./HTMLWrapper";
+import { Piano } from "./Piano";
 
 export class EnvelopeEditor {
 	public readonly container: HTMLElement = HTML.div({ class: "envelopeEditor" });
@@ -209,20 +210,16 @@ export class EnvelopeEditor {
 		if (isNoise) {
 			value = value * 6 + 12;
 		}
-		const offset: number = Config.keys[this._doc.song.key].basePitch % Config.pitchesPerOctave;
-		const keyValue = (value + offset) % Config.pitchesPerOctave;
-		if (Config.keys[keyValue].isWhiteKey) {
-			text = Config.keys[keyValue].name;
-		} else {
-			const shiftDir: number = Config.blackKeyNameParents[value % Config.pitchesPerOctave];
-			text = Config.keys[(keyValue + Config.pitchesPerOctave + shiftDir) % Config.pitchesPerOctave].name;
-			if (shiftDir == 1) {
-				text += "♭";
-			} else if (shiftDir == -1) {
-				text += "♯";
-			}
-		}
-		return "[" + text + Math.floor((value + Config.pitchesPerOctave) / 12 + this._doc.song.octave - 1) + "]";
+
+		const doc: SongDocument = this._doc;
+        const key: number = doc.song.key;
+        const divisions: number = doc.song.channels[doc.channel].equaveDivisions;
+        const equave: number = doc.song.channels[doc.channel].equaveNumerator / doc.song.channels[doc.channel].equaveDenominator;
+        const octaveOffset: number = doc.song.octave;
+        const notes: string[] = Piano.getPianoNotes(key, divisions, equave, octaveOffset, true);
+
+		text += notes[value];
+		return "[" + text + "]";
 	}
 
 	public rerenderExtraSettings(index: number = 0) { //probably not the best solution, but very reliable and easy
@@ -254,10 +251,10 @@ export class EnvelopeEditor {
 					this.pitchStartBoxes[i].value = instrument.envelopes[i].pitchEnvelopeStart.toString();
 					this.pitchEndBoxes[i].value = instrument.envelopes[i].pitchEnvelopeEnd.toString();
 					//reset bounds between noise and pitch channels
-					this._pitchStartSliders[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : Config.maxPitch).toString();
-					this.pitchStartBoxes[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : Config.maxPitch).toString();
-					this._pitchEndSliders[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : Config.maxPitch).toString();
-					this.pitchEndBoxes[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : Config.maxPitch).toString();
+					this._pitchStartSliders[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves)).toString();
+					this.pitchStartBoxes[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves)).toString();
+					this._pitchEndSliders[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves)).toString();
+					this.pitchEndBoxes[i].max = (instrument.isNoiseInstrument ? Config.drumCount - 1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves)).toString();
 					if (instrument.isNoiseInstrument && parseInt(this.pitchStartBoxes[i].value) > Config.drumCount - 1) {
 						this.pitchStartBoxes[i].value = (Config.drumCount - 1).toString(); //reset if somehow greater than it should be
 					}
@@ -414,11 +411,11 @@ export class EnvelopeEditor {
 			//Create HTML structure for the dropdowns
 
 			//pitch settings
-			const pitchStartNoteSlider: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeStart ? instrument.envelopes[envelopeIndex].pitchEnvelopeStart : 0, style: "width: 113px; margin-left: 0px;", type: "range", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount-1 : Config.maxPitch, step: "1" });
-			const pitchStartNoteBox: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeStart ? instrument.envelopes[envelopeIndex].pitchEnvelopeStart : 0, style: "width: 4em; font-size: 80%; ", id: "startNoteBox", type: "number", step: "1", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount - 1 : Config.maxPitch });
+			const pitchStartNoteSlider: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeStart ? instrument.envelopes[envelopeIndex].pitchEnvelopeStart : 0, style: "width: 113px; margin-left: 0px;", type: "range", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount-1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves), step: "1" });
+			const pitchStartNoteBox: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeStart ? instrument.envelopes[envelopeIndex].pitchEnvelopeStart : 0, style: "width: 4em; font-size: 80%; ", id: "startNoteBox", type: "number", step: "1", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount - 1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves) });
 
-			const pitchEndNoteSlider: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeEnd ? instrument.envelopes[envelopeIndex].pitchEnvelopeEnd : instrument.isNoiseInstrument ? Config.drumCount-1 : Config.maxPitch, style: "width: 113px; margin-left: 0px;", type: "range", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount-1 : Config.maxPitch, step: "1" });
-			const pitchEndNoteBox: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeEnd ? instrument.envelopes[envelopeIndex].pitchEnvelopeEnd : instrument.isNoiseInstrument ? Config.drumCount-1 : Config.maxPitch, style: "width: 4em; font-size: 80%; ", id: "endNoteBox", type: "number", step: "1", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount - 1 : Config.maxPitch });
+			const pitchEndNoteSlider: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeEnd ? instrument.envelopes[envelopeIndex].pitchEnvelopeEnd : instrument.isNoiseInstrument ? Config.drumCount-1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves), style: "width: 113px; margin-left: 0px;", type: "range", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount-1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves), step: "1" });
+			const pitchEndNoteBox: HTMLInputElement = HTML.input({ value: instrument.envelopes[envelopeIndex].pitchEnvelopeEnd ? instrument.envelopes[envelopeIndex].pitchEnvelopeEnd : instrument.isNoiseInstrument ? Config.drumCount-1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves), style: "width: 4em; font-size: 80%; ", id: "endNoteBox", type: "number", step: "1", min: "0", max: instrument.isNoiseInstrument ? Config.drumCount - 1 : (this._doc.song.channels[this._doc.channel].equaveDivisions * Config.pitchOctaves) });
 			
 			const pitchStartNoteDisplay: HTMLSpanElement = HTML.span({ class: "tip", style: `width:68px; flex:1; height:1em; font-size: smaller;`, onclick: () => this._openPrompt("pitchRange") }, "Start " + this._pitchToNote(parseInt(pitchStartNoteBox.value), instrument.isNoiseInstrument) + ": ");
 			const pitchEndNoteDisplay: HTMLSpanElement = HTML.span({ class: "tip", style: `width:68px; flex:1; height:1em; font-size: smaller;`, onclick: () => this._openPrompt("pitchRange") }, "End " + this._pitchToNote(parseInt(pitchEndNoteBox.value), instrument.isNoiseInstrument) + ": ");

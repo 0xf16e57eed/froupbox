@@ -46,6 +46,8 @@ export class Preferences {
 	public closePromptByClickoff: boolean;
 	public frostedGlassBackground: boolean;
 	public bisectionalModNotes: boolean;
+	public showChannelName: boolean;
+	public showChannelTuning: boolean;
 	public rollNoveltyPresets: boolean;
 
 	constructor() {
@@ -91,6 +93,8 @@ export class Preferences {
         this.customTheme2 = window.localStorage.getItem("customTheme2");
 		this.visibleOctaves = ((<any>window.localStorage.getItem("visibleOctaves")) >>> 0) || Preferences.defaultVisibleOctaves;
 		this.bisectionalModNotes = window.localStorage.getItem("bisectionalModNotes") != "false";
+		this.showChannelName = window.localStorage.getItem("showChannelName") != "false";
+		this.showChannelTuning = window.localStorage.getItem("showChannelTuning") != "false";
 		this.rollNoveltyPresets = window.localStorage.getItem("rollNoveltyPresets") == "true";
 
 		const defaultScale: Scale | undefined = Config.scales.dictionary[window.localStorage.getItem("defaultScale")!];
@@ -148,6 +152,8 @@ export class Preferences {
 		window.localStorage.setItem("volume", String(this.volume));
 		window.localStorage.setItem("visibleOctaves", String(this.visibleOctaves));
 		window.localStorage.setItem("bisectionalModNotes", this.bisectionalModNotes ? "true" : "false");
+		window.localStorage.setItem("showChannelName", this.showChannelName ? "true" : "false");
+		window.localStorage.setItem("showChannelTuning", this.showChannelTuning ? "true" : "false");
 		window.localStorage.setItem("rollNoveltyPresets", this.rollNoveltyPresets ? "true" : "false");
 	}
 }
