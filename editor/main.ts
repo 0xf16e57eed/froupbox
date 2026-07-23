@@ -10,7 +10,7 @@ import { SongDocument } from "./SongDocument";
 import { ExportPrompt } from "./ExportPrompt";
 import { ChangePreset } from "./changes";
 
-
+window.alert("THIS IS THE TESTING VERSION! ANY SONGS MADE HERE WILL BREAK! Go to https://froupbox.github.io/ for the non-testing version. (without the \"froupbox/dist/\" in the URL)");
 //namespace beepbox {
 const editor: SongEditor = new SongEditor();//same as above
 
