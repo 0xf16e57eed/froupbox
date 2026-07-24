@@ -12746,22 +12746,28 @@ export class Synth {
         let baseExpression: number = 1.0;
         let pitchDamping: number = 48;
         if (instrument.type == InstrumentType.spectrum) {
-            baseExpression = Config.spectrumBaseExpression;
+                baseExpression = Config.spectrumBaseExpression;
             if (isNoiseChannel) {
-                basePitch = Config.spectrumBasePitch - 69;
+                basePitch = Config.spectrumBasePitch;
                 baseExpression *= 2.0; // Note: spectrum is louder for drum channels than pitch channels!
+            } else {
+                expressionReferencePitch = Config.spectrumBasePitch - 12;
+                pitchDamping = 28;
             }
-            expressionReferencePitch = Config.spectrumBasePitch - 12;
-            pitchDamping = 28;
         } else if (instrument.type == InstrumentType.drumset) {
-            basePitch = Config.spectrumBasePitch - 69;
+            basePitch = Config.spectrumBasePitch;
             baseExpression = Config.drumsetBaseExpression;
-            expressionReferencePitch = Config.spectrumBasePitch - 12;
+            expressionReferencePitch = basePitch;
         } else if (instrument.type == InstrumentType.noise) {
-            extraPitchOffset = isNoiseChannel ? Config.chipNoises[instrument.chipNoise].basePitch - 69 : Config.chipNoises[instrument.chipNoise].basePitch - 12;
-            baseExpression = Config.noiseBaseExpression;
-            expressionReferencePitch = isNoiseChannel ? Config.chipNoises[instrument.chipNoise].basePitch - (Config.chipNoises[instrument.chipNoise].basePitch / (69 / 24)) : 0;
             pitchDamping = (Config.chipNoises[instrument.chipNoise].isSoft ? 24.0 : 60.0);
+            baseExpression = Config.noiseBaseExpression;
+            if (isNoiseChannel) {
+                basePitch = Config.chipNoises[instrument.chipNoise].basePitch;
+                expressionReferencePitch = basePitch;
+            } else {
+                extraPitchOffset = Config.chipNoises[instrument.chipNoise].basePitch - 12;
+                expressionReferencePitch = 0;
+            }
         } else if (instrument.type == InstrumentType.fm || instrument.type == InstrumentType.fm6op) {
             baseExpression = Config.fmBaseExpression;
         } else if (instrument.type == InstrumentType.chip) {
@@ -12878,8 +12884,13 @@ export class Synth {
             const pinRatioEnd: number = Math.min(1.0, (tickTimeEnd - pinStart) / (pinEnd - pinStart));
             fadeExpressionStart = 1.0;
             fadeExpressionEnd = 1.0;
-            noteOffsetStart = startPin.interval + (endPin.interval - startPin.interval) * pinRatioStart;
-            noteOffsetEnd = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
+            if (isNoiseChannel) {
+                intervalStart = startPin.interval + (endPin.interval - startPin.interval) * pinRatioStart;
+                intervalEnd = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
+            } else {
+                noteOffsetStart = startPin.interval + (endPin.interval - startPin.interval) * pinRatioStart;
+                noteOffsetEnd = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
+            }
             tone.lastInterval = intervalEnd;
 
             if ((!transition.isSeamless && !tone.forceContinueAtEnd) || nextNote == null) {
@@ -12996,7 +13007,6 @@ export class Synth {
         }
 
         if (effectsIncludePitchShift(instrument.effects)) {
-            instrument.pitchShiftFiveLimit;
             let pitchShift: number = ((instrument.pitchShiftFiveLimit) ? (Config.justIntonationSemitones[instrument.pitchShift]) : (instrument.pitchShift - 12)) / intervalScale ;
             let pitchShiftScalarStart: number = 1.0;
             let pitchShiftScalarEnd: number = 1.0;
@@ -13204,14 +13214,28 @@ export class Synth {
             for (let i: number = 0; i < (instrument.type == InstrumentType.fm6op ? 6 : Config.operatorCount); i++) {
 
                 const associatedCarrierIndex: number = (instrument.type == InstrumentType.fm6op ? instrument.customAlgorithm.associatedCarrier[i] - 1 : Config.algorithms[instrument.algorithm].associatedCarrier[i] - 1);
-                const pitch: number = tone.pitches[arpeggiates ? 0 : isMono ? instrument.monoChordTone : ((i < tone.pitchCount) ? i : ((associatedCarrierIndex < tone.pitchCount) ? associatedCarrierIndex : 0))] - (channel.equaveDivisions * Config.pitchOctaves) / 2;
                 const freqMult = Config.operatorFrequencies[instrument.operators[i].frequency].mult;
                 const interval = Config.operatorCarrierInterval[associatedCarrierIndex] + arpeggioInterval;
-                const pitchStart: number = pitch * intervalScale;
-                const pitchEnd: number = pitch * intervalScale;
-                const twelveEdoOffset = (song.key - 9 + interval + intervalStart * intervalScale + song.octave * 12) * (channel.equaveDivisions / 12) * (Math.log(2 / 1) / Math.log(channel.equaveNumerator / channel.equaveDenominator));
-                const baseFreqStart: number = Instrument.frequencyFromPitch(pitchStart + noteOffsetStart + twelveEdoOffset, channel.equaveNumerator / channel.equaveDenominator, channel.equaveDivisions);
-                const baseFreqEnd: number = Instrument.frequencyFromPitch(pitchEnd + noteOffsetEnd + twelveEdoOffset, channel.equaveNumerator / channel.equaveDenominator, channel.equaveDivisions);
+                let pitch: number;
+                let pitchStart: number;
+                let pitchEnd: number;
+                let twelveEdoOffset: number = 0;
+                let baseFreqStart: number;
+                let baseFreqEnd: number;
+                if (isNoiseChannel) {
+                    pitch = tone.pitches[arpeggiates ? 0 : isMono ? instrument.monoChordTone : ((i < tone.pitchCount) ? i : ((associatedCarrierIndex < tone.pitchCount) ? associatedCarrierIndex : 0))];
+                    pitchStart = basePitch + (pitch + intervalStart) * intervalScale + interval;
+                    pitchEnd = basePitch + (pitch + intervalEnd) * intervalScale + interval;
+                    baseFreqStart = Instrument.frequencyFromPitch(pitchStart - 69, 2 / 1, 12);
+                    baseFreqEnd = Instrument.frequencyFromPitch(pitchEnd - 69, 2 / 1, 12);
+                } else {
+                    pitch = tone.pitches[arpeggiates ? 0 : isMono ? instrument.monoChordTone : ((i < tone.pitchCount) ? i : ((associatedCarrierIndex < tone.pitchCount) ? associatedCarrierIndex : 0))] - (channel.equaveDivisions * Config.pitchOctaves) / 2;
+                    pitchStart = pitch * intervalScale;
+                    pitchEnd = pitch * intervalScale;
+                    twelveEdoOffset = (song.key - 9 + interval + intervalStart * intervalScale + song.octave * 12) * (channel.equaveDivisions / 12) * (Math.log(2 / 1) / Math.log(channel.equaveNumerator / channel.equaveDenominator));
+                    baseFreqStart = Instrument.frequencyFromPitch(pitchStart + noteOffsetStart + twelveEdoOffset, channel.equaveNumerator / channel.equaveDenominator, channel.equaveDivisions);
+                    baseFreqEnd = Instrument.frequencyFromPitch(pitchEnd + noteOffsetEnd + twelveEdoOffset, channel.equaveNumerator / channel.equaveDenominator, channel.equaveDivisions);
+                }
                 const hzOffset: number = Config.operatorFrequencies[instrument.operators[i].frequency].hzOffset;
                 const targetFreqStart: number = freqMult * baseFreqStart + hzOffset;
                 const targetFreqEnd: number = freqMult * baseFreqEnd + hzOffset;
@@ -13280,9 +13304,18 @@ export class Synth {
                     if (tone.prevPitchExpressions[i] != null) {
                         pitchExpressionStart = tone.prevPitchExpressions[i]!;
                     } else {
-                        pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchStart + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+                        if (isNoiseChannel) {
+                            pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * pitchStart - expressionReferencePitch) / pitchDamping);
+                        } else {
+                            pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchStart + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+                        }
                     }
-                    const pitchExpressionEnd: number = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchEnd + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+                    let pitchExpressionEnd: number;
+                    if (isNoiseChannel) {
+                        pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * pitchEnd - expressionReferencePitch) / pitchDamping);;
+                    } else {
+                        pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchEnd + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+                    }
                     tone.prevPitchExpressions[i] = pitchExpressionEnd;
                     expressionStart *= pitchExpressionStart * unisonExpression / 1.4;
                     expressionEnd *= pitchExpressionEnd * unisonExpression / 1.4;
@@ -13358,7 +13391,7 @@ export class Synth {
                 const arpeggio: number = Math.floor(instrumentState.arpTime / Config.ticksPerArpeggio);
                 if (chord.customInterval) {
                     const intervalOffset: number = tone.pitches[1 + getArpeggioPitchIndex(tone.pitchCount - 1, instrument.fastTwoNoteArp, arpeggio)] - tone.pitches[0];
-                    specialIntervalMult = Math.pow(2.0, intervalOffset / channel.equaveDivisions);
+                    specialIntervalMult = Math.pow(2.0, intervalOffset / (isNoiseChannel ? 12 : channel.equaveDivisions));
                     tone.specialIntervalExpressionMult = Math.pow(2.0, -intervalOffset / pitchDamping);
                 } else if (chord.arpeggiates) {
                     pitch = tone.pitches[getArpeggioPitchIndex(tone.pitchCount, instrument.fastTwoNoteArp, arpeggio)] - (isNoiseChannel ? 0 : (channel.equaveDivisions * Config.pitchOctaves) / 2);
@@ -13367,16 +13400,32 @@ export class Synth {
                 }
             }
             const convertedBasePitch = basePitch * (channel.equaveDivisions / 12) * (Math.log(2 / 1) / Math.log(channel.equaveNumerator / channel.equaveDenominator));
-            const startPitch: number = convertedBasePitch + (pitch + (isNoiseChannel ? intervalStart : 0)) * intervalScale;
-            const endPitch: number = convertedBasePitch + (pitch + (isNoiseChannel ? intervalEnd : 0)) * intervalScale;
+            let startPitch: number
+            let endPitch: number 
+            if (isNoiseChannel) {
+                startPitch = basePitch + (pitch + intervalStart) * intervalScale;
+                endPitch = basePitch + (pitch + intervalEnd) * intervalScale;
+            } else {
+                startPitch = convertedBasePitch + pitch * intervalScale;
+                endPitch = convertedBasePitch + pitch * intervalScale;
+            }
             let pitchExpressionStart: number;
             // TODO: use the second element of prevPitchExpressions for the unison voice, compute a separate expression delta for it.
             if (tone.prevPitchExpressions[0] != null) {
                 pitchExpressionStart = tone.prevPitchExpressions[0]!;
             } else {
-                pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (startPitch + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping); 
+                if (isNoiseChannel) {
+                    pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * startPitch - expressionReferencePitch) / pitchDamping);
+                } else {
+                    pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (startPitch + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping); 
+                }
             }
-            const pitchExpressionEnd: number = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (endPitch + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+            let pitchExpressionEnd: number
+            if (isNoiseChannel) {
+                pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * endPitch - expressionReferencePitch) / pitchDamping);
+            } else {
+                pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (endPitch + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+            }
             tone.prevPitchExpressions[0] = pitchExpressionEnd;
             let settingsExpressionMult: number = baseExpression * noteFilterExpression;
 
@@ -13429,8 +13478,13 @@ export class Synth {
                 settingsExpressionMult *= Math.pow(2.0, 0.7 * (1.0 - useSustainStart / (Config.stringSustainRange - 1)));
 
             }
-            const twelveEdoOffset = (extraPitchOffset + (isNoiseChannel ? 0 : (song.key - 9 + song.octave * 12) + intervalStart * intervalScale)) * (channel.equaveDivisions / 12) * (Math.log(2 / 1) / Math.log(channel.equaveNumerator / channel.equaveDenominator));
-            const startFreq: number = Instrument.frequencyFromPitch(startPitch + noteOffsetStart + twelveEdoOffset, channel.equaveNumerator / channel.equaveDenominator, channel.equaveDivisions);
+            let startFreq: number;
+            if (isNoiseChannel) {
+                startFreq = Instrument.frequencyFromPitch(startPitch - 69, 2 / 1, 12);
+            } else {
+                const twelveEdoOffset: number = (extraPitchOffset + (song.key - 9 + song.octave * 12) + intervalStart * intervalScale) * (channel.equaveDivisions / 12) * (Math.log(2 / 1) / Math.log(channel.equaveNumerator / channel.equaveDenominator));
+                startFreq = Instrument.frequencyFromPitch(startPitch + noteOffsetStart + twelveEdoOffset, channel.equaveNumerator / channel.equaveDenominator, channel.equaveDivisions);
+            }
             if (instrument.type == InstrumentType.chip || instrument.type == InstrumentType.customChipWave || instrument.type == InstrumentType.harmonics || instrument.type == InstrumentType.pickedString || instrument.type == InstrumentType.spectrum || instrument.type == InstrumentType.pwm || instrument.type == InstrumentType.noise || instrument.type == InstrumentType.drumset) {
                 const unisonVoices: number = instrument.unisonVoices;
                 const unisonSpread: number = instrument.unisonSpread;
