@@ -8301,7 +8301,7 @@ class PickedString {
         this.sustainFilterB1Delta = (sustainFilterB1End - sustainFilterB1Start) / roundedSamplesPerTick;
         this.sustainFilterB2Delta = (sustainFilterB2End - sustainFilterB2Start) / roundedSamplesPerTick;
 
-        const pitchChanged: boolean = Math.abs(Math.log2(delayLength / prevDelayLength)) > 0.01;
+        const pitchChanged: boolean = Math.abs(Math.log2(delayLength / prevDelayLength)) > 0.05;
 
         const reinitializeImpulse: boolean = (this.delayIndex == -1 || pitchChanged);
         if (this.delayLine == null || this.delayLine.length <= minBufferLength) {
