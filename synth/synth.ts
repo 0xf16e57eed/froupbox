@@ -12766,7 +12766,7 @@ export class Synth {
                 expressionReferencePitch = basePitch;
             } else {
                 extraPitchOffset = Config.chipNoises[instrument.chipNoise].basePitch - 12;
-                expressionReferencePitch = 0;
+                expressionReferencePitch = 80;
             }
         } else if (instrument.type == InstrumentType.fm || instrument.type == InstrumentType.fm6op) {
             baseExpression = Config.fmBaseExpression;
@@ -13306,14 +13306,14 @@ export class Synth {
                         if (isNoiseChannel) {
                             pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * pitchStart - expressionReferencePitch) / pitchDamping);
                         } else {
-                            pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchStart + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+                            pitchExpressionStart = 0.73842 * Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchStart + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
                         }
                     }
                     let pitchExpressionEnd: number;
                     if (isNoiseChannel) {
                         pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * pitchEnd - expressionReferencePitch) / pitchDamping);;
                     } else {
-                        pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchEnd + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+                        pitchExpressionEnd = 0.73842 * Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (pitchEnd + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
                     }
                     tone.prevPitchExpressions[i] = pitchExpressionEnd;
                     expressionStart *= pitchExpressionStart * unisonExpression / 1.4;
@@ -13417,14 +13417,14 @@ export class Synth {
                 if (isNoiseChannel) {
                     pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * startPitch - expressionReferencePitch) / pitchDamping);
                 } else {
-                    pitchExpressionStart = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (startPitch + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping); 
+                    pitchExpressionStart = 0.73842 * Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (startPitch + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping); 
                 }
             }
             let pitchExpressionEnd: number
             if (isNoiseChannel) {
                 pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * endPitch - expressionReferencePitch) / pitchDamping);
             } else {
-                pitchExpressionEnd = Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (endPitch + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
+                pitchExpressionEnd = 0.73842 * Math.pow(2.0, -(((instrument.volumePitchCompensation) / 25) * (endPitch + noteOffsetStart + twelveEdoOffset + (channel.equaveDivisions * Config.pitchOctaves) / 2) * (12 / channel.equaveDivisions) - expressionReferencePitch) / pitchDamping);
             }
             tone.prevPitchExpressions[0] = pitchExpressionEnd;
             let settingsExpressionMult: number = baseExpression * noteFilterExpression;
