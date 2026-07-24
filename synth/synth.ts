@@ -4935,6 +4935,9 @@ export class Song {
                     const [key, octave]: [number, number] = convertLegacyKeyToKeyAndOctave(rawKeyIndex);
                     this.key = key;
                     this.octave = octave;
+                } else if (fromUltraBox || fromSlarmoosBox){
+                    this.key = clamp(0, Config.keys.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    this.octave = clamp(Config.octaveMin, Config.octaveMax + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)] + Config.octaveMin + 6);
                 } else {
                     this.key = clamp(0, Config.keys.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                     this.octave = clamp(Config.octaveMin, Config.octaveMax + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)] + Config.octaveMin);
