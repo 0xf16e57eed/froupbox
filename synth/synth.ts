@@ -8453,7 +8453,7 @@ class EnvelopeComputer {
         this.startPinTickPitch = null
     }
 
-    public computeEnvelopes(instrument: Instrument, currentPart: number, tickTimeStart: number[], tickTimeStartReal: number, secondsPerTick: number, tone: Tone | null, timeScale: number[], instrumentState: InstrumentState, synth: Synth, channelIndex: number, instrumentIndex: number, perNote: boolean): void {
+    public computeEnvelopes(channel: Channel, instrument: Instrument, currentPart: number, tickTimeStart: number[], tickTimeStartReal: number, secondsPerTick: number, tone: Tone | null, timeScale: number[], instrumentState: InstrumentState, synth: Synth, channelIndex: number, instrumentIndex: number, perNote: boolean): void {
         const secondsPerTickUnscaled: number = secondsPerTick;
         const transition: Transition = instrument.getTransition();
         if (tone != null && tone.atNoteStart && !transition.continues && !tone.forceContinueAtStart) {
@@ -8508,8 +8508,8 @@ class EnvelopeComputer {
             const endPin: NotePin = tone.note.pins[endPinIndex];
             const startPinTick = (tone.note.start + startPin.time) * Config.ticksPerPart;
             if (this.startPinTickAbsolute == null || (!(transition.continues || transition.slides)) && (tone.passedEndOfNote || tone.atNoteStart)) this.startPinTickAbsolute = startPinTick + synth.computeTicksSinceStart(true); //for random per note
-            if (this.startPinTickDefaultPitch == null ||/* (!(transition.continues || transition.slides)) &&*/ (tone.passedEndOfNote || tone.atNoteStart)) this.startPinTickDefaultPitch = this.getPitchValue(instrument, tone, instrumentState, false);
-            if (!tone.passedEndOfNote) this.startPinTickPitch = this.getPitchValue(instrument, tone, instrumentState, true);
+            if (this.startPinTickDefaultPitch == null ||/* (!(transition.continues || transition.slides)) &&*/ (tone.passedEndOfNote || tone.atNoteStart)) this.startPinTickDefaultPitch = this.getPitchValue(channel, instrument, tone, instrumentState, false);
+            if (!tone.passedEndOfNote) this.startPinTickPitch = this.getPitchValue(channel, instrument, tone, instrumentState, true);
             const endPinTick: number = (tone.note.start + endPin.time) * Config.ticksPerPart;
             const ratioStart: number = (tickTimeStartReal - startPinTick) / (endPinTick - startPinTick);
             const ratioEnd: number = (tickTimeEndReal - startPinTick) / (endPinTick - startPinTick);
@@ -8630,7 +8630,7 @@ class EnvelopeComputer {
                 if (envelope.type == EnvelopeType.noteSize) usedNoteSize = true;
             }
             //only calculate pitch if needed
-            const pitch: number = (envelope.type == EnvelopeType.pitch) ? this.computePitchEnvelope(instrument, envelopeIndex, (this.startPinTickPitch || this.getPitchValue(instrument, tone, instrumentState, true))) : 0;
+            const pitch: number = (envelope.type == EnvelopeType.pitch) ? this.computePitchEnvelope(instrument, envelopeIndex, (this.startPinTickPitch || this.getPitchValue(channel, instrument, tone, instrumentState, true))) : 0;
 
             //calculate envelope values if target isn't null or part of the other envelope computer's job
             if (automationTarget.computeIndex != null && automationTarget.perNote == perNote) {
@@ -8887,17 +8887,18 @@ class EnvelopeComputer {
 
     }
 
-    public getPitchValue(instrument: Instrument, tone: Tone | null, instrumentState: InstrumentState, calculateBends: boolean = true): number {
+    public getPitchValue(channel: Channel, instrument: Instrument, tone: Tone | null, instrumentState: InstrumentState, calculateBends: boolean = true): number {
         if (tone && tone.pitchCount >= 1) {
+            const divisions = channel.equaveDivisions;
             const chord = instrument.getChord();
             const arpeggiates = chord.arpeggiates;
             const monophonic = chord.name == "monophonic"
             const arpeggio: number = Math.floor(instrumentState.arpTime / Config.ticksPerArpeggio); //calculate arpeggiation
-            const tonePitch = tone.pitches[arpeggiates ? getArpeggioPitchIndex(tone.pitchCount, instrument.fastTwoNoteArp, arpeggio) : monophonic ? instrument.monoChordTone : 0]
+            const tonePitch = tone.pitches[arpeggiates ? getArpeggioPitchIndex(tone.pitchCount, instrument.fastTwoNoteArp, arpeggio) : monophonic ? instrument.monoChordTone : 0];
             if (calculateBends) {
-                return tone.lastInterval != tonePitch ? tonePitch + tone.lastInterval : tonePitch; //account for pitch bends
+                return (tone.lastInterval != tonePitch ? tonePitch + tone.lastInterval : tonePitch) * (12 / divisions); //account for pitch bends
             } else {
-                return tonePitch;
+                return tonePitch * (12 / divisions);
             }
         }
         return 0;
@@ -9468,7 +9469,7 @@ class InstrumentState {
         this.ringModMixFade = 1.0;
     }
 
-    public compute(synth: Synth, instrument: Instrument, samplesPerTick: number, roundedSamplesPerTick: number, tone: Tone | null, channelIndex: number, instrumentIndex: number): void {
+    public compute(synth: Synth, channel: Channel, instrument: Instrument, samplesPerTick: number, roundedSamplesPerTick: number, tone: Tone | null, channelIndex: number, instrumentIndex: number): void {
         this.computed = true;
 
         this.type = instrument.type;
@@ -9531,7 +9532,7 @@ class InstrumentState {
             }
             envelopeSpeeds[envelopeIndex] = useEnvelopeSpeed * perEnvelopeSpeed;
         }
-        this.envelopeComputer.computeEnvelopes(instrument, currentPart, this.envelopeTime, tickTimeStart, secondsPerTick, tone, envelopeSpeeds, this, synth, channelIndex, instrumentIndex, false);
+        this.envelopeComputer.computeEnvelopes(channel, instrument, currentPart, this.envelopeTime, tickTimeStart, secondsPerTick, tone, envelopeSpeeds, this, synth, channelIndex, instrumentIndex, false);
         const envelopeStarts: number[] = this.envelopeComputer.envelopeStarts;
         const envelopeEnds: number[] = this.envelopeComputer.envelopeEnds;
 
@@ -11629,7 +11630,7 @@ export class Synth {
 
                         if (instrumentState.awake) {
                             if (!instrumentState.computed) {
-                                instrumentState.compute(this, instrument, samplesPerTick, Math.ceil(samplesPerTick), null, channelIndex, instrumentIndex);
+                                instrumentState.compute(this, channel, instrument, samplesPerTick, Math.ceil(samplesPerTick), null, channelIndex, instrumentIndex);
                             }
 
                             instrumentState.computed = false;
@@ -11857,7 +11858,7 @@ export class Synth {
                         // This uses the instrumentState envelopeComputer, but is effectively per tone to the user given that arpeggios cause only one tone to play at a time
                         if (instrumentState.activeTones.count() > 0) {
                             const tone: Tone = instrumentState.activeTones.get(0);
-                            envelopeComputer.computeEnvelopes(instrument, currentPart, instrumentState.envelopeTime, tickTimeStart, secondsPerTick, tone, envelopeSpeeds, instrumentState, this, channel, instrumentIdx, false);
+                            envelopeComputer.computeEnvelopes(channel, instrument, currentPart, instrumentState.envelopeTime, tickTimeStart, secondsPerTick, tone, envelopeSpeeds, instrumentState, this, channel, instrumentIdx, false);
                         }
 
                         const envelopeStarts: number[] = envelopeComputer.envelopeStarts;
@@ -12710,7 +12711,7 @@ export class Synth {
         instrumentState.awake = true;
         instrumentState.tonesAddedInThisTick = true;
         if (!instrumentState.computed) {
-            instrumentState.compute(this, instrument, samplesPerTick, roundedSamplesPerTick, tone, channelIndex, tone.instrumentIndex);
+            instrumentState.compute(this, channel, instrument, samplesPerTick, roundedSamplesPerTick, tone, channelIndex, tone.instrumentIndex);
         }
         const transition: Transition = instrument.getTransition();
         const chord: Chord = instrument.getChord();
@@ -12894,7 +12895,7 @@ export class Synth {
                 noteOffsetStart = startPin.interval + (endPin.interval - startPin.interval) * pinRatioStart;
                 noteOffsetEnd = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
             }
-            tone.lastInterval = intervalEnd;
+            tone.lastInterval = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
 
             if ((!transition.isSeamless && !tone.forceContinueAtEnd) || nextNote == null) {
                 const fadeOutTicks: number = -instrument.getFadeOutTicks();
@@ -12975,7 +12976,7 @@ export class Synth {
             envelopeSpeeds[envelopeIndex] = useEnvelopeSpeed;
         }
         //the perTone envelopeComputer
-        envelopeComputer.computeEnvelopes(instrument, currentPart, instrumentState.envelopeTime, Config.ticksPerPart * partTimeStart, samplesPerTick / this.samplesPerSecond, tone, envelopeSpeeds, instrumentState, this, channelIndex, tone.instrumentIndex, true);
+        envelopeComputer.computeEnvelopes(channel, instrument, currentPart, instrumentState.envelopeTime, Config.ticksPerPart * partTimeStart, samplesPerTick / this.samplesPerSecond, tone, envelopeSpeeds, instrumentState, this, channelIndex, tone.instrumentIndex, true);
         const envelopeStarts: number[] = tone.envelopeComputer.envelopeStarts;
         const envelopeEnds: number[] = tone.envelopeComputer.envelopeEnds;
         instrument.noteFilter = tmpNoteFilter;
