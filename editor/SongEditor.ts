@@ -2771,7 +2771,7 @@ export class SongEditor {
         }
 
         setSelectedValue(this._scaleSelect, this.doc.song.scale);
-        this._scaleSelect.title = Config.scales[this.doc.song.scale].realName + " " + Config.scales[this.doc.song.scale].intervals;
+        this._scaleSelect.title = Config.scales[this.doc.song.scale].realName + " " + (Config.scales[this.doc.song.scale].realName == "custom" ? this.doc.song.scaleCustom : Config.scales[this.doc.song.scale].intervals);
         setSelectedValue(this._keySelect, Config.keys.length - 1 - this.doc.song.key);
         this._octaveStepper.value = Math.round(this.doc.song.octave).toString();
         this._tempoSlider.updateValue(Math.max(0, Math.round(this.doc.song.tempo)));
