@@ -2989,7 +2989,7 @@ export class PatternEditor {
                             for (let i: number = 0; i < visualPins.length; i++) {
                                 visualPins[i].interval = Math.round(visualPins[i].interval * (loopedChannel.equaveDivisions / currentChannel.equaveDivisions));
                             }*/
-                            this._drawNote(notePath, correctedPitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset * (currentChannel.equaveDivisions / loopedChannel.equaveDivisions));
+                            this._drawNote(notePath, correctedPitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset * (currentChannel.equaveDivisions / 12));
                             this._svgNoteContainer.appendChild(notePath);
 
                             if (this._doc.prefs.notesFlashWhenPlayed && (this._barOffset == 0)) {
@@ -2997,7 +2997,7 @@ export class PatternEditor {
                                 // const noteFlashColor = ColorConfig.getComputed("--note-flash-secondary") !== "" ? "var(--note-flash-secondary)" : "#ffffff77";
                                 notePath.setAttribute("fill", noteFlashColor);
                                 notePath.setAttribute("pointer-events", "none");
-                                this._drawNote(notePath, correctedPitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset * (currentChannel.equaveDivisions / loopedChannel.equaveDivisions));
+                                this._drawNote(notePath, correctedPitch, note.start, note.pins, this._pitchHeight * 0.19, false, octaveOffset * (currentChannel.equaveDivisions / 12));
                                 this._svgNoteContainer.appendChild(notePath);
                                 notePath.classList.add('note-flash');
                                 notePath.style.opacity = "0";
