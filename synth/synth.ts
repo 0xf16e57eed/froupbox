@@ -5761,8 +5761,21 @@ export class Song {
                 } else {
                     const instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
                     instrument.unison = clamp(0, Config.unisons.length + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                    const unisonLength = ((beforeFive || !fromSlarmoosBox) && !fromFroupBox) ? 27 : Config.unisons.length; //27 was the old length before I added >2 voice presets
 
+                    // number of unisons in the current URL version. by default it's 27...
+                    let unisonLength = 27; 
+                    // until slarmoo's box added custom unisons, at which point it's 33
+                    if (fromSlarmoosBox && !beforeFive) unisonLength = 33;
+                    // or when froupbox adds more, bringing it to 49...
+                    else if (fromFroupBox) {
+                        unisonLength = 49;
+                        // ...well, in theory
+                        if (Config.unisons.length !== unisonLength) {
+                            alert("number of unisons in config changed! this is programmer error, please report this");
+                            throw new Error();
+                        }
+                    }
+                  
                     if (((fromUltraBox && !beforeFive) || fromSlarmoosBox || fromFroupBox) && (instrument.unison == unisonLength)) {
                         
                         // if (instrument.unison == Config.unisons.length) {

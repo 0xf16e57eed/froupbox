@@ -1290,6 +1290,8 @@ export class Config {
 
         { name: "FART",             voices: 2, spread: 13,       offset: -5,      expression: 1.0,   sign: -3   },
         //for modbox; voices = riffapp, spread = intervals, offset = offsets, expression = volume, and sign = signs
+
+        // NOTE: DO NOT ADD MORE (without updating the url version): changing the number of unisons changes the url format and breaks previous versions. search for "number of unisons in the current URL version" in synth.ts for more info
     ]);
     public static readonly unisonCapableInstruments: ReadonlySet<InstrumentType> = new Set([
       InstrumentType.chip,
