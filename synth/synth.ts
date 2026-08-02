@@ -7927,7 +7927,7 @@ export class Song {
         }
 
         if (jsonObject["defaultEquaveDivisions"] != undefined) {
-            this.defaultEquaveDenominator = clamp(1, Config.equaveDenominatorMax, jsonObject["defaultEquaveDivisions"] | 0);
+            this.defaultEquaveDenominator = clamp(1, Config.equaveDenominatorMax, jsonObject["defaultEquaveDenominator"] | 0);
         }
 
         if (jsonObject["keyOctave"] != undefined) {
