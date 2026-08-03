@@ -78,7 +78,7 @@ export class Preferences {
 		this.ignorePerformedNotesNotInScale = window.localStorage.getItem("ignorePerformedNotesNotInScale") == "true";
 		this.metronomeCountIn = window.localStorage.getItem("metronomeCountIn") != "false";
 		this.metronomeWhileRecording = window.localStorage.getItem("metronomeWhileRecording") != "false";
-		this.notesFlashWhenPlayed = window.localStorage.getItem("notesFlashWhenPlayed") != "flase";
+		this.notesFlashWhenPlayed = window.localStorage.getItem("notesFlashWhenPlayed") != "false";
 		this.showOscilloscope = window.localStorage.getItem("showOscilloscope") != "false";
 		this.showSampleLoadingStatus = window.localStorage.getItem("showSampleLoadingStatus") != "false";
 		this.showDescription = window.localStorage.getItem("showDescription") != "false";
