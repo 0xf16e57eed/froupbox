@@ -2462,6 +2462,7 @@ export class SongEditor {
         if (promptName) {
             switch (promptName) {
                 case "export":
+                case "quickExport":
                     this.prompt = new ExportPrompt(this.doc);
                     break;
                 case "import":
@@ -5204,7 +5205,7 @@ export class SongEditor {
                     event.preventDefault();
                     location.reload();
                 } else if (event.ctrlKey || event.metaKey) {
-                    this._openPrompt("export");
+                    this._openPrompt(event.shiftKey ? "quickExport" : "export");
                     event.preventDefault();
                 } else if (event.altKey) {
                     this._openPrompt("exportInstrument");
