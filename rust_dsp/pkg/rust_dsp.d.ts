@@ -4,16 +4,15 @@
 export class CompressorInstance {
     free(): void;
     [Symbol.dispose](): void;
+    begin(start: CompressorInstanceParams, end: CompressorInstanceParams, sample_rate: number, run_length: number): void;
     constructor();
     process(buffer: DspBuffer): void;
-    end: CompressorInstanceParams;
-    start: CompressorInstanceParams;
 }
 
 export class CompressorInstanceParams {
-    private constructor();
     free(): void;
     [Symbol.dispose](): void;
+    constructor();
     attack: number;
     decay: number;
     freq_lo_mid: number;
@@ -50,16 +49,15 @@ export class DspBuffer {
 export class FlangerInstance {
     free(): void;
     [Symbol.dispose](): void;
+    begin(start: FlangerInstanceParams, end: FlangerInstanceParams, sample_rate: number, run_length: number): void;
     constructor();
     process(buffer: DspBuffer): void;
-    end: FlangerInstanceParams;
-    start: FlangerInstanceParams;
 }
 
 export class FlangerInstanceParams {
-    private constructor();
     free(): void;
     [Symbol.dispose](): void;
+    constructor();
     delay: number;
     feedmix: number;
     mix: number;
@@ -70,21 +68,19 @@ export class FlangerInstanceParams {
 export class PhaserInstance {
     free(): void;
     [Symbol.dispose](): void;
-    begin(sample_rate: number, run_length: number): void;
+    begin(start: PhaserInstanceParams, end: PhaserInstanceParams, sample_rate: number, run_length: number): void;
     constructor(frame_size: number);
     process(sample: number): number;
     disperse: boolean;
-    end: PhaserInstanceParams;
     frame_size: number;
-    start: PhaserInstanceParams;
     set legacy_behavior(value: boolean);
     set num_stages(value: number);
 }
 
 export class PhaserInstanceParams {
-    private constructor();
     free(): void;
     [Symbol.dispose](): void;
+    constructor();
     feedback: number;
     freq: number;
     mix: number;

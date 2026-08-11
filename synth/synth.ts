@@ -10009,7 +10009,7 @@ class InstrumentState {
             this.phaser = new rustDsp.PhaserInstance(4096);
         }
         if (usesPhaser && this.phaser) {
-            const { start, end } = this.phaser;
+            const start = new rustDsp!.PhaserInstanceParams(), end = new rustDsp!.PhaserInstanceParams();
             
             const phaserMinFeedback: number = 0.0;
             const phaserMaxFeedback: number = 0.95;
@@ -10072,8 +10072,7 @@ class InstrumentState {
             this.phaser.disperse = instrument.phaserDisperse;
             this.phaser.legacy_behavior = instrument.phaserLegacyMode;
 
-            this.phaser.start = start;
-            this.phaser.end = end;
+            this.phaser.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
         }
 
         if (usesReverb) {
@@ -10116,7 +10115,8 @@ class InstrumentState {
           this.compressor = undefined;
         }
       if (usesCompressor && this.compressor) {
-        const { start, end } = this.compressor, params = instrument.compressor;
+        const start = new rustDsp!.CompressorInstanceParams(), end = new rustDsp!.CompressorInstanceParams();
+        const params = instrument.compressor;
         
         // copied from cy!box
         function gainToMultiplier(volume: number): number {
@@ -10149,8 +10149,7 @@ class InstrumentState {
         end.mid_gain = gainToMultiplier(params.gainMid) * envelopeEnds[EnvelopeComputeIndex.compressorMidGain];
         end.hi_gain = gainToMultiplier(params.gainHi) * envelopeEnds[EnvelopeComputeIndex.compressorHiGain];
         
-        this.compressor.start = start;
-        this.compressor.end = end;
+        this.compressor.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
       }
 
         if (usesFlanger) {
@@ -10162,7 +10161,7 @@ class InstrumentState {
         }
         if (usesFlanger && this.flanger)
         {
-          const start = this.flanger.start, end = this.flanger.end;
+          const start = new rustDsp!.FlangerInstanceParams(), end = new rustDsp!.FlangerInstanceParams();
           
           let usePanStart: number = instrument.flangerPan;
           let usePanEnd: number = instrument.flangerPan;
@@ -10174,7 +10173,7 @@ class InstrumentState {
 
           const panEnvelopeStart: number = envelopeStarts[EnvelopeComputeIndex.flangerPan] * 2.0 - 1.0;
           const panEnvelopeEnd: number = envelopeEnds[EnvelopeComputeIndex.flangerPan] * 2.0 - 1.0;
-
+          
           start.panning = Math.max(-1.0, Math.min(1.0, (usePanStart - Config.panCenter) / Config.panCenter * panEnvelopeStart));
           end.panning = Math.max(-1.0, Math.min(1.0, (usePanEnd - Config.panCenter) / Config.panCenter * panEnvelopeEnd));
 
@@ -10197,8 +10196,7 @@ class InstrumentState {
           [start.feedmix, end.feedmix] = getModifiedValues("flanger feedmix", EnvelopeComputeIndex.flangerFeedmix, instrument.flangerFeedmix);
           [start.voices, end.voices] = getModifiedValues("flanger voices", EnvelopeComputeIndex.flangerVoices, instrument.flangerVoices);
           
-          this.flanger.start = start;
-          this.flanger.end = end;
+          this.flanger.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
         }
       
 
@@ -14926,7 +14924,6 @@ export class Synth {
 
                 if(instrumentState.phaser){
                     instrumentState.phaser.num_stages = phaserStagesInt;
-                    instrumentState.phaser.begin(synth.samplesPerSecond, runLength);
                 }
                 `
             }

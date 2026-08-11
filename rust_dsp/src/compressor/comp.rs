@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{SamplePair, lerp, sample::Sample};
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 #[wasm_bindgen]
 pub struct CompressorParams {
     pub attack: f32,

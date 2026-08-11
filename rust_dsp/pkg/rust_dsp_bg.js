@@ -9,6 +9,19 @@ export class CompressorInstance {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_compressorinstance_free(ptr, 0);
     }
+    /**
+     * @param {CompressorInstanceParams} start
+     * @param {CompressorInstanceParams} end
+     * @param {number} sample_rate
+     * @param {number} run_length
+     */
+    begin(start, end, sample_rate, run_length) {
+        _assertClass(start, CompressorInstanceParams);
+        var ptr0 = start.__destroy_into_raw();
+        _assertClass(end, CompressorInstanceParams);
+        var ptr1 = end.__destroy_into_raw();
+        wasm.compressorinstance_begin(this.__wbg_ptr, ptr0, ptr1, sample_rate, run_length);
+    }
     constructor() {
         const ret = wasm.compressorinstance_new();
         this.__wbg_ptr = ret;
@@ -22,46 +35,10 @@ export class CompressorInstance {
         _assertClass(buffer, DspBuffer);
         wasm.compressorinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
     }
-    /**
-     * @returns {CompressorInstanceParams}
-     */
-    get end() {
-        const ret = wasm.__wbg_get_compressorinstance_end(this.__wbg_ptr);
-        return CompressorInstanceParams.__wrap(ret);
-    }
-    /**
-     * @returns {CompressorInstanceParams}
-     */
-    get start() {
-        const ret = wasm.__wbg_get_compressorinstance_start(this.__wbg_ptr);
-        return CompressorInstanceParams.__wrap(ret);
-    }
-    /**
-     * @param {CompressorInstanceParams} arg0
-     */
-    set end(arg0) {
-        _assertClass(arg0, CompressorInstanceParams);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_compressorinstance_end(this.__wbg_ptr, ptr0);
-    }
-    /**
-     * @param {CompressorInstanceParams} arg0
-     */
-    set start(arg0) {
-        _assertClass(arg0, CompressorInstanceParams);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_compressorinstance_start(this.__wbg_ptr, ptr0);
-    }
 }
 if (Symbol.dispose) CompressorInstance.prototype[Symbol.dispose] = CompressorInstance.prototype.free;
 
 export class CompressorInstanceParams {
-    static __wrap(ptr) {
-        const obj = Object.create(CompressorInstanceParams.prototype);
-        obj.__wbg_ptr = ptr;
-        CompressorInstanceParamsFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -71,6 +48,12 @@ export class CompressorInstanceParams {
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_compressorinstanceparams_free(ptr, 0);
+    }
+    constructor() {
+        const ret = wasm.compressorinstanceparams_new();
+        this.__wbg_ptr = ret;
+        CompressorInstanceParamsFinalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
     /**
      * @returns {number}
@@ -364,6 +347,19 @@ export class FlangerInstance {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_flangerinstance_free(ptr, 0);
     }
+    /**
+     * @param {FlangerInstanceParams} start
+     * @param {FlangerInstanceParams} end
+     * @param {number} sample_rate
+     * @param {number} run_length
+     */
+    begin(start, end, sample_rate, run_length) {
+        _assertClass(start, FlangerInstanceParams);
+        var ptr0 = start.__destroy_into_raw();
+        _assertClass(end, FlangerInstanceParams);
+        var ptr1 = end.__destroy_into_raw();
+        wasm.flangerinstance_begin(this.__wbg_ptr, ptr0, ptr1, sample_rate, run_length);
+    }
     constructor() {
         const ret = wasm.flangerinstance_new();
         this.__wbg_ptr = ret;
@@ -377,46 +373,10 @@ export class FlangerInstance {
         _assertClass(buffer, DspBuffer);
         wasm.flangerinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
     }
-    /**
-     * @returns {FlangerInstanceParams}
-     */
-    get end() {
-        const ret = wasm.__wbg_get_flangerinstance_end(this.__wbg_ptr);
-        return FlangerInstanceParams.__wrap(ret);
-    }
-    /**
-     * @returns {FlangerInstanceParams}
-     */
-    get start() {
-        const ret = wasm.__wbg_get_flangerinstance_start(this.__wbg_ptr);
-        return FlangerInstanceParams.__wrap(ret);
-    }
-    /**
-     * @param {FlangerInstanceParams} arg0
-     */
-    set end(arg0) {
-        _assertClass(arg0, FlangerInstanceParams);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_flangerinstance_end(this.__wbg_ptr, ptr0);
-    }
-    /**
-     * @param {FlangerInstanceParams} arg0
-     */
-    set start(arg0) {
-        _assertClass(arg0, FlangerInstanceParams);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_flangerinstance_start(this.__wbg_ptr, ptr0);
-    }
 }
 if (Symbol.dispose) FlangerInstance.prototype[Symbol.dispose] = FlangerInstance.prototype.free;
 
 export class FlangerInstanceParams {
-    static __wrap(ptr) {
-        const obj = Object.create(FlangerInstanceParams.prototype);
-        obj.__wbg_ptr = ptr;
-        FlangerInstanceParamsFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -426,6 +386,12 @@ export class FlangerInstanceParams {
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_flangerinstanceparams_free(ptr, 0);
+    }
+    constructor() {
+        const ret = wasm.flangerinstanceparams_new();
+        this.__wbg_ptr = ret;
+        FlangerInstanceParamsFinalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
     /**
      * @returns {number}
@@ -514,13 +480,6 @@ export class PhaserInstance {
         return ret !== 0;
     }
     /**
-     * @returns {PhaserInstanceParams}
-     */
-    get end() {
-        const ret = wasm.__wbg_get_phaserinstance_end(this.__wbg_ptr);
-        return PhaserInstanceParams.__wrap(ret);
-    }
-    /**
      * @returns {number}
      */
     get frame_size() {
@@ -528,18 +487,17 @@ export class PhaserInstance {
         return ret >>> 0;
     }
     /**
-     * @returns {PhaserInstanceParams}
-     */
-    get start() {
-        const ret = wasm.__wbg_get_phaserinstance_start(this.__wbg_ptr);
-        return PhaserInstanceParams.__wrap(ret);
-    }
-    /**
+     * @param {PhaserInstanceParams} start
+     * @param {PhaserInstanceParams} end
      * @param {number} sample_rate
      * @param {number} run_length
      */
-    begin(sample_rate, run_length) {
-        wasm.phaserinstance_begin(this.__wbg_ptr, sample_rate, run_length);
+    begin(start, end, sample_rate, run_length) {
+        _assertClass(start, PhaserInstanceParams);
+        var ptr0 = start.__destroy_into_raw();
+        _assertClass(end, PhaserInstanceParams);
+        var ptr1 = end.__destroy_into_raw();
+        wasm.phaserinstance_begin(this.__wbg_ptr, ptr0, ptr1, sample_rate, run_length);
     }
     /**
      * @param {number} frame_size
@@ -577,37 +535,15 @@ export class PhaserInstance {
         wasm.__wbg_set_phaserinstance_disperse(this.__wbg_ptr, arg0);
     }
     /**
-     * @param {PhaserInstanceParams} arg0
-     */
-    set end(arg0) {
-        _assertClass(arg0, PhaserInstanceParams);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_phaserinstance_end(this.__wbg_ptr, ptr0);
-    }
-    /**
      * @param {number} arg0
      */
     set frame_size(arg0) {
         wasm.__wbg_set_phaserinstance_frame_size(this.__wbg_ptr, arg0);
     }
-    /**
-     * @param {PhaserInstanceParams} arg0
-     */
-    set start(arg0) {
-        _assertClass(arg0, PhaserInstanceParams);
-        var ptr0 = arg0.__destroy_into_raw();
-        wasm.__wbg_set_phaserinstance_start(this.__wbg_ptr, ptr0);
-    }
 }
 if (Symbol.dispose) PhaserInstance.prototype[Symbol.dispose] = PhaserInstance.prototype.free;
 
 export class PhaserInstanceParams {
-    static __wrap(ptr) {
-        const obj = Object.create(PhaserInstanceParams.prototype);
-        obj.__wbg_ptr = ptr;
-        PhaserInstanceParamsFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -638,6 +574,12 @@ export class PhaserInstanceParams {
     get mix() {
         const ret = wasm.__wbg_get_phaserinstanceparams_mix(this.__wbg_ptr);
         return ret;
+    }
+    constructor() {
+        const ret = wasm.phaserinstanceparams_new();
+        this.__wbg_ptr = ret;
+        PhaserInstanceParamsFinalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
     /**
      * @param {number} arg0

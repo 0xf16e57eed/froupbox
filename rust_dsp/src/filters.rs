@@ -19,7 +19,7 @@ pub fn sincos_w0(w0: f32) -> (f32, f32) {
     (f32::sqrt(1.0 - cos * cos), cos)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct BiquadFilterCoefficients {
     pub b0: f32,
     pub b1: f32,
@@ -76,7 +76,7 @@ impl BiquadFilterValues {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct CrossoverCoefficients {
     pub lo: BiquadFilterCoefficients,
     pub hi: BiquadFilterCoefficients,

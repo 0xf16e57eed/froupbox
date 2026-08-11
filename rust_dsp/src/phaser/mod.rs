@@ -12,13 +12,18 @@ struct PhaserInstanceParams {
     pub freq: f32,
     pub feedback: f32,
 }
+#[wasm_bindgen]
+impl PhaserInstanceParams {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
 
 #[wasm_bindgen]
 #[derive(Default)]
 struct PhaserInstance {
     pub frame_size: usize,
-    pub start: PhaserInstanceParams,
-    pub end: PhaserInstanceParams,
     pub disperse: bool,
     legacy_behavior: bool,
 
@@ -66,17 +71,22 @@ impl PhaserInstance {
     }
 
     #[wasm_bindgen]
-    pub fn begin(&mut self, sample_rate: f32, run_length: f32) {
+    pub fn begin(
+        &mut self,
+        start: PhaserInstanceParams,
+        end: PhaserInstanceParams,
+        sample_rate: f32,
+        run_length: f32,
+    ) {
         self.i_break_coef = util::interpolate(
             run_length,
-            get_break_coef(self.start.freq, sample_rate),
-            get_break_coef(self.end.freq, sample_rate),
+            get_break_coef(start.freq, sample_rate),
+            get_break_coef(end.freq, sample_rate),
         );
 
-        self.i_feedback_mult =
-            util::interpolate(run_length, self.start.feedback, self.end.feedback);
+        self.i_feedback_mult = util::interpolate(run_length, start.feedback, end.feedback);
 
-        self.i_mix = util::interpolate(run_length, self.start.mix, self.end.mix);
+        self.i_mix = util::interpolate(run_length, start.mix, end.mix);
     }
 
     #[wasm_bindgen]
