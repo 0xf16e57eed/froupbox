@@ -516,6 +516,13 @@ export class TipPrompt implements Prompt {
 					p("The filter preserves the volume of frequencies that are below the cutoff frequency, and reduces the volume of frequencies that are above the cutoff. If this setting is used, the filter also increases the volume of frequencies that are near the cutoff."),
 				);
 			} break;
+            case "sampleChannel": {
+                message = div(
+					h2("Sample Channel"),
+					p("Some samples have multiple channels (due to being stereo or the like)."),
+					p("This option allows you to choose which channel the synth will use."),
+				);
+            } break;
 			case "loopControls":
 				{
 					message = div(h2("Loop Controls"), p("This enables the use of parameters that control how a chip wave should repeat."));

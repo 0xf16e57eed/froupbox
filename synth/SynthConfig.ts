@@ -390,6 +390,46 @@ export class SampleLoadEvents extends EventTarget {
 
 export const sampleLoadEvents: SampleLoadEvents = new SampleLoadEvents();
 
+/**
+ * much of the sample processing code assumes that each sample is mono (i.e. a singular Float32Array). this class extends Float32Array to minimise code changes.
+ * cursed? yeah. welcome to beepbox!
+ * - cypher
+ */
+export class MultiChannelSample extends Float32Array {
+    extraChannels: Float32Array[] = [];
+    constructor(buf: AudioBuffer | Float32Array) {
+        // store the first channel in super()...
+        super((buf instanceof AudioBuffer ? buf.getChannelData(0) : buf) as any);
+        if (buf instanceof AudioBuffer) {
+            // and the rest in extraChannels
+            for (let i = 1; i < buf.numberOfChannels; i++)
+                this.extraChannels[i - 1] = buf.getChannelData(i);
+        }
+    }
+
+    getChannel(i: number) : Float32Array{
+        return i === 0 ? this : this.extraChannels[i - 1];
+    }
+    *channels(): Generator<Float32Array> {
+        yield this;
+        yield* this.extraChannels;
+    }
+
+    mapChannels(fn: (arr: Float32Array) => Float32Array) {
+        const arr = fn(this);
+        const mapped = new MultiChannelSample(arr);
+        this.extraChannels.forEach((arr, i) => {
+            mapped.extraChannels[i] = fn(arr);
+        });
+        return mapped;
+    }
+
+    static numChannels(arr: Float32Array) {
+        if (!(arr instanceof MultiChannelSample)) return 1;
+        return 1 + arr.extraChannels.length;
+    }
+}
+
 export async function startLoadingSample(url: string, chipWaveIndex: number, presetSettings: Dictionary<any>, rawLoopOptions: any, customSampleRate: number): Promise<void> {
     // @TODO: Make parts of the code that expect everything to already be
     // in memory work correctly.
@@ -420,9 +460,8 @@ export async function startLoadingSample(url: string, chipWaveIndex: number, pre
     }).then((arrayBuffer) => {
 	return sampleLoaderAudioContext.decodeAudioData(arrayBuffer);
     }).then((audioBuffer) => {
-	// @TODO: Downmix.
-	const samples = centerWave(Array.from(audioBuffer.getChannelData(0)));
-	const integratedSamples = performIntegral(samples);
+    const samples = new MultiChannelSample(audioBuffer).mapChannels(centerWave);
+	const integratedSamples = samples.mapChannels(performIntegral);
 	chipWave.samples = integratedSamples;
 	rawChipWave.samples = samples;
 	rawRawChipWave.samples = samples;
@@ -2314,15 +2353,14 @@ export class Config {
         ]);
 }
 
-function centerWave(wave: Array<number>): Float32Array {
+function centerWave(wave: ArrayLike<number>): Float32Array {
+    // The first sample should be zero, and we'll duplicate it at the end for easier interpolation.
+    const newWave = new Float32Array(wave.length + 1);
     let sum: number = 0.0;
     for (let i: number = 0; i < wave.length; i++) sum += wave[i];
     const average: number = sum / wave.length;
-    for (let i: number = 0; i < wave.length; i++) wave[i] -= average;
-    performIntegral(wave);
-    // The first sample should be zero, and we'll duplicate it at the end for easier interpolation.
-    wave.push(0);
-    return new Float32Array(wave);
+    for (let i: number = 0; i < wave.length; i++) newWave[i] = wave[i] - average;
+    return newWave;
 }
 function centerAndNormalizeWave(wave: Array<number>): Float32Array {
     let magn: number = 0.0;

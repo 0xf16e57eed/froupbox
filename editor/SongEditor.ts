@@ -1,7 +1,7 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
 //import {Layout} from "./Layout";
-import { sampleLoadEvents, SampleLoadedEvent, InstrumentType, EffectType, Config, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeRingModulation, effectsIncludeGranular, DropdownID, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeNoteRange, effectsIncludeCompressor, effectsIncludeFlanger } from "../synth/SynthConfig";
+import { sampleLoadEvents, SampleLoadedEvent, InstrumentType, EffectType, Config, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeRingModulation, effectsIncludeGranular, DropdownID, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeNoteRange, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample } from "../synth/SynthConfig";
 import { BarScrollBar } from "./BarScrollBar";
 import { BeatsPerBarPrompt } from "./BeatsPerBarPrompt";
 import { Change, ChangeGroup } from "./Change";
@@ -47,7 +47,7 @@ import { CustomThemePrompt } from "./CustomThemePrompt";
 import { CustomPresetsPrompt } from "./CustomPresetsPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation, ChangeChipWaveSampleChannel } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -1046,6 +1046,7 @@ export class SongEditor {
 
     private readonly _chipWaveSelect: HTMLSelectElement = buildOptions(select(), Config.chipWaves.map(wave => wave.name));
     private readonly _chipNoiseSelect: HTMLSelectElement = buildOptions(select(), Config.chipNoises.map(wave => wave.name));
+    private readonly _chipWaveSampleChannelSelect: HTMLSelectElement = select();
     // advloop addition
     // @TODO: Add a dropdown for these. Or maybe this checkbox is fine?
     private readonly _useChipWaveAdvancedLoopControlsBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 0.4em; margin-right: 4em;" });
@@ -1059,6 +1060,7 @@ export class SongEditor {
     private readonly _chipWaveSelectRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chipWave") }, "Wave: "), div({ class: "selectContainer" }, this._chipWaveSelect));
     private readonly _chipNoiseSelectRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chipNoise") }, "Noise: "), div({ class: "selectContainer" }, this._chipNoiseSelect));
     private readonly _visualLoopControlsButton: HTMLButtonElement = button({ style: "margin-left: 0em; padding-left: 0.2em; height: 1.5em; max-width: 12px;", onclick: () => this._openPrompt("visualLoopControls") }, "+");
+    private readonly _chipWaveSampleChannelRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", style: "flex-shrink: 0;", onclick: () => this._openPrompt("sampleChannel") }, "Channel: "), div({ class: "selectContainer" }, this._chipWaveSampleChannelSelect));
     private readonly _useChipWaveAdvancedLoopControlsRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", style: "flex-shrink: 0;", onclick: () => this._openPrompt("loopControls") }, "Loop Controls: "), this._useChipWaveAdvancedLoopControlsBox);
     private readonly _chipWaveLoopModeSelectRow = div({ class: "selectRow" }, span({ class: "tip", style: "font-size: x-small;", onclick: () => this._openPrompt("loopMode") }, "Loop Mode: "), div({ class: "selectContainer" }, this._chipWaveLoopModeSelect));
     private readonly _chipWaveLoopStartRow = div({ class: "selectRow" }, span({ class: "tip", style: "font-size: x-small;", onclick: () => this._openPrompt("loopStart") }, "Loop Start: "), this._visualLoopControlsButton, span({ style: "display: flex;" }, this._chipWaveLoopStartStepper));
@@ -1335,6 +1337,7 @@ export class SongEditor {
         this._panDropdownGroup,
         this._chipWaveSelectRow,
         this._chipNoiseSelectRow,
+        this._chipWaveSampleChannelRow,
         this._useChipWaveAdvancedLoopControlsRow,
         this._chipWaveLoopModeSelectRow,
         this._chipWaveLoopStartRow,
@@ -1662,7 +1665,8 @@ export class SongEditor {
     private _modRecTimeout: number = -1;
 
     constructor(/*private _doc: SongDocument*/) {
-
+        sampleLoadEvents.addEventListener("sampleloaded", () => setTimeout(() => this.whenUpdated()));
+        
         this.doc.notifier.watch(this.whenUpdated);
         this.doc.modRecordingHandler = () => { this.handleModRecording() };
         new MidiInputHandler(this.doc);
@@ -1847,6 +1851,7 @@ export class SongEditor {
         this._algorithm6OpSelect.addEventListener("change", this._whenSet6OpAlgorithm);
         this._feedback6OpTypeSelect.addEventListener("change", this._whenSet6OpFeedbackType);
         this._chipWaveSelect.addEventListener("change", this._whenSetChipWave);
+        this._chipWaveSampleChannelSelect.addEventListener("change", this._whenSetSampleChannel);
         this._ringModWaveSelect.addEventListener("change", this._whenSetRingModChipWave);
         // advloop addition
         this._useChipWaveAdvancedLoopControlsBox.addEventListener("input", this._whenSetUseChipWaveAdvancedLoopControls);
@@ -2877,6 +2882,7 @@ export class SongEditor {
 
             if (instrument.type == InstrumentType.noise) {
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -2892,6 +2898,7 @@ export class SongEditor {
             }
             if (instrument.type == InstrumentType.spectrum) {
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -2907,6 +2914,7 @@ export class SongEditor {
             }
             if (instrument.type == InstrumentType.harmonics || instrument.type == InstrumentType.pickedString) {
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -2922,6 +2930,7 @@ export class SongEditor {
             }
             if (instrument.type == InstrumentType.pickedString) {
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -2939,6 +2948,7 @@ export class SongEditor {
             if (instrument.type == InstrumentType.drumset) {
                 this._drumsetGroup.style.display = "";
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -2960,6 +2970,22 @@ export class SongEditor {
 
             if (instrument.type == InstrumentType.chip) {
                 this._chipWaveSelectRow.style.display = "";
+
+                const numChannels = MultiChannelSample.numChannels(Config.rawChipWaves[instrument.chipWave].samples);
+                this._chipWaveSampleChannelRow.style.display = numChannels >= 2 ? "" : "none";
+                if (numChannels >= 2) {
+                    if (this._chipWaveSampleChannelSelect.childElementCount !== numChannels) {
+                        // recreate this._chipWaveSampleChannelSelect
+                        this._chipWaveSampleChannelSelect.replaceChildren();
+                        let channelNames: string[];
+                        if (numChannels === 2) channelNames = ["Left", "Right"];
+                        else if (numChannels === 6) channelNames = ["Front Left", "Front Right", "Center", "LFE", "Back Left", "Back Right"]; // https://en.wikipedia.org/wiki/5.1_surround_sound#Channel_order
+                        else channelNames = Array.from(Array(numChannels), num => `Channel ${num + 1}`);
+                        buildOptions(this._chipWaveSampleChannelSelect, channelNames);
+                    }
+                    setSelectedValue(this._chipWaveSampleChannelSelect, instrument.chipWaveSampleChannel);
+                }
+                
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "";
                 if (instrument.isUsingAdvancedLoopControls) {
@@ -2993,6 +3019,7 @@ export class SongEditor {
             if (instrument.type == InstrumentType.customChipWave) {
                 this._customWaveDraw.style.display = "";
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -3020,6 +3047,7 @@ export class SongEditor {
             }
             if (instrument.type == InstrumentType.pwm || instrument.type == InstrumentType.supersaw) {
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -3049,6 +3077,7 @@ export class SongEditor {
                 this._phaseModGroup.style.display = "";
                 this._feedbackRow2.style.display = "";
                 this._chipWaveSelectRow.style.display = "none";
+                this._chipWaveSampleChannelRow.style.display = "none";
                 // advloop addition
                 this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
                 this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -3543,6 +3572,7 @@ export class SongEditor {
 
             this._chipNoiseSelectRow.style.display = "none";
             this._chipWaveSelectRow.style.display = "none";
+            this._chipWaveSampleChannelRow.style.display = "none";
             // advloop addition
             this._useChipWaveAdvancedLoopControlsRow.style.display = "none";
             this._chipWaveLoopModeSelectRow.style.display = "none";
@@ -5868,6 +5898,10 @@ export class SongEditor {
 
     private _whenSetChipWave = (): void => {
         this.doc.record(new ChangeChipWave(this.doc, this._chipWaveSelect.selectedIndex));
+    }
+
+    private _whenSetSampleChannel = (): void => {
+        this.doc.record(new ChangeChipWaveSampleChannel(this.doc, this._chipWaveSampleChannelSelect.selectedIndex));
     }
 
     private _whenSetRingModChipWave = (): void => {

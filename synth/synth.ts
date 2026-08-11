@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludeFlanger } from "./SynthConfig";
+import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample } from "./SynthConfig";
 import { Preset, EditorConfig } from "../editor/EditorConfig";
 import { scaleElementsByFactor, inverseRealFourierTransform } from "./FFT";
 import { Deque } from "./Deque";
@@ -1617,6 +1617,7 @@ export class Instrument {
     public type: InstrumentType = InstrumentType.chip;
     public preset: number = 0;
     public chipWave: number = 2;
+    public chipWaveSampleChannel: number = 0;
     // advloop addition
     public isUsingAdvancedLoopControls: boolean = false;
     public chipWaveLoopStart: number = 0;
@@ -2309,6 +2310,7 @@ export class Instrument {
             }
         } else if (this.type == InstrumentType.chip) {
             instrumentObject["wave"] = Config.chipWaves[this.chipWave].name;
+            instrumentObject["chipWaveSampleChannel"] = this.chipWaveSampleChannel;
 
             // advloop addition
             instrumentObject["isUsingAdvancedLoopControls"] = this.isUsingAdvancedLoopControls;
@@ -2887,6 +2889,10 @@ export class Instrument {
             }
             // this.chipWave = legacyWaveNames[instrumentObject["wave"]] != undefined ? legacyWaveNames[instrumentObject["wave"]] : modboxWaveNames[instrumentObject["wave"]] != undefined ? modboxWaveNames[instrumentObject["wave"]] : sandboxWaveNames[instrumentObject["wave"]] != undefined ? sandboxWaveNames[instrumentObject["wave"]] : zefboxWaveNames[instrumentObject["wave"]] != undefined ? zefboxWaveNames[instrumentObject["wave"]] : miscWaveNames[instrumentObject["wave"]] != undefined ? miscWaveNames[instrumentObject["wave"]] : paandorasboxWaveNames[instrumentObject["wave"]] != undefined ? paandorasboxWaveNames[instrumentObject["wave"]] : Config.chipWaves.findIndex(wave => wave.name == instrumentObject["wave"]); 
             if (this.chipWave == -1) this.chipWave = 1;
+
+            if(typeof instrumentObject["chipWaveSampleChannel"] === "number") {
+                this.chipWaveSampleChannel = instrumentObject["chipWaveSampleChannel"];
+            }
         }
 
         if (this.type == InstrumentType.fm || this.type == InstrumentType.fm6op) {
@@ -4199,17 +4205,27 @@ export class Song {
 
                     // Repurposed for chip wave loop controls.
                     buffer.push(SongTagCode.loopControls);
+
+                    const isUsingSampleChannelIndex = instrument.chipWaveSampleChannel > 0;
+                    
                     // The encoding here is as follows:
-                    // 0b11111_1
+                    // 0b1111111
                     //         ^-- isUsingAdvancedLoopControls
-                    //   ^^^^^---- chipWaveLoopMode
-                    // This essentially allocates 32 different loop modes,
+                    //    ^^^^---- chipWaveLoopMode
+                    //   ^-------- isUsingSampleChannelIndex
+                    // This essentially allocates 16 different loop modes,
                     // which should be plenty.
                     const encodedLoopMode: number = (
-                        (clamp(0, 31 + 1, instrument.chipWaveLoopMode) << 1)
-                        | (instrument.isUsingAdvancedLoopControls ? 1 : 0)
+                        (clamp(0, 15 + 1, instrument.chipWaveLoopMode) << 1)
+                        | +isUsingSampleChannelIndex << 5
+                        | +instrument.isUsingAdvancedLoopControls
                     );
+
                     buffer.push(base64IntToCharCode[encodedLoopMode]);
+                    
+                    if (isUsingSampleChannelIndex)
+                        buffer.push(base64IntToCharCode[instrument.chipWaveSampleChannel]);
+                    
                     // The same encoding above is used here, but with the release mode
                     // (which isn't implemented currently), and the backwards toggle.
                     const encodedReleaseMode: number = (
@@ -5391,7 +5407,14 @@ export class Song {
                         // See Song.toBase64String for details on the encodings used here.
                         const encodedLoopMode: number = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                         const isUsingAdvancedLoopControls: boolean = Boolean(encodedLoopMode & 1);
-                        const chipWaveLoopMode: number = encodedLoopMode >> 1;
+                        const isUsingSampleChannelIndex = Boolean(encodedLoopMode & 0x20);
+
+                        const instrument: Instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
+                        
+                        if (isUsingSampleChannelIndex)
+                            instrument.chipWaveSampleChannel = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                        
+                        const chipWaveLoopMode: number = encodedLoopMode >> 1 & 0x0f;
                         const encodedReleaseMode: number = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                         const chipWavePlayBackwards: boolean = Boolean(encodedReleaseMode & 1);
                         // const chipWaveReleaseMode: number = encodedReleaseMode >> 1;
@@ -5401,7 +5424,6 @@ export class Song {
                         charIndex += 6;
                         const chipWaveStartOffset: number = decode32BitNumber(compressed, charIndex);
                         charIndex += 6;
-                        const instrument: Instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
                         instrument.isUsingAdvancedLoopControls = isUsingAdvancedLoopControls;
                         instrument.chipWaveLoopStart = chipWaveLoopStart;
                         instrument.chipWaveLoopEnd = chipWaveLoopEnd;
@@ -10278,6 +10300,9 @@ class InstrumentState {
         }
         if (instrument.type == InstrumentType.chip) {
             this.wave = (this.aliases) ? Config.rawChipWaves[instrument.chipWave].samples : Config.chipWaves[instrument.chipWave].samples;
+            if (this.wave instanceof MultiChannelSample) {
+                this.wave = this.wave.getChannel(instrument.chipWaveSampleChannel) ?? this.wave;
+            }
             this.isUsingAdvancedLoopControls = instrument.isUsingAdvancedLoopControls;
             this.chipWaveLoopStart = instrument.chipWaveLoopStart;
             this.chipWaveLoopEnd = instrument.chipWaveLoopEnd;

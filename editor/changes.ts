@@ -5672,6 +5672,18 @@ export class ChangeChipWave extends Change {
     }
 }
 
+export class ChangeChipWaveSampleChannel extends Change {
+    constructor(doc: SongDocument, newValue: number) {
+        super();
+        const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
+        if (instrument.chipWave != newValue) {
+            instrument.chipWaveSampleChannel = newValue;
+            doc.notifier.changed();
+            this._didSomething();
+        }
+    }
+}
+
 // advloop addition
 export class ChangeChipWaveUseAdvancedLoopControls extends Change {
     constructor(doc: SongDocument, newValue: boolean) {
