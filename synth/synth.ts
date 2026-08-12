@@ -1723,8 +1723,10 @@ export class Instrument {
     public phaserFreq: number = 0;
     public phaserFeedback: number = 0;
     public phaserStages: number = 2;
+    public phaserSpread: number = 16;
     public phaserDisperse: boolean = false;
-    public phaserLegacyMode: boolean = false;
+    public phaserFilterIndex: number = 0;
+    //public phaserLegacyMode: boolean = false;
     
     public flangerMix: number = 32;
     public flangerVoices: number = 1;
@@ -1867,7 +1869,9 @@ export class Instrument {
         this.phaserFreq	= 0;
         this.phaserFeedback = 0;
         this.phaserStages = 2;
+        this.phaserSpread = 16;
         this.phaserDisperse = false;
+        this.phaserFilterIndex = 0;
 
         this.flangerMix = 32;
         this.flangerVoices = 1;
@@ -2222,7 +2226,8 @@ export class Instrument {
             instrumentObject["phaserFeedback"] =  Math.round(100 *this.phaserFeedback/(Config.phaserFeedbackRange - 1));
             instrumentObject["phaserStages2"] = this.phaserStages;
             instrumentObject["phaserDisperse"] = this.phaserDisperse;
-            instrumentObject["phaserLegacyMode"] = this.phaserLegacyMode;
+            instrumentObject["phaserFilterType"] = this.phaserFilterIndex;
+            instrumentObject["phaserSpread"] = this.phaserSpread;
         }
         if (effectsIncludeFlanger(this.effects)) {
             instrumentObject["flangerMix"] =  Math.round(100 * this.flangerMix/(Config.flangerMixRange - 1));
@@ -2706,7 +2711,14 @@ export class Instrument {
         if (typeof instrumentObject["phaserDisperse"] === "boolean") {
             this.phaserDisperse = instrumentObject["phaserDisperse"];
         }
-        this.phaserLegacyMode = instrumentObject["phaserMix"] != undefined && instrumentObject["phaserLegacyMode"] !== false;
+        if (instrumentObject["phaserFilterType"] != undefined) {
+            this.phaserFilterIndex = instrumentObject["phaserFilterType"];
+        } else if (instrumentObject["phaserLegacyMode"] != undefined) {
+            this.phaserFilterIndex = (instrumentObject["phaserLegacyMode"] !== false) ? 2 : 0;
+        }
+        if (instrumentObject["phaserSpread"] != undefined) {
+            this.phaserSpread = clamp(0, Config.phaserSpreadRange + 1, instrumentObject["phaserSpread"]);
+        }
 
 
         if (instrumentObject["flangerMix"] != undefined) {
@@ -3387,7 +3399,7 @@ export class Song {
     private static readonly _oldestSlarmoosBoxVersion: number = 1;
     private static readonly _latestSlarmoosBoxVersion: number = 5;
     private static readonly _oldestFroupBoxVersion: number = 1;
-    private static readonly _latestFroupBoxVersion: number = 7;
+    private static readonly _latestFroupBoxVersion: number = 8;
     // One-character variant detection at the start of URL to distinguish variants such as JummBox, Or Goldbox. "j" and "g" respectively
     //also "u" is ultrabox lol
     private static readonly _variant = 0x66; //"f" ~ froupbox
@@ -4067,15 +4079,13 @@ export class Song {
                 }
                 
                 if (effectsIncludePhaser(instrument.effects)) {
+                    buffer.push(base64IntToCharCode[instrument.phaserMix]);
                     buffer.push(base64IntToCharCode[instrument.phaserFreq]);
                     buffer.push(base64IntToCharCode[instrument.phaserFeedback]);
-                    // previous max stages was 32; thus, use the other values as a marker/flags for the new phaser format
-                    let phaserFlags = 0;
-                    phaserFlags |= +instrument.phaserLegacyMode;
-                    buffer.push(base64IntToCharCode[0x3e | phaserFlags]);
                     buffer.push(base64IntToCharCode[instrument.phaserStages >> 6]);
                     buffer.push(base64IntToCharCode[instrument.phaserStages & 0x3f]);
-                    buffer.push(base64IntToCharCode[instrument.phaserMix]);
+                    buffer.push(base64IntToCharCode[instrument.phaserFilterIndex]);
+                    buffer.push(base64IntToCharCode[instrument.phaserSpread]);
                     buffer.push(base64IntToCharCode[+instrument.phaserDisperse]);
                 }
 
@@ -6068,23 +6078,36 @@ export class Song {
                         instrument.ringModHzOffset = clamp(Config.rmHzOffsetMin, Config.rmHzOffsetMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                     }
                     if (effectsIncludePhaser(instrument.effects)) {
-                        instrument.phaserFreq = clamp(0, Config.phaserFreqRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                        instrument.phaserFeedback = clamp(0, Config.phaserFeedbackRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                        instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]); 
-                        const newFormat = instrument.phaserStages > 32; // previous max stages was 32; thus, use the unused values as a marker for the new phaser format
-                        const phaserFlags = instrument.phaserStages & 0x1f; // ...and flags
-                        if (newFormat) {
-                          instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1,
-                            base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6 | 
-                            base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
-                          );
+                        if (beforeEight) {
+                            instrument.phaserFreq = clamp(0, Config.phaserFreqRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.phaserFeedback = clamp(0, Config.phaserFeedbackRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]); 
+                            const newFormat = instrument.phaserStages > 32; // previous max stages was 32; thus, use the unused values as a marker for the new phaser format
+                            const phaserFlags = instrument.phaserStages & 0x1f; // ...and flags
+                            if (newFormat) {
+                            instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1,
+                                base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6 | 
+                                base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            );
+                            }
+                            instrument.phaserMix = clamp(0, Config.phaserMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            if (newFormat && beforeFour) {
+                                charIndex++ // skipping over old character for clickless stages
+                            }
+                            instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
+                            instrument.phaserFilterIndex = (!newFormat || (phaserFlags & 1) === 1) ? 2 : 0;
+                        } else {
+                            instrument.phaserMix = clamp(0, Config.phaserMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.phaserFreq = clamp(0, Config.phaserFreqRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.phaserFeedback = clamp(0, Config.phaserFeedbackRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1,
+                                base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6 | 
+                                base64CharCodeToInt[compressed.charCodeAt(charIndex++)]
+                            ); 
+                            instrument.phaserFilterIndex = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                            instrument.phaserSpread = clamp(0, Config.phaserSpreadRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.phaserDisperse = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
                         }
-                        instrument.phaserMix = clamp(0, Config.phaserMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
-                        if (newFormat && beforeFour) {
-                            charIndex++ // skipping over old character for clickless stages
-                        }
-                        instrument.phaserDisperse = newFormat && base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
-                        instrument.phaserLegacyMode = !newFormat || (phaserFlags & 1) === 1;
                     }
                     if (effectsIncludeFlanger(instrument.effects)) {
                         instrument.flangerMix = clamp(0, Config.flangerMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);

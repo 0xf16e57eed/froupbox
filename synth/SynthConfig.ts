@@ -187,6 +187,8 @@ export const enum EnvelopeComputeIndex {
     flangerPan,
     flangerFeedmix,
 
+    phaserSpread,
+
     length,
 }
 
@@ -1035,13 +1037,16 @@ export class Config {
     public static readonly reverbRange:                 number = 32;
     public static readonly reverbDelayBufferSize:       number = 16384; // TODO: Compute a buffer size based on sample rate.
     public static readonly reverbDelayBufferMask:       number = Config.reverbDelayBufferSize - 1; // TODO: Compute a buffer size based on sample rate.
+
     public static readonly phaserMixRange:              number = 32; 
     public static readonly phaserFeedbackRange:         number = 32; 
     public static readonly phaserFreqRange:             number = 32; 
     public static readonly phaserMinFreq:               number = 8.0; 
     public static readonly phaserMaxFreq:               number = 20000.0; 
     public static readonly phaserMinStages:             number = 0; 
-    public static readonly phaserMaxStages:             number = 1024; 
+    public static readonly phaserMaxStages:             number = 2048; 
+    public static readonly phaserSpreadRange:           number = 64; 
+
     public static readonly flangerMixRange:             number = 64; 
     public static readonly flangerMinVoices:            number = 1; 
     public static readonly flangerMaxVoices:            number = 64; 
@@ -1249,22 +1254,15 @@ export class Config {
         { name: "delayed", amplitude: 0.3, type: 0, delayTicks: 37 }, // It will fade in over the previous two ticks.
         { name: "heavy", amplitude: 0.45, type: 0, delayTicks: 0 },
         { name: "shaky", amplitude: 0.1, type: 1, delayTicks: 0 },
-        //    { name: "very shaky", amplitude: 1, type: 0, delayTicks: 0 },
-        //{ name: "insane", amplitude: 10, type: 1, delayTicks: 0 },
-        //todbox vibratos
-        //	{ name: "super insane", amplitude: 30, type: 1, delayTicks: 1 },
-        //wackybox
-        //	 { name: "quiver", amplitude: 0.001, type: 0, delayTicks: 0 },
-        //  { name: "wub-wub", amplitude: 10.0, type: 0, delayTicks: 0 },
-        //     { name: "quiver delayed", amplitude: 0.001, type: 0, delayTicks: 18 },
-        //  { name: "vibrate", amplitude: 0.08, type: 0, delayTicks: 0 },
-        // { name: "too much wub ⚠", amplitude: 30.0, type: 0, delayTicks: 18 },
-        //too much wub breaks things just a little bit at it's original amplitude
-        //sandbox
     ]);
     public static readonly vibratoTypes: DictionaryArray<VibratoType> = toNameMap([
         { name: "normal", periodsSeconds: [0.14], period: 0.14 },
         { name: "shaky", periodsSeconds: [0.11, 1.618 * 0.11, 3 * 0.11], period: 266.97 }, // LCM of all periods
+    ]);
+    public static readonly phaserFilterTypes: any = toNameMap([
+        { name: "unipole" },
+        { name: "bipole" },
+        { name: "legacy unipole" },
     ]);
     // This array is more or less a linear step by 0.1 but there's a bit of range added at the start to hit specific ratios, and the end starts to grow faster.
     //                                                             0       1      2    3     4      5    6    7      8     9   10   11 12   13   14   15   16   17   18   19   20   21 22   23   24   25   26   27   28   29   30   31 32   33   34   35   36   37   38    39  40   41 42    43   44   45   46 47   48 49 50
@@ -1984,6 +1982,7 @@ export class Config {
         { name: "flangerPan",             computeIndex: EnvelopeComputeIndex.flangerPan,                displayName: "flanger pan",      perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
         { name: "flangerFeedmix",         computeIndex: EnvelopeComputeIndex.flangerFeedmix,            displayName: "flanger feedmix",  perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
         { name: "flangerVoices",          computeIndex: EnvelopeComputeIndex.flangerVoices,             displayName: "flanger voices",   perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null }, 
+        { name: "phaserSpread",           computeIndex: EnvelopeComputeIndex.phaserSpread,              displayName: "phaser spread",    perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.phaser, compatibleInstruments: null }, 
     ]);
     public static readonly operatorWaves: DictionaryArray<OperatorWave> = toNameMap([
 		{ name: "sine", samples: Config.sineWave },
@@ -2350,6 +2349,11 @@ export class Config {
             maxRawVol: Config.flangerMaxVoices - Config.flangerMinVoices, newNoteVol: 0, forSong: false, convertRealFactor: Config.flangerMinVoices, associatedEffect: EffectType.flanger, maxIndex: 0,
             promptName: "Flanger Voices", 
             promptDesc: [ "This setting controls the flanger voices.", "[OVERWRITING] [$LO - $HI]"] }, 
+        { name: "phaser spread", 
+            pianoName: "Phaser Spread", 
+            maxRawVol: Config.phaserSpreadRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.phaser, maxIndex: 0,
+            promptName: "Phaser Spread", 
+            promptDesc: [ "This setting controls the phaser spread of your instrument, just like the phaser spread slider.", "At $LO, your instrument will have no phaser spread. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"] },     
         ]);
 }
 

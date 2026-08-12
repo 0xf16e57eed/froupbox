@@ -47,7 +47,7 @@ import { CustomThemePrompt } from "./CustomThemePrompt";
 import { CustomPresetsPrompt } from "./CustomPresetsPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangePhaserLegacyMode, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation, ChangeChipWaveSampleChannel } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation, ChangeChipWaveSampleChannel, ChangePhaserSpread, ChangePhaserFilterType } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -970,9 +970,11 @@ export class SongEditor {
         span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("phaserStages") }, div(" Stages:")), 
         div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._phaserStagesInputBox),
     ), this._phaserStagesDropdown, this._phaserStagesSlider.container);
-    private readonly _phaserLegacyModeBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
-    private readonly _phaserLegacyModeRow: HTMLElement = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("phaserLegacyMode") }, "‣ Legacy Mode:"), this._phaserLegacyModeBox);
-    private readonly _phaserStagesDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._phaserLegacyModeRow);
+    private readonly _phaserFilterTypeSelect: HTMLSelectElement = buildOptions(select(), Config.phaserFilterTypes.map((filter: any) => filter.name));
+    private readonly _phaserFilterTypeSelectRow: HTMLElement = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("phaserFilterType") }, "‣ Mode:"), div({ class: "selectContainer", style: "width: 61.5%;" }, this._phaserFilterTypeSelect));
+    private readonly _phaserSpreadSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaserSpreadRange - 1, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangePhaserSpread(this.doc, oldValue, newValue), false);
+    private readonly _phaserSpreadRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserSpread") }, span("‣ Spread:")), this._phaserSpreadSlider.container);
+    private readonly _phaserStagesDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._phaserFilterTypeSelectRow, this._phaserSpreadRow);
     private readonly _phaserDisperseBox: HTMLInputElement = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
     private readonly _phaserDisperseRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", style: "margin-left:10px;", onclick: () => this._openPrompt("phaserDisperse") }, "Disperse:"), this._phaserDisperseBox);
 
@@ -1853,6 +1855,7 @@ export class SongEditor {
         this._chipWaveSelect.addEventListener("change", this._whenSetChipWave);
         this._chipWaveSampleChannelSelect.addEventListener("change", this._whenSetSampleChannel);
         this._ringModWaveSelect.addEventListener("change", this._whenSetRingModChipWave);
+        this._phaserFilterTypeSelect.addEventListener("change", this._whenSetPhaserFilterType);
         // advloop addition
         this._useChipWaveAdvancedLoopControlsBox.addEventListener("input", this._whenSetUseChipWaveAdvancedLoopControls);
         this._chipWaveLoopModeSelect.addEventListener("change", this._whenSetChipWaveLoopMode);
@@ -1991,7 +1994,6 @@ export class SongEditor {
         this._invertWaveBox.addEventListener("input", () => { this.doc.record(new ChangeInvertWave(this.doc, this._invertWaveBox.checked)) });
         
         this._phaserStagesInputBox.addEventListener("input", () => { this.doc.record(new ChangePhaserStages(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].detune, Math.min(Config.phaserMaxStages, Math.max(Config.phaserMinStages, Math.round(+this._phaserStagesInputBox.value))))) });
-        this._phaserLegacyModeBox.addEventListener("input", () => { this.doc.record(new ChangePhaserLegacyMode(this.doc, this._phaserLegacyModeBox.checked)) });
         this._phaserDisperseBox.addEventListener("input", () => { this.doc.record(new ChangePhaserDisperse(this.doc, this._phaserDisperseBox.checked)) });
 
         this._flangerVoicesInputBox.addEventListener("input", () => { this.doc.record(new ChangeFlangerVoices(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].flangerVoices, Math.min(Config.flangerMaxVoices, Math.max(Config.flangerMinVoices, Math.round(+this._flangerVoicesInputBox.value))))) });
@@ -2413,6 +2415,8 @@ export class SongEditor {
                 return this._phaserFeedbackSlider;    
             case Config.modulators.dictionary["phaser stages"].index:
                 return this._phaserStagesSlider;   
+            case Config.modulators.dictionary["phaser spread"].index:
+                return this._phaserSpreadSlider;    
             case Config.modulators.dictionary["flanger mix"].index:
                 return this._flangerMixSlider;
             case Config.modulators.dictionary["flanger voices"].index:
@@ -3357,6 +3361,8 @@ export class SongEditor {
                 this._phaserStagesSlider.updateValue(instrument.phaserStages);
                 if (this._openPhaserStagesDropdown)
                     this._phaserStagesDropdownGroup.style.display = "";
+                this._phaserSpreadSlider.updateValue(instrument.phaserSpread);
+                setSelectedValue(this._phaserFilterTypeSelect, instrument.phaserFilterIndex);
                 this._phaserDisperseBox.checked = instrument.phaserDisperse;
                 this._phaserDisperseRow.style.display = "";
             } else {
@@ -4022,6 +4028,7 @@ export class SongEditor {
                             settingList.push("phaser frequency");
                             settingList.push("phaser feedback");
                             settingList.push("phaser stages");
+                            settingList.push("phaser spread");
                         }
 
                         if (anyInstrumentFlanger) {
@@ -4284,7 +4291,6 @@ export class SongEditor {
         this._detuneSlider.updateValue(instrument.detune - Config.detuneCenter);
         this._twoNoteArpBox.checked = instrument.fastTwoNoteArp ? true : false;
         this._clicklessTransitionBox.checked = instrument.clicklessTransition ? true : false;
-        this._phaserLegacyModeBox.checked = instrument.phaserLegacyMode ? true : false;
         this._aliasingBox.checked = instrument.aliases ? true : false;
         this._invertWaveBox.checked = instrument.invertWave ? true : false;
         this._addEnvelopeButton.disabled = (instrument.envelopeCount >= Config.maxEnvelopeCount);
@@ -5907,6 +5913,10 @@ export class SongEditor {
 
     private _whenSetRingModChipWave = (): void => {
         this.doc.record(new ChangeRingModChipWave(this.doc, this._ringModWaveSelect.selectedIndex));
+    }
+
+    private _whenSetPhaserFilterType = (): void => {
+        this.doc.record(new ChangePhaserFilterType(this.doc, this._phaserFilterTypeSelect.selectedIndex));
     }
 
     // advloop addition

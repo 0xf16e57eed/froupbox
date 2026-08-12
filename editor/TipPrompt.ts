@@ -727,11 +727,16 @@ export class TipPrompt implements Prompt {
 					p(`The minimum value of this slider is 1, the reason being that 1 all-pass is the exact same as having no phaser at all, if there were 0 all-passes then the audio would cease to exist.`),
 				);
 			} break;
-			case "phaserLegacyMode": {
+			case "phaserFilterType": {
 				message = div(
-					h2("Phaser Legacy Mode"),
-					p(`To improve performance, by default phaser uses the new & improved parallel implementation. However, this new implementation sounds subtly different than the previous behavior. Check this box to use the old behavior.`),
-					p(`When importing a previous song, this box is always checked.`),
+					h2("Phaser Filter Mode"),
+					p(`This setting allows you to choose the type of filter used in the phaser.`),
+				);
+			} break;
+			case "phaserSpread": {
+				message = div(
+					h2("Phaser Spread"),
+					p(`This slider controls the spread of the phasers stages when using a bipole filter.`),
 				);
 			} break;
 			case "phaserDisperse": {

@@ -2902,18 +2902,25 @@ export class ChangePhaserStages extends ChangeInstrumentSlider {
     }
 }
 
-export class ChangePhaserLegacyMode extends Change {
-    constructor(doc: SongDocument, newValue: boolean) {
+export class ChangePhaserFilterType extends Change {
+    constructor(doc: SongDocument, newValue: number) {
         super();
         const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
-        const oldValue = instrument.phaserLegacyMode;
-
-        doc.notifier.changed();
-        if (oldValue != newValue) {
-            instrument.phaserLegacyMode = newValue;
-            instrument.preset = instrument.type;
+        if (instrument.phaserFilterIndex != newValue) {
+            instrument.phaserFilterIndex = newValue;
+            doc.notifier.changed();
             this._didSomething();
         }
+    }
+}
+
+export class ChangePhaserSpread extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.phaserSpread = newValue;
+        // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
     }
 }
 
