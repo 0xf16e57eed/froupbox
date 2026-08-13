@@ -2,6 +2,8 @@
 
 use core::simd::f32x4;
 
+use crate::filters::AngularFrequency;
+
 #[derive(Clone, Copy, Default)]
 pub struct PhaserStage {
     prev_input: f32x4,
@@ -11,20 +13,20 @@ impl super::SimdPhaserStage for PhaserStage {
     type Coefficients = f32;
     type SimdCoefficients = f32x4;
 
-    fn calculate_coefficients(freq: f32, _q: f32, sample_rate: f32) -> f32 {
-        let break_t = f32::tan(0.5 * crate::filters::to_w0(freq, sample_rate));
+    fn calculate_coefficients(freq: AngularFrequency, _q: f32) -> f32 {
+        let break_t = (freq * 0.5).tan();
         (break_t - 1.0) / (break_t + 1.0)
     }
     fn simd_coefficients_from_array(interp: &[f32; 4]) -> f32x4 {
         f32x4::from_array(*interp)
     }
 
-    fn compute(&mut self, break_coef: &f32x4, input: &mut f32x4) {
+    fn compute_simd(&mut self, break_coef: &f32x4, input: &mut f32x4) {
         self.output = *break_coef * (*input - self.output) + self.prev_input;
         self.prev_input = *input;
         *input = self.output;
     }
-    fn compute_single(&mut self, idx: usize, break_coef: &f32, input: &mut f32) {
+    fn compute(&mut self, idx: usize, break_coef: &f32, input: &mut f32) {
         self.output.as_mut_array()[idx] = *break_coef * (*input - self.output.as_mut_array()[idx])
             + self.prev_input.as_mut_array()[idx];
         self.prev_input.as_mut_array()[idx] = *input;

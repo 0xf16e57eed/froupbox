@@ -1,9 +1,12 @@
-use core::simd::{f32x4, simd_swizzle};
-use std::iter::zip;
+use core::simd::f32x4;
+use std::{fmt::Debug, iter::zip};
 
 use wasm_bindgen::prelude::*;
 
-use crate::util::{self, Interpolator, Zippable};
+use crate::{
+    filters::AngularFrequency,
+    util::{self, Interpolator, Zippable},
+};
 
 mod bipole;
 mod legacy;
@@ -39,13 +42,13 @@ trait PhaserAlgorithm {
 }
 
 trait SimdPhaserStage: Clone + Copy + Default {
-    type Coefficients: Zippable;
+    type Coefficients: Zippable + Debug;
     type SimdCoefficients;
 
-    fn calculate_coefficients(freq: f32, q: f32, sample_rate: f32) -> Self::Coefficients;
+    fn calculate_coefficients(w0: AngularFrequency, q: f32) -> Self::Coefficients;
     fn simd_coefficients_from_array(arr: &[Self::Coefficients; 4]) -> Self::SimdCoefficients;
-    fn compute(&mut self, coef: &Self::SimdCoefficients, input: &mut f32x4);
-    fn compute_single(&mut self, idx: usize, coef: &Self::Coefficients, input: &mut f32);
+    fn compute(&mut self, idx: usize, coef: &Self::Coefficients, input: &mut f32);
+    fn compute_simd(&mut self, coef: &Self::SimdCoefficients, input: &mut f32x4);
 
     fn concat_rotate(&mut self, other: &mut Self);
 }
@@ -58,7 +61,8 @@ struct SimdPhaserWrapper<S: SimdPhaserStage> {
 
     simd_index: u8,
 
-    i_break_coef: Interpolator<S::Coefficients>,
+    i_w0: Interpolator<AngularFrequency>,
+    i_q: Interpolator<f32>,
 
     i_feedback_mult: Interpolator<f32>,
 
@@ -68,14 +72,19 @@ struct SimdPhaserWrapper<S: SimdPhaserStage> {
 }
 impl<S: SimdPhaserStage> SimdPhaserWrapper<S> {
     fn compute_one(&mut self, i: usize, coef: &S::Coefficients, val: &mut f32) {
-        unsafe { self.stages.get_unchecked_mut(i / 4) }.compute_single(i % 4, coef, val);
+        unsafe { self.stages.get_unchecked_mut(i / 4) }.compute(i % 4, coef, val);
+    }
+
+    fn next_coef(&mut self) -> S::Coefficients {
+        S::calculate_coefficients(self.i_w0.next(), self.i_q.next())
     }
 
     fn compute_simd(&mut self, val_simd: &mut f32x4) {
         let simd_len = self.num_stages / 4;
         assert!(self.stages.len() >= simd_len);
 
-        let coef_array = self.i_break_coef.next_array();
+        let coef_array =
+            std::array::from_fn(|_| S::calculate_coefficients(self.i_w0.next(), self.i_q.next()));
         let coef_simd = S::simd_coefficients_from_array(&coef_array);
 
         // arbitrary threshold below which simd isn't worth it
@@ -124,7 +133,7 @@ impl<S: SimdPhaserStage> SimdPhaserWrapper<S> {
             let mut next_stage = self.stages[i];
 
             for _iter in 0..4 {
-                cur_stage.compute(&coef_simd, val_simd);
+                cur_stage.compute_simd(&coef_simd, val_simd);
                 cur_stage.concat_rotate(&mut next_stage);
             }
 
@@ -157,11 +166,12 @@ impl<S: SimdPhaserStage> PhaserAlgorithm for SimdPhaserWrapper<S> {
         sample_rate: f32,
         run_length: f32,
     ) {
-        self.i_break_coef = util::interpolate(
+        self.i_w0 = util::interpolate(
             run_length,
-            S::calculate_coefficients(start.freq, start.q, sample_rate),
-            S::calculate_coefficients(end.freq, end.q, sample_rate),
+            AngularFrequency::new(start.freq, sample_rate),
+            AngularFrequency::new(end.freq, sample_rate),
         );
+        self.i_q = util::interpolate(run_length, start.q, end.q);
 
         self.i_feedback_mult = util::interpolate(run_length, start.feedback, end.feedback);
     }

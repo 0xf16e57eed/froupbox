@@ -4332,7 +4332,13 @@ export class SongEditor {
             this._ringModPulsewidthSlider.container.style.display = "none";
             this._ringModWaveText.style.display = "";
         }
-
+        
+        if (this._phaserFilterTypeSelect.selectedIndex == Config.phaserFilterTypes.dictionary['bipole'].index) {
+            this._phaserSpreadRow.style.display = "";
+        } else {
+            this._phaserSpreadRow.style.display = "none";
+        }
+        
         // Writeback to mods if control key is held while moving a slider.
         this.handleModRecording();
 

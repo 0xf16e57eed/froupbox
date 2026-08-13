@@ -10,13 +10,42 @@ pub enum FilterDirection {
     High,
 }
 
-pub fn to_w0(freq: f32, sample_rate: f32) -> f32 {
-    freq / sample_rate * f32::consts::TAU
+/// angular frequency, but without the `TAU` factor. i.e. it's just `freq / sample_rate`
+#[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Default)]
+pub struct AngularFrequency(pub f32);
+impl AngularFrequency {
+    pub fn new(freq: f32, sample_rate: f32) -> Self {
+        Self(freq / sample_rate)
+    }
+    pub fn sin_cos(self) -> (f32, f32) {
+        // like `cybox_util::osc::sine`, but only valid from `0..0.5`.
+        fn sin_half(x: f32) -> f32 {
+            debug_assert!((0.0..=0.5).contains(&x), "{x} out of range for sin_half");
+            let x = x * (0.5 - x);
+            12.4 * x + 57.6 * x * x
+        }
+        let sin = sin_half(self.0);
+        let mut unsigned_cos = (1.0 - sin * sin).sqrt();
+        if self.0 > 0.25 {
+            unsigned_cos = -unsigned_cos;
+        }
+        (sin, unsigned_cos)
+    }
+    pub fn tan(self) -> f32 {
+        let (sin, cos) = self.sin_cos();
+        sin / cos
+    }
 }
-pub fn sincos_w0(w0: f32) -> (f32, f32) {
-    let cos = f32::cos(w0);
-    // assuming the frequency is below the nyquist frequency, 0 < w0 < PI and thus sin(w0) > 0
-    (f32::sqrt(1.0 - cos * cos), cos)
+impl core::ops::Mul<f32> for AngularFrequency {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self {
+        Self(self.0 * rhs)
+    }
+}
+impl crate::util::Zippable for AngularFrequency {
+    fn zip(&self, other: &Self, f: impl Fn(f32, f32) -> f32) -> Self {
+        Self(f(self.0, other.0))
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -39,8 +68,8 @@ impl BiquadFilterCoefficients {
         }
     }
 
-    pub fn pass(dir: FilterDirection, w0: f32, mult: f32) -> Self {
-        let (sw0, cw0) = sincos_w0(w0);
+    pub fn pass(dir: FilterDirection, w0: AngularFrequency, mult: f32) -> Self {
+        let (sw0, cw0) = w0.sin_cos();
 
         let alpha = sw0 / mult;
 
@@ -82,7 +111,7 @@ pub struct CrossoverCoefficients {
     pub hi: BiquadFilterCoefficients,
 }
 impl CrossoverCoefficients {
-    pub fn new(w0: f32) -> Self {
+    pub fn new(w0: AngularFrequency) -> Self {
         Self {
             lo: BiquadFilterCoefficients::pass(
                 FilterDirection::Low,

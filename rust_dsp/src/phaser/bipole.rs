@@ -2,6 +2,8 @@
 
 use core::simd::f32x4;
 
+use crate::filters::AngularFrequency;
+
 #[derive(Clone, Copy, Default)]
 pub struct PhaserStage {
     x1: f32x4,
@@ -13,8 +15,8 @@ impl super::SimdPhaserStage for PhaserStage {
     type Coefficients = BreakCoefficients;
     type SimdCoefficients = SimdBreakCoefficients;
 
-    fn calculate_coefficients(freq: f32, q: f32, sample_rate: f32) -> BreakCoefficients {
-        let (sin, cos) = crate::filters::to_w0(freq, sample_rate).sin_cos();
+    fn calculate_coefficients(w0: AngularFrequency, q: f32) -> BreakCoefficients {
+        let (sin, cos) = w0.sin_cos();
         let alpha = sin / (2.0 * q);
         BreakCoefficients((1.0 - alpha) / (1.0 + alpha), (2.0 * cos) / (1.0 + alpha))
     }
@@ -27,7 +29,7 @@ impl super::SimdPhaserStage for PhaserStage {
         res
     }
 
-    fn compute(&mut self, break_coef: &SimdBreakCoefficients, input: &mut f32x4) {
+    fn compute_simd(&mut self, break_coef: &SimdBreakCoefficients, input: &mut f32x4) {
         // y0 = ((1-a)/(1+a)) (x0 - y2) + 2cosw0/(1+a) (y1 - x1) + x2
         let output =
             break_coef.0 * (*input - self.y2) + break_coef.1 * (self.y1 - self.x1) + self.x2;
@@ -37,7 +39,7 @@ impl super::SimdPhaserStage for PhaserStage {
         self.y1 = output;
         *input = output;
     }
-    fn compute_single(&mut self, idx: usize, break_coef: &BreakCoefficients, input: &mut f32) {
+    fn compute(&mut self, idx: usize, break_coef: &BreakCoefficients, input: &mut f32) {
         let output = break_coef.0 * (*input - self.y2.as_mut_array()[idx])
             + break_coef.1 * (self.y1.as_mut_array()[idx] - self.x1.as_mut_array()[idx])
             + self.x2.as_mut_array()[idx];

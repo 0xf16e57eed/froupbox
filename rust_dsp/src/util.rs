@@ -1,6 +1,6 @@
 use std::simd::{f32x4, simd_swizzle};
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Interpolator<T: Zippable> {
     val: T,
     diff: T,
@@ -9,10 +9,6 @@ impl<T: Zippable> Interpolator<T> {
     pub fn next(&mut self) -> T {
         let new = self.val.zip(&self.diff, |x, y| x + y);
         std::mem::replace(&mut self.val, new)
-    }
-
-    pub fn next_array<const N: usize>(&mut self) -> [T; N] {
-        std::array::from_fn(|_| self.next())
     }
 }
 

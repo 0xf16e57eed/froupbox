@@ -9,7 +9,7 @@ use crate::{
     SamplePair,
     buffer::DspBuffer,
     compressor::comp::{Compressor, CompressorParams},
-    filters::{Crossover, CrossoverCoefficients, to_w0},
+    filters::{AngularFrequency, Crossover, CrossoverCoefficients},
     util::{self, Interpolator},
 };
 mod comp;
@@ -82,8 +82,10 @@ impl CompressorInstance {
         sample_rate: f32,
         run_length: f32,
     ) {
-        self.coef_lo_mid = CrossoverCoefficients::new(to_w0(start.freq_lo_mid, sample_rate));
-        self.coef_mid_hi = CrossoverCoefficients::new(to_w0(start.freq_mid_hi, sample_rate));
+        self.coef_lo_mid =
+            CrossoverCoefficients::new(AngularFrequency::new(start.freq_lo_mid, sample_rate));
+        self.coef_mid_hi =
+            CrossoverCoefficients::new(AngularFrequency::new(start.freq_mid_hi, sample_rate));
         self.comp_params = util::interpolate(
             run_length,
             start.comp_params(sample_rate),
