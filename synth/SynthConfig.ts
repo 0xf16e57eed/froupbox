@@ -514,6 +514,8 @@ export function getLocalStorageItem<T>(key: string, defaultValue: T): T | string
 // or not.
 declare global {
     const OFFLINE: boolean; // for UB offline
+    const DO_ALERTS: boolean;
+    
     const getDirname: () => Promise<string>; // for UB offline
     const pathJoin: (...parts: string[]) => Promise<string>; // for UB offline
     const kicksample: number[];

@@ -30,4 +30,7 @@ npm run build
 # and upload the contents of the dist/ folder to a static hosting website, or run
 npm run dev
 # to host a local live-reloading web server.
+
+# additionally, to enable the "this is the testing version" alerts, run
+DO_ALERTS=1 npm run build
 ```

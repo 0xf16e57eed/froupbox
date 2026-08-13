@@ -32,6 +32,7 @@ export default {
   source: {
     define: {
       OFFLINE: isOfflineBuild,
+      DO_ALERTS: !!process.env.DO_ALERTS
     },
   },
   splitChunks: false,
