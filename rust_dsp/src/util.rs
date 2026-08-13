@@ -1,4 +1,4 @@
-use std::simd::f32x4;
+use std::simd::{f32x4, simd_swizzle};
 
 #[derive(Default, Clone)]
 pub struct Interpolator<T: Zippable> {
@@ -10,10 +10,9 @@ impl<T: Zippable> Interpolator<T> {
         let new = self.val.zip(&self.diff, |x, y| x + y);
         std::mem::replace(&mut self.val, new)
     }
-}
-impl Interpolator<f32> {
-    pub fn next_simd(&mut self) -> f32x4 {
-        f32x4::from_array([self.next(), self.next(), self.next(), self.next()])
+
+    pub fn next_array<const N: usize>(&mut self) -> [T; N] {
+        std::array::from_fn(|_| self.next())
     }
 }
 
@@ -31,4 +30,11 @@ pub fn interpolate<T: Zippable>(run_length: f32, start: T, end: T) -> Interpolat
         diff: end.zip(&start, |x, y| (x - y) / run_length),
         val: start,
     }
+}
+
+pub fn concat_rotate(s1: &mut f32x4, s2: &mut f32x4) {
+    (*s1, *s2) = (
+        simd_swizzle!(*s1, *s2, [1, 2, 3, 4]),
+        simd_swizzle!(*s1, *s2, [5, 6, 7, 0]),
+    );
 }

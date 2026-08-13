@@ -10028,8 +10028,7 @@ class InstrumentState {
         let maxReverbMult = 0.0;
 
         if (usesPhaser && !this.phaser && rustDsp) {
-            // we don't know the buffer size beforehand, so just set it to the max possible (which is currently 4096).
-            this.phaser = new rustDsp.PhaserInstance(4096);
+            this.phaser = new rustDsp.PhaserInstance();
         }
         if (usesPhaser && this.phaser) {
             const start = new rustDsp!.PhaserInstanceParams(), end = new rustDsp!.PhaserInstanceParams();
@@ -10049,18 +10048,29 @@ class InstrumentState {
             end.feedback = Math.max(phaserMinFeedback, Math.min(phaserMaxFeedback, phaserFeedbackMultRawEnd));
             
             const phaserMixSlider: number = instrument.phaserMix / (Config.phaserMixRange - 1);
-
-            const phaserMixEnvelopeStart: number = envelopeStarts[EnvelopeComputeIndex.phaserMix];
-            const phaserMixEnvelopeEnd: number = envelopeEnds[EnvelopeComputeIndex.phaserMix];
-            let phaserMixStart: number = phaserMixSlider * phaserMixEnvelopeStart;
-            let phaserMixEnd: number = phaserMixSlider * phaserMixEnvelopeEnd;
-
+            let phaserMixStart: number = phaserMixSlider;
+            let phaserMixEnd: number = phaserMixSlider;
             if (synth.isModActive(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex)) {
                 phaserMixStart = Math.max(0, Math.min(Config.phaserMixRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, false))) / (Config.phaserMixRange - 1)
                 phaserMixEnd = Math.max(0, Math.min(Config.phaserMixRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, true))) / (Config.phaserMixRange - 1);
             }
-            start.mix = phaserMixStart;
-            end.mix = phaserMixEnd;
+            start.mix = phaserMixStart * envelopeStarts[EnvelopeComputeIndex.phaserMix];
+            end.mix = phaserMixEnd * envelopeEnds[EnvelopeComputeIndex.phaserMix];
+            
+            const phaserSpreadSlider: number = instrument.phaserSpread / (Config.phaserSpreadRange - 1);
+            let phaserSpreadStart: number = phaserSpreadSlider;
+            let phaserSpreadEnd: number = phaserSpreadSlider;
+            if (synth.isModActive(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex)) {
+                phaserSpreadStart = Math.max(0, Math.min(Config.phaserSpreadRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, false))) / (Config.phaserSpreadRange - 1)
+                phaserSpreadEnd = Math.max(0, Math.min(Config.phaserSpreadRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, true))) / (Config.phaserSpreadRange - 1);
+            }
+
+            function spreadToQ(spread: number): number {
+                // map 0-1 to 0.01-100
+                return 10 ** (spread * 4 - 2);
+            }
+            start.q = spreadToQ(phaserSpreadStart * envelopeStarts[EnvelopeComputeIndex.phaserSpread]);
+            end.q = spreadToQ(phaserSpreadEnd * envelopeEnds[EnvelopeComputeIndex.phaserSpread]);
 
             // @TODO: Use filtering.ts
             const phaserBreakFreqSlider: number = instrument.phaserFreq / (Config.phaserFreqRange - 1);
@@ -10093,7 +10103,7 @@ class InstrumentState {
             this.phaserStagesDelta = (phaserStagesEnd - phaserStagesStart) / roundedSamplesPerTick;
             
             this.phaser.disperse = instrument.phaserDisperse;
-            this.phaser.legacy_behavior = instrument.phaserLegacyMode;
+            this.phaser.type = instrument.phaserFilterIndex;
 
             this.phaser.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
         }

@@ -65,16 +65,21 @@ export class FlangerInstanceParams {
     voices: number;
 }
 
+export enum PhaserAlgorithmMode {
+    Unipole = 0,
+    Bipole = 1,
+    Legacy = 2,
+}
+
 export class PhaserInstance {
     free(): void;
     [Symbol.dispose](): void;
     begin(start: PhaserInstanceParams, end: PhaserInstanceParams, sample_rate: number, run_length: number): void;
-    constructor(frame_size: number);
+    constructor();
     process(sample: number): number;
     disperse: boolean;
-    frame_size: number;
-    set legacy_behavior(value: boolean);
     set num_stages(value: number);
+    set type(value: PhaserAlgorithmMode);
 }
 
 export class PhaserInstanceParams {
@@ -84,6 +89,7 @@ export class PhaserInstanceParams {
     feedback: number;
     freq: number;
     mix: number;
+    q: number;
 }
 
 export function start(): void;

@@ -461,6 +461,15 @@ export class FlangerInstanceParams {
 }
 if (Symbol.dispose) FlangerInstanceParams.prototype[Symbol.dispose] = FlangerInstanceParams.prototype.free;
 
+/**
+ * @enum {0 | 1 | 2}
+ */
+export const PhaserAlgorithmMode = Object.freeze({
+    Unipole: 0, "0": "Unipole",
+    Bipole: 1, "1": "Bipole",
+    Legacy: 2, "2": "Legacy",
+});
+
 export class PhaserInstance {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -480,13 +489,6 @@ export class PhaserInstance {
         return ret !== 0;
     }
     /**
-     * @returns {number}
-     */
-    get frame_size() {
-        const ret = wasm.__wbg_get_phaserinstance_frame_size(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
      * @param {PhaserInstanceParams} start
      * @param {PhaserInstanceParams} end
      * @param {number} sample_rate
@@ -499,11 +501,8 @@ export class PhaserInstance {
         var ptr1 = end.__destroy_into_raw();
         wasm.phaserinstance_begin(this.__wbg_ptr, ptr0, ptr1, sample_rate, run_length);
     }
-    /**
-     * @param {number} frame_size
-     */
-    constructor(frame_size) {
-        const ret = wasm.phaserinstance_new(frame_size);
+    constructor() {
+        const ret = wasm.phaserinstance_new();
         this.__wbg_ptr = ret;
         PhaserInstanceFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -517,28 +516,22 @@ export class PhaserInstance {
         return ret;
     }
     /**
-     * @param {boolean} legacy_behavior
-     */
-    set legacy_behavior(legacy_behavior) {
-        wasm.phaserinstance_set_legacy_behavior(this.__wbg_ptr, legacy_behavior);
-    }
-    /**
      * @param {number} num_stages
      */
     set num_stages(num_stages) {
         wasm.phaserinstance_set_num_stages(this.__wbg_ptr, num_stages);
     }
     /**
+     * @param {PhaserAlgorithmMode} mode
+     */
+    set type(mode) {
+        wasm.phaserinstance_set_type(this.__wbg_ptr, mode);
+    }
+    /**
      * @param {boolean} arg0
      */
     set disperse(arg0) {
         wasm.__wbg_set_phaserinstance_disperse(this.__wbg_ptr, arg0);
-    }
-    /**
-     * @param {number} arg0
-     */
-    set frame_size(arg0) {
-        wasm.__wbg_set_phaserinstance_frame_size(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) PhaserInstance.prototype[Symbol.dispose] = PhaserInstance.prototype.free;
@@ -575,6 +568,13 @@ export class PhaserInstanceParams {
         const ret = wasm.__wbg_get_phaserinstanceparams_mix(this.__wbg_ptr);
         return ret;
     }
+    /**
+     * @returns {number}
+     */
+    get q() {
+        const ret = wasm.__wbg_get_phaserinstanceparams_q(this.__wbg_ptr);
+        return ret;
+    }
     constructor() {
         const ret = wasm.phaserinstanceparams_new();
         this.__wbg_ptr = ret;
@@ -598,6 +598,12 @@ export class PhaserInstanceParams {
      */
     set mix(arg0) {
         wasm.__wbg_set_phaserinstanceparams_mix(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set q(arg0) {
+        wasm.__wbg_set_phaserinstanceparams_q(this.__wbg_ptr, arg0);
     }
 }
 if (Symbol.dispose) PhaserInstanceParams.prototype[Symbol.dispose] = PhaserInstanceParams.prototype.free;
