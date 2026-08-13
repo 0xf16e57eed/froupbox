@@ -10067,7 +10067,7 @@ class InstrumentState {
 
             function spreadToQ(spread: number): number {
                 // map 0-1 to 0.01-100
-                return 10 ** (spread * 4 - 2);
+                return 10 ** -(spread * 4 - 2);
             }
             start.q = spreadToQ(phaserSpreadStart * envelopeStarts[EnvelopeComputeIndex.phaserSpread]);
             end.q = spreadToQ(phaserSpreadEnd * envelopeEnds[EnvelopeComputeIndex.phaserSpread]);
