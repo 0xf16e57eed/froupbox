@@ -4812,6 +4812,8 @@ export class SongEditor {
                 if (canPlayNotes) break;
                 if (event.shiftKey) {
                     this.doc.redo();
+                } else if (event.altKey) {
+                    this._zoomOut();
                 } else {
                     this.doc.undo();
                 }
@@ -4819,7 +4821,11 @@ export class SongEditor {
                 break;
             case 88: // x
                 if (canPlayNotes) break;
-                this.doc.selection.cutNotes();
+                if (event.altKey) {
+                    this._zoomIn();
+                } else {
+                    this.doc.selection.cutNotes();
+                }
                 event.preventDefault();
                 break;
             case 89: // y
