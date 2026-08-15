@@ -171,6 +171,8 @@ export const enum EnvelopeComputeIndex {
     phaserMix,
     phaserFeedback,
     phaserStages,
+    phaserSpread,
+    
     invertWave,
     
     compressorThreshold,
@@ -186,8 +188,6 @@ export const enum EnvelopeComputeIndex {
     flangerDelay,
     flangerPan,
     flangerFeedmix,
-
-    phaserSpread,
 
     length,
 }

@@ -758,6 +758,12 @@ export class TipPrompt implements Prompt {
 					p(`This setting controls the amount of phase-shifted voices.`),
 				);
 			} break;
+			case "flangerDistribute": {
+				message = div(
+					h2("Flanger Distribute "),
+					p(`When this setting is checked the delay is split evenly between each of the voices.`),
+				);
+			} break;
 			case "flangerDelay": {
 				message = div(
 					h2("Flanger Delay"),

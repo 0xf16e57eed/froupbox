@@ -2959,6 +2959,21 @@ export class ChangeFlangerVoices extends ChangeInstrumentSlider {
     }
 }
 
+export class ChangeFlangerDistribute extends Change {
+    constructor(doc: SongDocument, newValue: boolean) {
+        super();
+        const instrument: Instrument = doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()];
+        const oldValue = instrument.flangerDistribute;
+
+        doc.notifier.changed();
+        if (oldValue != newValue) {
+            instrument.flangerDistribute = newValue;
+            instrument.preset = instrument.type;
+            this._didSomething();
+        }
+    }
+}
+
 export class ChangeFlangerDelay extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super(doc);

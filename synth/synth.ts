@@ -1726,10 +1726,10 @@ export class Instrument {
     public phaserSpread: number = 16;
     public phaserDisperse: boolean = false;
     public phaserFilterIndex: number = 0;
-    //public phaserLegacyMode: boolean = false;
     
     public flangerMix: number = 32;
     public flangerVoices: number = 1;
+    public flangerDistribute: boolean = true;
     public flangerDelay: number = 256;
     public flangerPan: number = Config.flangerPanCenter;
     public flangerFeedmix: number = 0;
@@ -1875,6 +1875,7 @@ export class Instrument {
 
         this.flangerMix = 32;
         this.flangerVoices = 1;
+        this.flangerDistribute = true;
         this.flangerDelay = 256;
         this.flangerPan = Config.flangerPanCenter;
         this.flangerFeedmix = 0;
@@ -2232,6 +2233,7 @@ export class Instrument {
         if (effectsIncludeFlanger(this.effects)) {
             instrumentObject["flangerMix"] =  Math.round(100 * this.flangerMix/(Config.flangerMixRange - 1));
             instrumentObject["flangerVoices"] =  this.flangerVoices;
+            instrumentObject["flangerDistribute"] = this.flangerDistribute;
             instrumentObject["flangerDelay"] =  this.flangerDelay;
             instrumentObject["flangerPan"] =  Math.round(100 * (this.flangerPan - Config.flangerPanCenter) / Config.flangerPanCenter);
             instrumentObject["flangerFeedmix"] = Math.round(100 * this.flangerFeedmix/(Config.flangerFeedmixRange - 1));
@@ -2726,6 +2728,9 @@ export class Instrument {
         }
         if (instrumentObject["flangerVoices"] != undefined) {
             this.flangerVoices = clamp(0, Config.flangerMaxVoices + 1, instrumentObject["flangerVoices"]);
+        }
+        if (instrumentObject["flangerDistribute"] != undefined) {
+            this.flangerDistribute = instrumentObject["flangerDistribute"];
         }
         if (instrumentObject["flangerDelay"] != undefined) {
             this.flangerDelay = clamp(0, Config.flangerDelayMax + 1, instrumentObject["flangerDelay"]);
@@ -3399,7 +3404,7 @@ export class Song {
     private static readonly _oldestSlarmoosBoxVersion: number = 1;
     private static readonly _latestSlarmoosBoxVersion: number = 5;
     private static readonly _oldestFroupBoxVersion: number = 1;
-    private static readonly _latestFroupBoxVersion: number = 8;
+    private static readonly _latestFroupBoxVersion: number = 9;
     // One-character variant detection at the start of URL to distinguish variants such as JummBox, Or Goldbox. "j" and "g" respectively
     //also "u" is ultrabox lol
     private static readonly _variant = 0x66; //"f" ~ froupbox
@@ -4092,6 +4097,7 @@ export class Song {
                 if (effectsIncludeFlanger(instrument.effects)) {
                     buffer.push(base64IntToCharCode[instrument.flangerMix]);
                     buffer.push(base64IntToCharCode[instrument.flangerVoices - 1]);
+                    buffer.push(base64IntToCharCode[+instrument.flangerDistribute]);
                     buffer.push(base64IntToCharCode[instrument.flangerDelay >> 12]);
                     buffer.push(base64IntToCharCode[instrument.flangerDelay >> 6 & 0x3f]);
                     buffer.push(base64IntToCharCode[instrument.flangerDelay & 0x3f]);
@@ -6113,6 +6119,9 @@ export class Song {
                         instrument.flangerMix = clamp(0, Config.flangerMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         if (!beforeSix) {
                             instrument.flangerVoices = clamp(1, Config.flangerMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)] + 1);
+                        }
+                        if (!beforeNine) {
+                            instrument.flangerDistribute = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
                         }
                         instrument.flangerDelay = clamp(0, Config.flangerDelayMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         instrument.flangerPan = clamp(0, Config.flangerPanMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
