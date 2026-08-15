@@ -128,6 +128,7 @@ export const enum EffectType {
     invertWave,
     compressor,
     flanger,
+    colorizer,
     length,
 }
 
@@ -188,6 +189,9 @@ export const enum EnvelopeComputeIndex {
     flangerDelay,
     flangerPan,
     flangerFeedmix,
+
+    colorizerMix,
+    colorizerColor,
 
     length,
 }
@@ -1057,6 +1061,10 @@ export class Config {
     public static readonly flangerPanCenter:            number = 50;
     public static readonly flangerPanMax:               number = Config.flangerPanCenter * 2;
     public static readonly flangerFeedmixRange:         number = 64; 
+
+    public static readonly colorizerMixRange:           number = 64; 
+    public static readonly colorizerColorRange:         number = 64; 
+
     public static readonly beatsPerBarMin:              number = 1;
     public static readonly beatsPerBarMax:              number = 64;
     public static readonly barCountMin:                 number = 1;
@@ -1345,8 +1353,8 @@ export class Config {
       InstrumentType.fm6op,
       InstrumentType.supersaw,
     ]);
-    public static readonly effectNames: ReadonlyArray<string> = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "note range", "ring mod", "granular", "phaser", "", "invert wave", "compressor", "flanger"];
-    public static readonly effectOrder: ReadonlyArray<EffectType> = [EffectType.panning, EffectType.transition, EffectType.chord, EffectType.pitchShift, EffectType.detune, EffectType.vibrato, EffectType.noteFilter, EffectType.granular, EffectType.distortion, EffectType.bitcrusher, EffectType.chorus, EffectType.echo, EffectType.reverb, EffectType.ringModulation, EffectType.phaser, EffectType.invertWave, EffectType.compressor, EffectType.noteRange, EffectType.flanger];
+    public static readonly effectNames: ReadonlyArray<string> = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "note range", "ring mod", "granular", "phaser", "", "invert wave", "compressor", "flanger", "colorizer"];
+    public static readonly effectOrder: ReadonlyArray<EffectType> = [EffectType.panning, EffectType.transition, EffectType.chord, EffectType.pitchShift, EffectType.detune, EffectType.vibrato, EffectType.noteFilter, EffectType.granular, EffectType.distortion, EffectType.bitcrusher, EffectType.chorus, EffectType.echo, EffectType.reverb, EffectType.ringModulation, EffectType.phaser, EffectType.invertWave, EffectType.compressor, EffectType.noteRange, EffectType.flanger, EffectType.colorizer];
     public static readonly noteSizeMax: number = 6;
     public static readonly volumeRange: number = 50;
     // Beepbox's old volume scale used factor -0.5 and was [0~7] had roughly value 6 = 0.125 power. This new value is chosen to have -21 be the same,
@@ -1985,6 +1993,8 @@ export class Config {
         { name: "flangerFeedmix",         computeIndex: EnvelopeComputeIndex.flangerFeedmix,            displayName: "flanger feedmix",  perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null },
         { name: "flangerVoices",          computeIndex: EnvelopeComputeIndex.flangerVoices,             displayName: "flanger voices",   perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.flanger, compatibleInstruments: null }, 
         { name: "phaserSpread",           computeIndex: EnvelopeComputeIndex.phaserSpread,              displayName: "phaser spread",    perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.phaser, compatibleInstruments: null }, 
+        { name: "colorizerMix",           computeIndex: EnvelopeComputeIndex.colorizerMix,              displayName: "colorizer mix",    perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.colorizer, compatibleInstruments: null },
+        { name: "colorizerColor",         computeIndex: EnvelopeComputeIndex.colorizerColor,            displayName: "colorizer color",  perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: EffectType.colorizer, compatibleInstruments: null },
     ]);
     public static readonly operatorWaves: DictionaryArray<OperatorWave> = toNameMap([
 		{ name: "sine", samples: Config.sineWave },
@@ -2356,6 +2366,16 @@ export class Config {
             maxRawVol: Config.phaserSpreadRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.phaser, maxIndex: 0,
             promptName: "Phaser Spread", 
             promptDesc: [ "This setting controls the phaser spread of your instrument, just like the phaser spread slider.", "At $LO, your instrument will have no phaser spread. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"] },     
+        { name: "colorizer mix", 
+            pianoName: "Colorizer Mix", 
+            maxRawVol: Config.colorizerMixRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.colorizer, maxIndex: 0,
+            promptName: "Colorizer Mix", 
+            promptDesc: [ "This setting controls the colorizer mix.", "[OVERWRITING] [$LO - $HI]"] },
+        { name: "colorizer color", 
+            pianoName: "Colorizer Color", 
+            maxRawVol: Config.colorizerColorRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: EffectType.colorizer, maxIndex: 0,
+            promptName: "Colorizer Color", 
+            promptDesc: [ "This setting controls the colorizer color.", "[OVERWRITING] [$LO - $HI]"] },  
         ]);
 }
 
@@ -2778,6 +2798,9 @@ export function effectsIncludePhaser(effects: number): boolean {
 }
 export function effectsIncludeFlanger(effects: number): boolean {
 	return (effects & (1 << EffectType.flanger)) != 0;
+}
+export function effectsIncludeColorizer(effects: number): boolean {
+	return (effects & (1 << EffectType.colorizer)) != 0;
 }
 export function effectsIncludeInvertWave(effects: number): boolean {
     return (effects & (1 << EffectType.invertWave)) != 0;

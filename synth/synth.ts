@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample } from "./SynthConfig";
+import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample, effectsIncludeColorizer } from "./SynthConfig";
 import { Preset, EditorConfig } from "../editor/EditorConfig";
 import { scaleElementsByFactor, inverseRealFourierTransform } from "./FFT";
 import { Deque } from "./Deque";
@@ -1734,6 +1734,9 @@ export class Instrument {
     public flangerPan: number = Config.flangerPanCenter;
     public flangerFeedmix: number = 0;
 
+    public colorizerMix: number = 32;
+    public colorizerColor: number = 32;
+
     public invertWave: boolean = false;
 
     public algorithm: number = 0;
@@ -1879,6 +1882,9 @@ export class Instrument {
         this.flangerDelay = 256;
         this.flangerPan = Config.flangerPanCenter;
         this.flangerFeedmix = 0;
+
+        this.colorizerMix = 32;
+        this.colorizerColor = 32;
 
         this.invertWave = false;
         
@@ -2237,6 +2243,10 @@ export class Instrument {
             instrumentObject["flangerDelay"] =  this.flangerDelay;
             instrumentObject["flangerPan"] =  Math.round(100 * (this.flangerPan - Config.flangerPanCenter) / Config.flangerPanCenter);
             instrumentObject["flangerFeedmix"] = Math.round(100 * this.flangerFeedmix/(Config.flangerFeedmixRange - 1));
+        }
+        if (effectsIncludeColorizer(this.effects)) {
+            instrumentObject["colorizerMix"] =  this.colorizerMix;
+            instrumentObject["colorizerColor"] =  this.colorizerColor;
         }
         if (effectsIncludeDistortion(this.effects)) {
             instrumentObject["distortion"] = Math.round(100 * this.distortion / (Config.distortionRange - 1));
@@ -2741,8 +2751,14 @@ export class Instrument {
         if (instrumentObject["flangerFeedmix"] != undefined) {
             this.flangerFeedmix = clamp(0, Config.flangerFeedmixRange, Math.round((Config.flangerFeedmixRange - 1) * (instrumentObject["flangerFeedmix"] | 0) / 100));
         }
-        
 
+        if (instrumentObject["colorizerMix"] != undefined) {
+            this.colorizerMix = clamp(0, Config.colorizerMixRange + 1, instrumentObject["colorizerMix"]);
+        }
+        if (instrumentObject["colorizerColor"] != undefined) {
+            this.colorizerColor = clamp(0, Config.colorizerColorRange + 1, instrumentObject["colorizerColor"]);
+        }
+        
         if (instrumentObject["distortion"] != undefined) {
             this.distortion = clamp(0, Config.distortionRange, Math.round((Config.distortionRange - 1) * (instrumentObject["distortion"] | 0) / 100));
         }
@@ -4104,6 +4120,11 @@ export class Song {
                     buffer.push(base64IntToCharCode[instrument.flangerPan >> 6]);
                     buffer.push(base64IntToCharCode[instrument.flangerPan & 0x3f]);
                     buffer.push(base64IntToCharCode[instrument.flangerFeedmix]);
+                }
+
+                if (effectsIncludeColorizer(instrument.effects)) {
+                    buffer.push(base64IntToCharCode[instrument.colorizerMix]);
+                    buffer.push(base64IntToCharCode[instrument.colorizerColor]);
                 }
 
                 if (effectsIncludeInvertWave(instrument.effects)) {
@@ -6126,6 +6147,10 @@ export class Song {
                         instrument.flangerDelay = clamp(0, Config.flangerDelayMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 12) + (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         instrument.flangerPan = clamp(0, Config.flangerPanMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         instrument.flangerFeedmix = clamp(0, Config.flangerFeedmixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                    }    
+                    if (effectsIncludeColorizer(instrument.effects)) {
+                        instrument.colorizerMix = clamp(0, Config.colorizerMixRange + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.colorizerColor = clamp(0, Config.colorizerColorRange + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                     }    
                     if(effectsIncludeInvertWave(instrument.effects)) {
                         instrument.invertWave = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] ? true : false;
@@ -9614,6 +9639,7 @@ class InstrumentState {
         const usesPhaser: boolean = effectsIncludePhaser(this.effects);
         const usesCompressor: boolean = effectsIncludeCompressor(this.effects);
         const usesFlanger: boolean = effectsIncludeFlanger(this.effects);
+        const usesColorizer: boolean = effectsIncludeColorizer(this.effects);
         
         let granularChance: number = 0;
         if (usesGranular) { //has to happen before buffer allocation
@@ -14805,6 +14831,7 @@ export class Synth {
         const usesRingModulation: boolean = effectsIncludeRingModulation(instrumentState.effects);
         const usesPhaser: boolean = effectsIncludePhaser(instrumentState.effects);
         const usesFlanger: boolean = effectsIncludeFlanger(instrumentState.effects);
+        const usesColorizer: boolean = effectsIncludeColorizer(instrumentState.effects);
         const usesInvertWave: boolean = effectsIncludeInvertWave(instrumentState.effects) && instrumentState.invertWave;
         const usesCompressor: boolean = effectsIncludeCompressor(instrumentState.effects);
         let signature: number = 0; if (usesDistortion) signature = signature | 1;
@@ -14820,6 +14847,7 @@ export class Synth {
         signature = signature << 1; if (usesInvertWave) signature = signature | 1;
         signature = signature << 1; if (usesCompressor) signature = signature | 1;
         signature = signature << 1; if (usesFlanger) signature = signature | 1;
+        signature = signature << 1; if (usesColorizer) signature = signature | 1;
 
         const usesRustDsp = usesCompressor || usesFlanger;
         if (usesRustDsp) {

@@ -783,6 +783,18 @@ export class TipPrompt implements Prompt {
 					p(`This setting controls whether the phase shift uses feedback or feedforward, and can interpolate between the two.`),
 				);
 			} break;
+			case "colorizerMix": {
+				message = div(
+					h2("Colorizer Mix"),
+					p(`This setting controls the dry-wet mix of the colorizer.`),
+				);
+			} break;
+			case "colorizerColor": {
+				message = div(
+					h2("Colorizer Color"),
+					p(`This setting controls how extreme the colorization is.`),
+				);
+			} break;
 			case "slideSpeedSlider": {
 				message = div(
 					h2("Slide Speed"),
