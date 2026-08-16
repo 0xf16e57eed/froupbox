@@ -52,6 +52,7 @@ export class FlangerInstance {
     begin(start: FlangerInstanceParams, end: FlangerInstanceParams, sample_rate: number, run_length: number): void;
     constructor();
     process(buffer: DspBuffer): void;
+    use_larger_delay_line: boolean;
 }
 
 export class FlangerInstanceParams {
