@@ -2368,11 +2368,11 @@ function centerWave(wave: ArrayLike<number>): Float32Array {
     for (let i: number = 0; i < wave.length; i++) newWave[i] = wave[i] - average;
     return newWave;
 }
-function centerAndNormalizeWave(wave: Array<number>): Float32Array {
+function centerAndNormalizeWave(original: Array<number>): Float32Array {
     let magn: number = 0.0;
 
-    centerWave(wave);
-
+    const wave = centerWave(original);
+    
     // Going to length-1 because an extra 0 sample is added on the end as part of centerWave, which shouldn't impact magnitude calculation.
     for (let i: number = 0; i < wave.length - 1; i++) {
         magn += Math.abs(wave[i]);
