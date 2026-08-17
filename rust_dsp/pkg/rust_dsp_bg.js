@@ -1,3 +1,97 @@
+export class ColourizerInstance {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        ColourizerInstanceFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_colourizerinstance_free(ptr, 0);
+    }
+    /**
+     * @param {ColourizerInstanceParams} start
+     * @param {ColourizerInstanceParams} end
+     * @param {number} sample_rate
+     * @param {number} run_length
+     */
+    begin(start, end, sample_rate, run_length) {
+        _assertClass(start, ColourizerInstanceParams);
+        var ptr0 = start.__destroy_into_raw();
+        _assertClass(end, ColourizerInstanceParams);
+        var ptr1 = end.__destroy_into_raw();
+        wasm.colourizerinstance_begin(this.__wbg_ptr, ptr0, ptr1, sample_rate, run_length);
+    }
+    constructor() {
+        const ret = wasm.colourizerinstance_new();
+        this.__wbg_ptr = ret;
+        ColourizerInstanceFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @param {DspBuffer} buffer
+     */
+    process(buffer) {
+        _assertClass(buffer, DspBuffer);
+        wasm.colourizerinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
+    }
+    /**
+     * @param {Float32Array} freqs
+     */
+    set freqs(freqs) {
+        const ptr0 = passArrayF32ToWasm0(freqs, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.colourizerinstance_set_freqs(this.__wbg_ptr, ptr0, len0);
+    }
+}
+if (Symbol.dispose) ColourizerInstance.prototype[Symbol.dispose] = ColourizerInstance.prototype.free;
+
+export class ColourizerInstanceParams {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        ColourizerInstanceParamsFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_colourizerinstanceparams_free(ptr, 0);
+    }
+    constructor() {
+        const ret = wasm.colourizerinstanceparams_new();
+        this.__wbg_ptr = ret;
+        ColourizerInstanceParamsFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @returns {number}
+     */
+    get mix() {
+        const ret = wasm.__wbg_get_colourizerinstanceparams_mix(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get voices() {
+        const ret = wasm.__wbg_get_colourizerinstanceparams_voices(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set mix(arg0) {
+        wasm.__wbg_set_colourizerinstanceparams_mix(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set voices(arg0) {
+        wasm.__wbg_set_colourizerinstanceparams_voices(this.__wbg_ptr, arg0);
+    }
+}
+if (Symbol.dispose) ColourizerInstanceParams.prototype[Symbol.dispose] = ColourizerInstanceParams.prototype.free;
+
 export class CompressorInstance {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -663,6 +757,12 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
+const ColourizerInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_colourizerinstance_free(ptr, 1));
+const ColourizerInstanceParamsFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_colourizerinstanceparams_free(ptr, 1));
 const CompressorInstanceFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_compressorinstance_free(ptr, 1));
@@ -725,6 +825,13 @@ function getUint8ArrayMemory0() {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
+}
+
+function passArrayF32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4, 4) >>> 0;
+    getFloat32ArrayMemory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
 }
 
 function passStringToWasm0(arg, malloc, realloc) {

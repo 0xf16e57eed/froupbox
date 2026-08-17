@@ -9428,6 +9428,8 @@ class InstrumentState {
   
     public flanger: rustDspTypes.FlangerInstance | undefined;
 
+    public colorizer: rustDspTypes.ColourizerInstance | undefined;
+    
     public readonly spectrumWave: SpectrumWaveState = new SpectrumWaveState();
     public readonly harmonicsWave: HarmonicsWaveState = new HarmonicsWaveState();
     public readonly drumsetSpectrumWaves: SpectrumWaveState[] = [];
@@ -9563,6 +9565,10 @@ class InstrumentState {
           this.flanger.free();
           this.flanger = undefined;
         }
+        if (this.colorizer) {
+          this.colorizer.free();
+          this.colorizer = undefined;
+        }
         if (this.dspBuffer) {
           this.dspBuffer.free();
           this.dspBuffer = undefined;
@@ -9688,7 +9694,24 @@ class InstrumentState {
         const usesCompressor: boolean = effectsIncludeCompressor(this.effects);
         const usesFlanger: boolean = effectsIncludeFlanger(this.effects);
         const usesColorizer: boolean = effectsIncludeColorizer(this.effects);
-        
+
+        // this was added for flanger and then spread to the rest of the rust dsp.
+        // inconsistent with the js code? yes. makes my life easier? also yes.
+        // - cypher
+        function getModifiedValues(modulatorName: string, envelope: EnvelopeComputeIndex, defaultValue: number): [number, number] {
+          const modulatorIdx = Config.modulators.dictionary[modulatorName].index;
+
+          let start = defaultValue, end = defaultValue;
+          if (synth.isModActive(modulatorIdx, channelIndex, instrumentIndex)) {
+            start = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, false);
+            end = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, true);
+          }
+          return [
+            start * envelopeStarts[envelope],
+            end * envelopeEnds[envelope],
+          ];
+        }
+      
         let granularChance: number = 0;
         if (usesGranular) { //has to happen before buffer allocation
             granularChance = (instrument.grainAmounts + 1);
@@ -10222,6 +10245,7 @@ class InstrumentState {
             this.reverbShelfB0 = Synth.tempFilterStartCoefficients.b[0];
             this.reverbShelfB1 = Synth.tempFilterStartCoefficients.b[1];
         }
+
       
         if (usesCompressor) {
           if (!this.compressor && rustDsp)
@@ -10268,6 +10292,24 @@ class InstrumentState {
         this.compressor.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
       }
 
+      if (usesColorizer) {
+        if (!this.colorizer && rustDsp)
+          this.colorizer = new rustDsp.ColourizerInstance();
+      } else if (this.colorizer) {
+        this.colorizer.free();
+        this.colorizer = undefined;
+      }
+      if (usesColorizer && this.colorizer)
+      {
+        const start = new rustDsp!.ColourizerInstanceParams(), end = new rustDsp!.ColourizerInstanceParams();
+
+        [start.mix, end.mix] = getModifiedValues("colorizer mix", EnvelopeComputeIndex.colorizerMix, instrument.colorizerMix);
+        [start.voices, end.voices] = getModifiedValues("colorizer color", EnvelopeComputeIndex.colorizerColor, instrument.colorizerColor);
+
+        this.colorizer.freqs = new Float32Array(instrument.colorizerFrequencies);
+        this.colorizer.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
+      }
+      
         if (usesFlanger) {
           if (!this.flanger && rustDsp)
             this.flanger = new rustDsp.FlangerInstance();
@@ -10292,20 +10334,6 @@ class InstrumentState {
           
           start.panning = Math.max(-1.0, Math.min(1.0, (usePanStart - Config.panCenter) / Config.panCenter * panEnvelopeStart));
           end.panning = Math.max(-1.0, Math.min(1.0, (usePanEnd - Config.panCenter) / Config.panCenter * panEnvelopeEnd));
-
-          function getModifiedValues(modulatorName: string, envelope: EnvelopeComputeIndex, defaultValue: number): [number, number] {
-            const modulatorIdx = Config.modulators.dictionary[modulatorName].index;
-
-            let start = defaultValue, end = defaultValue;
-            if (synth.isModActive(modulatorIdx, channelIndex, instrumentIndex)) {
-              start = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, false);
-              end = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, true);
-            }
-            return [
-              start * envelopeStarts[envelope],
-              end * envelopeEnds[envelope],
-            ];
-          }
           
           [start.delay, end.delay] = getModifiedValues("flanger delay", EnvelopeComputeIndex.flangerDelay, instrument.flangerDelay);
           [start.mix, end.mix] = getModifiedValues("flanger mix", EnvelopeComputeIndex.flangerMix, instrument.flangerMix);
@@ -10387,6 +10415,11 @@ class InstrumentState {
             if (usesFlanger) {
               // copied from rust_dsp/src/flanger/mod.rs
               let delay = instrument.flangerDelay * 0.000024414063 * synth.samplesPerSecond;
+              totalDelaySamples += (delay | 0) + 328;
+            }
+            if (usesColorizer) {
+              let lowestFreq = Math.min(...instrument.colorizerFrequencies.filter(freq => freq > 40));
+              let delay = synth.samplesPerSecond / lowestFreq * Config.colorizerColorRange;
               totalDelaySamples += (delay | 0) + 328;
             }
 
@@ -14966,7 +14999,7 @@ export class Synth {
         signature = signature << 1; if (usesFlanger) signature = signature | 1;
         signature = signature << 1; if (usesColorizer) signature = signature | 1;
 
-        const usesRustDsp = usesCompressor || usesFlanger;
+        const usesRustDsp = usesFlanger || usesColorizer || usesCompressor;
         if (usesRustDsp) {
           if (rustDsp && !instrumentState.dspBuffer)
             instrumentState.dspBuffer = new rustDsp.DspBuffer(4096); // max frame size is currently 4096
@@ -15593,6 +15626,9 @@ export class Synth {
           
           if (usesFlanger) {
             effectsSource += "instrumentState.flanger?.process(instrumentState.dspBuffer);";
+          }
+          if (usesColorizer) {
+            effectsSource += "instrumentState.colorizer?.process(instrumentState.dspBuffer);";
           }
           if (usesCompressor) {
             effectsSource += "instrumentState.compressor?.process(instrumentState.dspBuffer);";

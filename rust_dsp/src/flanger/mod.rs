@@ -2,12 +2,13 @@
 
 use wasm_bindgen::prelude::*;
 
+mod flan;
+pub use flan::{Flanger, FlangerParams};
+
 use crate::{
-    SamplePair,
     buffer::DspBuffer,
     delay_line::DelayLine,
-    lerp,
-    util::{self, Interpolator, Zippable},
+    util::{self},
 };
 
 #[wasm_bindgen]
@@ -25,7 +26,8 @@ impl FlangerInstanceParams {
     pub fn new() -> Self {
         Default::default()
     }
-
+}
+impl FlangerInstanceParams {
     fn split(&self, sample_rate: f32) -> (FlangerParams, FlangerParams) {
         let delay = self.delay * 0.000024414063 * sample_rate;
         let panning = self.panning * 0.5 + 0.5;
@@ -51,11 +53,11 @@ impl FlangerInstanceParams {
 
 #[wasm_bindgen]
 #[derive(Default)]
-pub struct FlangerInstance {
+struct FlangerInstance {
     pub use_larger_delay_line: bool,
 
-    shifter_l: Flanger,
-    shifter_r: Flanger,
+    shifter_l: Flanger<f32>,
+    shifter_r: Flanger<f32>,
 }
 #[wasm_bindgen]
 impl FlangerInstance {
@@ -94,71 +96,11 @@ impl FlangerInstance {
     #[wasm_bindgen]
     pub fn process(&mut self, buffer: &mut DspBuffer) {
         let (left, right) = buffer.as_channels();
-        self.shifter_l.process(left, self.use_larger_delay_line);
-        self.shifter_r.process(right, self.use_larger_delay_line);
-    }
-}
-
-#[derive(Default)]
-struct FlangerParams {
-    delay: f32,
-    mix: f32,
-    feedmix: f32,
-    voices: f32,
-}
-impl Zippable for FlangerParams {
-    fn zip(&self, other: &Self, f: impl Fn(f32, f32) -> f32) -> Self {
-        Self {
-            delay: f(self.delay, other.delay),
-            mix: f(self.mix, other.mix),
-            feedmix: f(self.feedmix, other.feedmix),
-            voices: f(self.voices, other.voices),
+        for val in left {
+            *val = self.shifter_l.process(*val, self.use_larger_delay_line);
         }
-    }
-}
-
-/// mono flanger using linear interpolation
-#[derive(Default)]
-struct Flanger {
-    // not actually a SamplePair. left side is delayed input, right side is delayed output.
-    delay_line: DelayLine<SamplePair>,
-
-    interpolator: Interpolator<FlangerParams>,
-}
-impl Flanger {
-    fn process(&mut self, buf: &mut [f32], use_larger_delay_line: bool) {
-        for sample in &mut *buf {
-            let params = self.interpolator.next();
-
-            let (dx, dy) = if (params.voices - 1.0).abs() < 1e-5 {
-                let SamplePair { l, r } = self.delay_line.compute(params.delay);
-                (l, r)
-            } else {
-                let mut result = 0.0;
-                let num_voices_int = params.voices.ceil() as usize;
-                let delay_scale = if use_larger_delay_line {
-                    1.0
-                } else {
-                    params.voices.recip().min(1.0)
-                };
-                for i in 1..=num_voices_int {
-                    let SamplePair { l: mut val, .. } = self
-                        .delay_line
-                        .compute(params.delay * delay_scale * i as f32);
-                    if i as f32 - params.voices > 0.0 {
-                        val *= 1.0 - (i as f32 - params.voices);
-                    }
-                    result += val;
-                }
-                let SamplePair { r, .. } = self.delay_line.compute(params.delay);
-
-                (result, r)
-            };
-
-            let x = *sample;
-            let y = lerp(x, lerp(dx, dy, params.feedmix), params.mix);
-            self.delay_line.push(SamplePair { l: x, r: y });
-            *sample = y;
+        for val in right {
+            *val = self.shifter_r.process(*val, self.use_larger_delay_line);
         }
     }
 }
