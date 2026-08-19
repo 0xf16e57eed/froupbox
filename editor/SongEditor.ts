@@ -1,7 +1,7 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
 //import {Layout} from "./Layout";
-import { sampleLoadEvents, SampleLoadedEvent, InstrumentType, EffectType, Config, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeRingModulation, effectsIncludeGranular, DropdownID, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeNoteRange, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample, effectsIncludeColorizer } from "../synth/SynthConfig";
+import { sampleLoadEvents, SampleLoadedEvent, InstrumentType, EffectType, Config, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeRingModulation, effectsIncludeGranular, DropdownID, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeNoteRange, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample, effectsIncludeColorizer, colorizerValueToFreq } from "../synth/SynthConfig";
 import { BarScrollBar } from "./BarScrollBar";
 import { BeatsPerBarPrompt } from "./BeatsPerBarPrompt";
 import { Change, ChangeGroup } from "./Change";
@@ -47,7 +47,7 @@ import { CustomThemePrompt } from "./CustomThemePrompt";
 import { CustomPresetsPrompt } from "./CustomPresetsPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation, ChangeChipWaveSampleChannel, ChangePhaserSpread, ChangePhaserFilterType, ChangeFlangerDistribute, ChangeColorizerMix, ChangeColorizerColor } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation, ChangeChipWaveSampleChannel, ChangePhaserSpread, ChangePhaserFilterType, ChangeFlangerDistribute, ChangeColorizerMix, ChangeColorizerColor, ChangeColorizerChannel, ChangeColorizerMaxFreq, ChangeColorizerMinFreq } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -1008,7 +1008,29 @@ export class SongEditor {
     private readonly _colorizerMixSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.colorizerMixRange - 1, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeColorizerMix(this.doc, oldValue, newValue), false);
     private readonly _colorizerMixRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("colorizerMix") }, span("Mix:")), this._colorizerMixSlider.container);
     private readonly _colorizerColorSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.colorizerColorRange - 1, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeColorizerColor(this.doc, oldValue, newValue), false);
-    private readonly _colorizerColorRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("colorizerMix") }, span("Color:")), this._colorizerColorSlider.container);
+    private readonly _colorizerColorRow: HTMLDivElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("colorizerColor") }, span("Color:")), this._colorizerColorSlider.container);
+    private readonly _colorizerChannelInputBox: HTMLInputElement = input({ style: "width: 9em; font-size: 80%; ", id: "colorizerChannelInputBox", type: "number", step: "1", min: 0, max: Config.pitchChannelCountMax, value: 0 });
+    private readonly _colorizerChannelDropdown: HTMLButtonElement = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(DropdownID.ColorizerChannel) }, "▼");
+    private readonly _colorizerChannelRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", style: "height:2.5em; width: 6em; font-size: smaller;", onclick: () => this._openPrompt("colorizerChannel") }, "Pitch Source Channel:"), this._colorizerChannelDropdown, this._colorizerChannelInputBox);
+    private readonly _colorizerPitchMaxFreqSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.colorizerMaxFreqRange, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeColorizerMaxFreq(this.doc, oldValue, newValue), false);
+    public readonly colorizerPitchMaxFreqNum: HTMLParagraphElement = div({ style: "font-size: 80%; ", id: "colorizerPitchMaxFreqNum" });
+    private readonly _colorizerPitchMaxFreqSliderRow: HTMLDivElement = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" },
+        span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("colorizerMaxFreq") }, "Max Freq: "),
+        div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.colorizerPitchMaxFreqNum),
+    ), this._colorizerPitchMaxFreqSlider.container);
+    private readonly _colorizerPitchMinFreqSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.colorizerMinFreqRange, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeColorizerMinFreq(this.doc, oldValue, newValue), false);
+    public readonly colorizerPitchMinFreqNum: HTMLParagraphElement = div({ style: "font-size: 80%; ", id: "colorizerPitchMinFreqNum" });
+    private readonly _colorizerPitchMinFreqSliderRow: HTMLDivElement = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" },
+        span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("colorizerMinFreq") }, "Min Freq: "),
+        div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.colorizerPitchMinFreqNum),
+    ), this._colorizerPitchMinFreqSlider.container);
+    private readonly _colorizerChannelDropdownGroup: HTMLElement = div({ class: "editor-controls", style: `display: none;` }, this._colorizerPitchMaxFreqSliderRow, this._colorizerPitchMinFreqSliderRow);
+    private readonly _colorizerContainerRow: HTMLDivElement = div({ class: "", style: "display:flex; flex-direction:column;" },
+        this._colorizerMixRow,
+        this._colorizerColorRow,
+        this._colorizerChannelRow,
+        this._colorizerChannelDropdownGroup
+    );
 
     private readonly _pitchedPresetSelect: HTMLSelectElement = buildPresetOptions(false, "pitchPresetSelect");
     private readonly _drumPresetSelect: HTMLSelectElement = buildPresetOptions(true, "drumPresetSelect");
@@ -1394,7 +1416,6 @@ export class SongEditor {
         this._noteFilterRow,
         this._noteFilterSimpleCutRow,
         this._noteFilterSimplePeakRow,
-        this._granularContainerRow,
         this._distortionRow,
         this._aliasingRow,
         this._bitcrusherQuantizationRow,
@@ -1415,8 +1436,7 @@ export class SongEditor {
         this._flangerDelayRow,
         this._flangerPanSliderRow,
         this._flangerFeedmixRow,
-        this._colorizerMixRow,
-        this._colorizerColorRow,
+        this._colorizerContainerRow,
         this._invertWaveRow,
         this._upperNoteLimitRow,
         this._lowerNoteLimitRow,
@@ -1663,6 +1683,7 @@ export class SongEditor {
     private _openTransitionDropdown: boolean = false;
     private _openPhaserStagesDropdown: boolean = false;
     private _openFlangerMixDropdown: boolean = false;
+    private _openColorizerChannelDropdown: boolean = false;
     private _openOperatorDropdowns: boolean[] = [];
     private _openPulseWidthDropdown: boolean = false;
     private _openPitchShiftDropdown: boolean = false;
@@ -1995,6 +2016,8 @@ export class SongEditor {
         this._upperNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeUpperLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].upperNoteLimit, (Math.min(this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves, Math.max(0.0, Math.round(+this._upperNoteLimitInputBox.value)))))) });
         this._lowerNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeLowerLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].lowerNoteLimit, (Math.min(this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves, Math.max(0.0, Math.round(+this._lowerNoteLimitInputBox.value)))))) });
 
+        this._colorizerChannelInputBox.addEventListener("input", () => { this.doc.record(new ChangeColorizerChannel(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].colorizerChannel, (Math.min(Config.pitchChannelCountMax, Math.max(0, Math.round(+this._colorizerChannelInputBox.value)))))) });
+
         this._pitchShiftEquaveDivisionsInputBox.addEventListener("input", () => { this.doc.record(new ChangePitchShiftEquaveDivisions(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pitchShiftEquaveDivisions, (Math.min(Config.equaveDivisionsMax, Math.max(1, Math.round(+this._pitchShiftEquaveDivisionsInputBox.value)))))) });
         this._pitchShiftEquaveNumeratorInputBox.addEventListener("input", () => { this.doc.record(new ChangePitchShiftEquaveNumerator(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pitchShiftEquaveNumerator, (Math.min(Config.equaveNumeratorMax, Math.max(1, Math.round(+this._pitchShiftEquaveNumeratorInputBox.value)))), Math.max(1, Math.round(+this._pitchShiftEquaveDenominatorInputBox.value)))) });
         this._pitchShiftEquaveDenominatorInputBox.addEventListener("input", () => { this.doc.record(new ChangePitchShiftEquaveDenominator(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pitchShiftEquaveDenominator, (Math.min(Config.equaveDenominatorMax, Math.max(1, Math.round(+this._pitchShiftEquaveDenominatorInputBox.value)))), Math.max(1, Math.round(+this._pitchShiftEquaveNumeratorInputBox.value)))) });
@@ -2116,6 +2139,12 @@ export class SongEditor {
                 this._openFlangerMixDropdown = this._openFlangerMixDropdown ? false : true;
                 group = this._flangerMixDropdownGroup;
                 shouldOpen = this._openFlangerMixDropdown;
+                break;
+            case DropdownID.ColorizerChannel:
+                target = this._colorizerChannelDropdown;
+                this._openColorizerChannelDropdown = this._openColorizerChannelDropdown ? false : true;
+                group = this._colorizerChannelDropdownGroup;
+                shouldOpen = this._openColorizerChannelDropdown;
                 break;
             case DropdownID.FM:
                 target = this._operatorDropdowns[submenu];
@@ -2830,6 +2859,7 @@ export class SongEditor {
 
         this.updateApplyTuningButton();
 
+        this._colorizerChannelInputBox.max = this.doc.song.pitchChannelCount + "";
         this._upperNoteLimitInputBox.max = this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves + "";
         this._lowerNoteLimitInputBox.max = this.doc.song.channels[this.doc.channel].equaveDivisions * Config.pitchOctaves + "";
 
@@ -3410,13 +3440,17 @@ export class SongEditor {
             }
 
             if (effectsIncludeColorizer(instrument.effects)) {
-                this._colorizerMixRow.style.display = "";
+                this._colorizerContainerRow.style.display = "";
                 this._colorizerMixSlider.updateValue(instrument.colorizerMix);
-                this._colorizerColorRow.style.display = "";
                 this._colorizerColorSlider.updateValue(instrument.colorizerColor);
+                this._colorizerChannelInputBox.value = String(instrument.colorizerChannel);
+                if (this._openColorizerChannelDropdown)
+                    this._colorizerChannelDropdownGroup.style.display = "";
+                this._colorizerPitchMaxFreqSlider.updateValue(instrument.colorizerMaxFreq);
+                this._colorizerPitchMinFreqSlider.updateValue(instrument.colorizerMinFreq);
             } else {
-                this._colorizerMixRow.style.display = "none";
-                this._colorizerColorRow.style.display = "none";
+                this._colorizerContainerRow.style.display = "none";
+                this._colorizerChannelDropdownGroup.style.display = "none";
             }
 
             if (effectsIncludeInvertWave(instrument.effects)) {
@@ -3530,6 +3564,8 @@ export class SongEditor {
             this.ringModHzNum.innerHTML =  calculateRingModHertz(instrument.ringModulationHz / (Config.ringModHzRange - 1), instrument.ringModHzOffset) + " (" + calculateRingModHertz(instrument.ringModulationHz / (Config.ringModHzRange - 1), 200) + ")";
             this.grainSizeNum.innerHTML = " (" + instrument.grainSize * Config.grainSizeStep + ")";
             this.grainRangeNum.innerHTML = " (" + instrument.grainRange * Config.grainSizeStep + ")";
+            this.colorizerPitchMaxFreqNum.innerHTML = " (" + colorizerValueToFreq(instrument.colorizerMaxFreq) + "Hz" + ")";
+            this.colorizerPitchMinFreqNum.innerHTML = " (" + colorizerValueToFreq(instrument.colorizerMinFreq) + "Hz" + ")";
             this._instrumentVolumeSlider.updateValue(instrument.volume);
             this._instrumentVolumeSliderInputBox.value = "" + (instrument.volume);
             this._volumePitchCompensationSlider.updateValue(instrument.volumePitchCompensation);
@@ -4702,6 +4738,7 @@ export class SongEditor {
             || document.activeElement == this._flangerVoicesInputBox
             || document.activeElement == this._flangerDelayInputBox
             || document.activeElement == this._flangerPanSliderInputBox
+            || document.activeElement == this._colorizerChannelInputBox
             || document.activeElement == this._pitchShiftEquaveDivisionsInputBox
             || document.activeElement == this._pitchShiftEquaveNumeratorInputBox
             || document.activeElement == this._pitchShiftEquaveDenominatorInputBox

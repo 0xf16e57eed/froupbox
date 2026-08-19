@@ -104,6 +104,7 @@ export const enum DropdownID {
     FlangerMix = 10,
     PitchShift = 11,
     InstrumentVolume = 12,
+    ColorizerChannel = 13,
 }
 
 export const enum EffectType {
@@ -1062,8 +1063,10 @@ export class Config {
     public static readonly flangerPanMax:               number = Config.flangerPanCenter * 2;
     public static readonly flangerFeedmixRange:         number = 64; 
 
-    public static readonly colorizerMixRange:           number = 64; 
-    public static readonly colorizerColorRange:         number = 64; 
+    public static readonly colorizerMixRange:           number = 63; 
+    public static readonly colorizerColorRange:         number = 63; 
+    public static readonly colorizerMaxFreqRange:       number = 63; 
+    public static readonly colorizerMinFreqRange:       number = 63; 
 
     public static readonly beatsPerBarMin:              number = 1;
     public static readonly beatsPerBarMax:              number = 64;
@@ -2772,6 +2775,10 @@ export function scaleToBools(scale: string, equaveDivisions: number, equaveNumer
 }
 function validateNumber(num: string): boolean {
     return +num + "" == num;
+}
+
+export function colorizerValueToFreq(value: number): number {
+    return Math.round((8 * Math.pow(1.13551976587355, value) - 8) * 100) / 100;
 }
 
 export function rawChipToIntegrated(raw: DictionaryArray<ChipWave>): DictionaryArray<ChipWave> {

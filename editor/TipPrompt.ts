@@ -795,6 +795,25 @@ export class TipPrompt implements Prompt {
 					p(`This setting controls how extreme the colorization is.`),
 				);
 			} break;
+			case "colorizerChannel": {
+				message = div(
+					h2("Colorizer Pitch Source Channel"),
+					p(`This setting controls which channel the pitches used for colorization are pulled from.`),
+					p(`Pitches pulled from other channels do not take into account effects such as instrument detune, song detune, vibrato, unison offset, or pitch shift.`),
+				);
+			} break;
+			case "colorizerMaxFreq": {
+				message = div(
+					h2("Colorizer Max Freq"),
+					p(`This setting controls the maximum frequency that can be used in the colorizer's pitch set.`),
+				);
+			} break;
+			case "colorizerMinFreq": {
+				message = div(
+					h2("Colorizer Min Freq"),
+					p(`This setting controls the minimum frequency that can be used in the colorizer's pitch set.`),
+				);
+			} break;
 			case "slideSpeedSlider": {
 				message = div(
 					h2("Slide Speed"),

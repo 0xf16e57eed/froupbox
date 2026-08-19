@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2022 John Nesky and contributing authors, distributed under the MIT license, see accompanying the LICENSE.md file.
 
-import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample, effectsIncludeColorizer } from "./SynthConfig";
+import { startLoadingSample, sampleLoadingState, SampleLoadingState, sampleLoadEvents, SampleLoadedEvent, SampleLoadingStatus, loadBuiltInSamples, Dictionary, DictionaryArray, toNameMap, FilterType, SustainType, EnvelopeType, InstrumentType, EffectType, EnvelopeComputeIndex, Transition, Unison, Chord, Vibrato, Envelope, AutomationTarget, Config, getDrumWave, drawNoiseSpectrum, getArpeggioPitchIndex, performIntegralOld, getPulseWidthRatio, effectsIncludeTransition, effectsIncludeChord, effectsIncludePitchShift, effectsIncludeDetune, effectsIncludeVibrato, effectsIncludeNoteFilter, effectsIncludeDistortion, effectsIncludeBitcrusher, effectsIncludePanning, effectsIncludeChorus, effectsIncludeEcho, effectsIncludeReverb, effectsIncludeNoteRange, effectsIncludeRingModulation, effectsIncludeGranular, OperatorWave, LFOEnvelopeTypes, RandomEnvelopeTypes, GranularEnvelopeType, calculateRingModHertz, effectsIncludePhaser, effectsIncludeInvertWave, effectsIncludeCompressor, effectsIncludeFlanger, MultiChannelSample, effectsIncludeColorizer, colorizerValueToFreq } from "./SynthConfig";
 import { Preset, EditorConfig } from "../editor/EditorConfig";
 import { scaleElementsByFactor, inverseRealFourierTransform } from "./FFT";
 import { Deque } from "./Deque";
@@ -1736,6 +1736,10 @@ export class Instrument {
 
     public colorizerMix: number = 32;
     public colorizerColor: number = 32;
+    public colorizerChannel: number = 0;
+    public colorizerMaxFreq: number = 63;
+    public colorizerMinFreq: number = 0;
+    public colorizerFrequencies: number[] = [];
 
     public invertWave: boolean = false;
 
@@ -1885,6 +1889,9 @@ export class Instrument {
 
         this.colorizerMix = 32;
         this.colorizerColor = 32;
+        this.colorizerChannel = 0;
+        this.colorizerMaxFreq = 63;
+        this.colorizerMinFreq = 0;
 
         this.invertWave = false;
         
@@ -2247,6 +2254,9 @@ export class Instrument {
         if (effectsIncludeColorizer(this.effects)) {
             instrumentObject["colorizerMix"] =  this.colorizerMix;
             instrumentObject["colorizerColor"] =  this.colorizerColor;
+            instrumentObject["colorizerChannel"] =  this.colorizerChannel;
+            instrumentObject["colorizerMaxFreq"] =  this.colorizerMaxFreq;
+            instrumentObject["colorizerMinFreq"] =  this.colorizerMinFreq;
         }
         if (effectsIncludeDistortion(this.effects)) {
             instrumentObject["distortion"] = Math.round(100 * this.distortion / (Config.distortionRange - 1));
@@ -2757,6 +2767,15 @@ export class Instrument {
         }
         if (instrumentObject["colorizerColor"] != undefined) {
             this.colorizerColor = clamp(0, Config.colorizerColorRange + 1, instrumentObject["colorizerColor"]);
+        }
+        if (instrumentObject["colorizerChannel"] != undefined) {
+            this.colorizerChannel = clamp(0, Config.pitchChannelCountMax + 1, instrumentObject["colorizerChannel"]);
+        }
+        if (instrumentObject["colorizerMaxFreq"] != undefined) {
+            this.colorizerMaxFreq = clamp(0, Config.colorizerMaxFreqRange + 1, instrumentObject["colorizerMaxFreq"]);
+        }
+        if (instrumentObject["colorizerMinFreq"] != undefined) {
+            this.colorizerMinFreq = clamp(0, Config.colorizerMinFreqRange + 1, instrumentObject["colorizerMinFreq"]);
         }
         
         if (instrumentObject["distortion"] != undefined) {
@@ -4125,6 +4144,9 @@ export class Song {
                 if (effectsIncludeColorizer(instrument.effects)) {
                     buffer.push(base64IntToCharCode[instrument.colorizerMix]);
                     buffer.push(base64IntToCharCode[instrument.colorizerColor]);
+                    buffer.push(base64IntToCharCode[instrument.colorizerChannel]);
+                    buffer.push(base64IntToCharCode[instrument.colorizerMaxFreq]);
+                    buffer.push(base64IntToCharCode[instrument.colorizerMinFreq]);
                 }
 
                 if (effectsIncludeInvertWave(instrument.effects)) {
@@ -6139,7 +6161,7 @@ export class Song {
                     if (effectsIncludeFlanger(instrument.effects)) {
                         instrument.flangerMix = clamp(0, Config.flangerMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         if (!beforeSix) {
-                            instrument.flangerVoices = clamp(1, Config.flangerMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)] + 1);
+                            instrument.flangerVoices = clamp(1, Config.flangerMaxVoices + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)] + 1);
                         }
                         if (!beforeNine) {
                             instrument.flangerDistribute = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] === 1;
@@ -6151,6 +6173,9 @@ export class Song {
                     if (effectsIncludeColorizer(instrument.effects)) {
                         instrument.colorizerMix = clamp(0, Config.colorizerMixRange + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                         instrument.colorizerColor = clamp(0, Config.colorizerColorRange + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.colorizerChannel = clamp(0, Config.pitchChannelCountMax + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.colorizerMaxFreq = clamp(0, Config.colorizerMaxFreqRange + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        instrument.colorizerMinFreq = clamp(0, Config.colorizerMinFreqRange + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                     }    
                     if(effectsIncludeInvertWave(instrument.effects)) {
                         instrument.invertWave = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] ? true : false;
@@ -11612,6 +11637,74 @@ export class Synth {
         let limit: number = +this.limit;
         let skippedBars: number[] = [];
         let firstSkippedBufferIndex = -1;
+
+        // colorizer frequencies
+        for (let channelIndex: number = 0; channelIndex < song.pitchChannelCount; channelIndex++) {
+            const channel: Channel = song.channels[channelIndex];
+
+            for (let instrumentIndex: number = 0; instrumentIndex < channel.instruments.length; instrumentIndex++) {
+                const instrument: Instrument = channel.instruments[instrumentIndex];
+
+                if (instrument.colorizerChannel - 1 < song.pitchChannelCount && instrument.colorizerChannel > 0) {
+                    const sourceChannel: Channel = song.channels[instrument.colorizerChannel - 1];
+                    const pattern: Pattern | null = song.getPattern(instrument.colorizerChannel - 1, this.bar);
+                    const currentPart: number = this.getCurrentPart();
+
+                    let freqs: number[] = [];
+                    let slideOffset: number = 0;
+
+                    if (playSong && pattern != null) {
+                        for (let i: number = 0; i < pattern.notes.length; i++) {
+                            const note = pattern.notes[i];
+                            if (note.start <= currentPart && note.end > currentPart) {
+                                freqs = note.pitches;
+
+                                const endPinIndex: number = note.getEndPinIndex(currentPart);
+                                const startPin: NotePin = note.pins[endPinIndex - 1];  
+                                const endPin: NotePin = note.pins[endPinIndex];
+                                const pinStart: number = (note.start + startPin.time) * Config.ticksPerPart;
+                                const pinEnd: number = (note.start + endPin.time) * Config.ticksPerPart;
+
+                                const tickTimeStart: number = currentPart * Config.ticksPerPart + this.tick;
+                                const tickTimeEnd: number = tickTimeStart + 1.0;
+                                const pinRatioStart: number = Math.min(1.0, (tickTimeStart - pinStart) / (pinEnd - pinStart));
+                                const pinRatioEnd: number = Math.min(1.0, (tickTimeEnd - pinStart) / (pinEnd - pinStart));
+
+                                const noteOffsetStart = startPin.interval + (endPin.interval - startPin.interval) * pinRatioStart;
+                                const noteOffsetEnd = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
+
+                                slideOffset = (noteOffsetStart + noteOffsetEnd) / 2
+                            }
+                        }
+                    }
+
+                    const twelveEdoOffset: number = (song.key - 9 + song.octave * 12) 
+                        * (sourceChannel.equaveDivisions / 12) 
+                        * (Math.log(2 / 1) / Math.log(sourceChannel.equaveNumerator / sourceChannel.equaveDenominator)
+                    );
+
+                    instrument.colorizerFrequencies = new Array(freqs.length);
+
+                    for (let i: number = 0; i < instrument.colorizerFrequencies.length; i++) {
+                        const convertedFrequency = Instrument.frequencyFromPitch(
+                            freqs[i] + slideOffset - (sourceChannel.equaveDivisions * Config.pitchOctaves / 2) + twelveEdoOffset, 
+                            sourceChannel.equaveNumerator / sourceChannel.equaveDenominator, 
+                            sourceChannel.equaveDivisions
+                        ); 
+
+                        if ((convertedFrequency > colorizerValueToFreq(instrument.colorizerMinFreq))
+                            && (convertedFrequency < colorizerValueToFreq(instrument.colorizerMaxFreq))
+                        ) {
+                            instrument.colorizerFrequencies[i] = convertedFrequency;
+                        } else {
+                            instrument.colorizerFrequencies[i] = -1;
+                        }
+                    }
+                } else {
+                    instrument.colorizerFrequencies = [];
+                }
+            }
+        }
 
         let bufferIndex: number = 0;
         while (bufferIndex < outputBufferLength && !ended) {
