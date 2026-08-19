@@ -3004,6 +3004,53 @@ export class ChangeFlangerFeedmix extends ChangeInstrumentSlider {
     }
 }
 
+export class ChangeColorizerMix extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.colorizerMix = newValue;
+        // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeColorizerColor extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.colorizerColor = newValue;
+        // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeColorizerChannel extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.colorizerChannel = newValue;
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeColorizerMaxFreq extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.colorizerMaxFreq = newValue;
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeColorizerMinFreq extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.colorizerMinFreq = newValue;
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
 export class ChangeStringSustain extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super(doc);
