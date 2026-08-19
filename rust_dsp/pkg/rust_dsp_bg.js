@@ -373,6 +373,19 @@ export class FlangerInstance {
         _assertClass(buffer, DspBuffer);
         wasm.flangerinstance_process(this.__wbg_ptr, buffer.__wbg_ptr);
     }
+    /**
+     * @returns {boolean}
+     */
+    get use_larger_delay_line() {
+        const ret = wasm.__wbg_get_flangerinstance_use_larger_delay_line(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @param {boolean} arg0
+     */
+    set use_larger_delay_line(arg0) {
+        wasm.__wbg_set_flangerinstance_use_larger_delay_line(this.__wbg_ptr, arg0);
+    }
 }
 if (Symbol.dispose) FlangerInstance.prototype[Symbol.dispose] = FlangerInstance.prototype.free;
 

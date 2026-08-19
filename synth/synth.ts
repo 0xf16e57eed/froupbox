@@ -10289,6 +10289,7 @@ class InstrumentState {
           [start.feedmix, end.feedmix] = getModifiedValues("flanger feedmix", EnvelopeComputeIndex.flangerFeedmix, instrument.flangerFeedmix);
           [start.voices, end.voices] = getModifiedValues("flanger voices", EnvelopeComputeIndex.flangerVoices, instrument.flangerVoices);
           
+          this.flanger.use_larger_delay_line = !instrument.flangerDistribute;
           this.flanger.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
         }
       
