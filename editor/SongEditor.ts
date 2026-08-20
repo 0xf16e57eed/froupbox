@@ -47,7 +47,7 @@ import { CustomThemePrompt } from "./CustomThemePrompt";
 import { CustomPresetsPrompt } from "./CustomPresetsPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { TipPrompt } from "./TipPrompt";
-import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation, ChangeChipWaveSampleChannel, ChangePhaserSpread, ChangePhaserFilterType, ChangeFlangerDistribute, ChangeColorizerMix, ChangeColorizerColor, ChangeColorizerChannel, ChangeColorizerMaxFreq, ChangeColorizerMinFreq } from "./changes";
+import { ChangeTempo, ChangeKeyOctave, ChangeChorus, ChangeEchoDelay, ChangeEchoSustain, ChangeReverb, ChangeVolume, ChangePan, ChangePatternSelection, ChangePatternsPerChannel, ChangePatternNumbers, ChangeSupersawDynamism, ChangeSupersawSpread, ChangeSupersawShape, ChangePulseWidth, ChangeFeedbackAmplitude, ChangeOperatorAmplitude, ChangeOperatorFrequency, ChangeDrumsetEnvelope, ChangePasteInstrument, ChangePreset, pickRandomPresetValue, ChangeRandomGeneratedInstrument, ChangeEQFilterType, ChangeNoteFilterType, ChangeEQFilterSimpleCut, ChangeEQFilterSimplePeak, ChangeNoteFilterSimpleCut, ChangeNoteFilterSimplePeak, ChangeScale, ChangeKey, ChangeRhythm, ChangeFeedbackType, ChangeAlgorithm, ChangeChipWave, ChangeNoiseWave, ChangeTransition, ChangeToggleEffects, ChangeVibrato, ChangeUnison, ChangeChord, ChangeSong, ChangePitchShift, ChangeDetune, ChangeDistortion, ChangeStringSustain, ChangeBitcrusherFreq, ChangeBitcrusherQuantization, ChangeAddEnvelope, ChangeEnvelopeSpeed, ChangeAddChannelInstrument, ChangeRemoveChannelInstrument, ChangeCustomWave, ChangeOperatorWaveform, ChangeOperatorPulseWidth, ChangeSongTitle, ChangeVibratoDepth, ChangeVibratoSpeed, ChangeVibratoDelay, ChangeVibratoType, ChangePanDelay, ChangeArpeggioSpeed, ChangeFastTwoNoteArp, ChangeClicklessTransition, ChangeAliasing, ChangeSetPatternInstruments, ChangeHoldingModRecording, ChangeChipWavePlayBackwards, ChangeChipWaveStartOffset, ChangeChipWaveLoopEnd, ChangeChipWaveLoopStart, ChangeChipWaveLoopMode, ChangeChipWaveUseAdvancedLoopControls, ChangeDecimalOffset, ChangeUnisonVoices, ChangeUnisonSpread, ChangeUnisonOffset, ChangeUnisonExpression, ChangeUnisonSign, Change6OpFeedbackType, Change6OpAlgorithm, ChangeCustomAlgorythmorFeedback, ChangeRingMod, ChangeRingModHz, ChangeRingModChipWave, ChangeRingModPulseWidth, ChangeGranular, ChangeGrainSize, ChangeGrainAmounts, ChangeGrainRange, ChangeMonophonicTone, ChangePhaserMix, ChangePhaserFreq, ChangePhaserFeedback, ChangePhaserStages, ChangeInvertWave, ChangeUpperLimit, ChangeLowerLimit, ChangeCompressor, ChangeCompressorTime, ChangeRmHzOffset, ChangePhaserDisperse, ChangeSlideSpeed, ChangeStrumSpeed, ChangeLoop, ChangeChannelBar, ChangeFlangerMix, ChangeFlangerDelay, ChangeFlangerPan, ChangeFlangerFeedmix, ChangeFlangerVoices, ChangeChannelTuning, ChangePitchShiftFiveLimit, ChangePitchShiftEquaveDivisions, ChangePitchShiftEquaveNumerator, ChangePitchShiftEquaveDenominator, ChangeVolumePitchCompensation, ChangeVolumeChordCompensation, ChangeChipWaveSampleChannel, ChangePhaserSpread, ChangePhaserFilterType, ChangeFlangerDistribute, ChangeColorizerMix, ChangeColorizerColor, ChangeColorizerChannel, ChangeColorizerMaxFreq, ChangeColorizerMinFreq, ChangeEQFilterCompensation, ChangeNoteFilterCompensation } from "./changes";
 
 import { TrackEditor } from "./TrackEditor";
 import { oscilloscopeCanvas } from "../global/Oscilloscope";
@@ -1115,8 +1115,16 @@ export class SongEditor {
     private readonly _eqFilterAdvancedButton: HTMLButtonElement = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "last-button no-underline", onclick: () => this._switchEQFilterType(false) }, "pro");
     private readonly _eqFilterTypeRow: HTMLElement = div({ class: "selectRow", style: "padding-top: 4px; margin-bottom: 0px;" }, span({ style: "font-size: x-small;", class: "tip", onclick: () => this._openPrompt("filterType") }, "EQ Filt.Type:"), div({ class: "instrument-bar" }, this._eqFilterSimpleButton, this._eqFilterAdvancedButton));
     private readonly _eqFilterEditor: FilterEditor = new FilterEditor(this.doc);
+    private readonly _eqFilterDropdown: HTMLButtonElement = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(DropdownID.EQFilter) }, "▼");
+    private readonly _eqFilterCompensationSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.eqFilterCompensationRange, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeEQFilterCompensation(this.doc, oldValue, newValue), true);
+    public readonly eqFilterCompensationNum: HTMLParagraphElement = div({ style: "font-size: 80%; ", id: "colorizerPitchMaxFreqNum" });
+    private readonly _eqFilterCompensationSliderRow: HTMLDivElement = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" },
+        span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("eqFilterCompensation") }, "Compensate: "),
+        div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.eqFilterCompensationNum),
+    ), this._eqFilterCompensationSlider.container);
+    private readonly _eqFilterDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._eqFilterCompensationSliderRow);
     private readonly _eqFilterZoom: HTMLButtonElement = button({ style: "margin-left:0em; padding-left:0.2em; height:1.5em; max-width: 12px;", onclick: () => this._openPrompt("customEQFilterSettings") }, "+");
-    private readonly _eqFilterRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("eqFilter") }, "EQ Filt:"), this._eqFilterZoom, this._eqFilterEditor.container);
+    private readonly _eqFilterRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("eqFilter") }, "EQ:"), this._eqFilterDropdown, this._eqFilterZoom, this._eqFilterEditor.container);
     private readonly _eqFilterSimpleCutSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimpleCutRange - 1, value: "6", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeEQFilterSimpleCut(this.doc, oldValue, newValue), false);
     private _eqFilterSimpleCutRow: HTMLDivElement = div({ class: "selectRow", title: "Low-pass Filter Cutoff Frequency" }, span({ class: "tip", onclick: () => this._openPrompt("filterCutoff") }, "Filter Cut:"), this._eqFilterSimpleCutSlider.container);
     private readonly _eqFilterSimplePeakSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimplePeakRange - 1, value: "6", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeEQFilterSimplePeak(this.doc, oldValue, newValue), false);
@@ -1126,8 +1134,16 @@ export class SongEditor {
     private readonly _noteFilterAdvancedButton: HTMLButtonElement = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "last-button no-underline", onclick: () => this._switchNoteFilterType(false) }, "pro");
     private readonly _noteFilterTypeRow: HTMLElement = div({ class: "selectRow", style: "padding-top: 4px; margin-bottom: 0px;" }, span({ style: "font-size: x-small;", class: "tip", onclick: () => this._openPrompt("filterType") }, "Note Filt.Type:"), div({ class: "instrument-bar" }, this._noteFilterSimpleButton, this._noteFilterAdvancedButton));
     private readonly _noteFilterEditor: FilterEditor = new FilterEditor(this.doc, true);
+    private readonly _noteFilterDropdown: HTMLButtonElement = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(DropdownID.NoteFilter) }, "▼");
+    private readonly _noteFilterCompensationSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.eqFilterCompensationRange, value: "0", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeNoteFilterCompensation(this.doc, oldValue, newValue), true);
+    public readonly noteFilterCompensationNum: HTMLParagraphElement = div({ style: "font-size: 80%; ", id: "colorizerPitchMaxFreqNum" });
+    private readonly _noteFilterCompensationSliderRow: HTMLDivElement = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" },
+        span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("eqFilterCompensation") }, "Compensate: "),
+        div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.noteFilterCompensationNum),
+    ), this._noteFilterCompensationSlider.container);
+    private readonly _noteFilterDropdownGroup: HTMLElement = div({ class: "editor-controls", style: "display: none;" }, this._noteFilterCompensationSliderRow);
     private readonly _noteFilterZoom: HTMLButtonElement = button({ style: "margin-left:0em; padding-left:0.2em; height:1.5em; max-width: 12px;", onclick: () => this._openPrompt("customNoteFilterSettings") }, "+");
-    private readonly _noteFilterRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("noteFilter") }, "Note Filt:"), this._noteFilterZoom, this._noteFilterEditor.container);
+    private readonly _noteFilterRow: HTMLElement = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("noteFilter") }, "Filter:"), this._noteFilterDropdown, this._noteFilterZoom, this._noteFilterEditor.container);
     private readonly _noteFilterSimpleCutSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimpleCutRange - 1, value: "6", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeNoteFilterSimpleCut(this.doc, oldValue, newValue), false);
     private _noteFilterSimpleCutRow: HTMLDivElement = div({ class: "selectRow", title: "Low-pass Filter Cutoff Frequency" }, span({ class: "tip", onclick: () => this._openPrompt("filterCutoff") }, "Filter Cut:"), this._noteFilterSimpleCutSlider.container);
     private readonly _noteFilterSimplePeakSlider: Slider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimplePeakRange - 1, value: "6", step: "1" }), this.doc, (oldValue: number, newValue: number) => new ChangeNoteFilterSimplePeak(this.doc, oldValue, newValue), false);
@@ -1380,6 +1396,7 @@ export class SongEditor {
         this._eqFilterRow,
         this._eqFilterSimpleCutRow,
         this._eqFilterSimplePeakRow,
+        this._eqFilterDropdownGroup,
         this._fadeInOutRow,
         this._algorithmSelectRow,
         this._algorithm6OpSelectRow,
@@ -1416,6 +1433,7 @@ export class SongEditor {
         this._noteFilterRow,
         this._noteFilterSimpleCutRow,
         this._noteFilterSimplePeakRow,
+        this._noteFilterDropdownGroup,
         this._distortionRow,
         this._aliasingRow,
         this._bitcrusherQuantizationRow,
@@ -1681,6 +1699,8 @@ export class SongEditor {
     private _openEnvelopeDropdown: boolean = false;
     private _openChordDropdown: boolean = false;
     private _openTransitionDropdown: boolean = false;
+    private _openEQFilterDropdown: boolean = false;
+    private _openNoteFilterDropdown: boolean = false;
     private _openPhaserStagesDropdown: boolean = false;
     private _openFlangerMixDropdown: boolean = false;
     private _openColorizerChannelDropdown: boolean = false;
@@ -2127,6 +2147,18 @@ export class SongEditor {
                 this._openTransitionDropdown = this._openTransitionDropdown ? false : true;
                 group = this._transitionDropdownGroup;
                 shouldOpen = this._openTransitionDropdown;
+                break;
+            case DropdownID.EQFilter:
+                target = this._eqFilterDropdown;
+                this._openEQFilterDropdown = this._openEQFilterDropdown ? false : true;
+                group = this._eqFilterDropdownGroup;
+                shouldOpen = this._openEQFilterDropdown;
+                break;
+            case DropdownID.NoteFilter:
+                target = this._noteFilterDropdown;
+                this._openNoteFilterDropdown = this._openNoteFilterDropdown ? false : true;
+                group = this._noteFilterDropdownGroup;
+                shouldOpen = this._openNoteFilterDropdown;
                 break;
             case DropdownID.PhaserStages:
                 target = this._phaserStagesDropdown;
@@ -2847,12 +2879,15 @@ export class SongEditor {
             this._eqFilterRow.style.display = "none";
             this._eqFilterSimpleCutRow.style.display = "";
             this._eqFilterSimplePeakRow.style.display = "";
+            this._eqFilterDropdownGroup.style.display = "none";
         } else {
             this._eqFilterSimpleButton.classList.add("deactivated");
             this._eqFilterAdvancedButton.classList.remove("deactivated");
             this._eqFilterRow.style.display = "";
             this._eqFilterSimpleCutRow.style.display = "none";
             this._eqFilterSimplePeakRow.style.display = "none";
+            if (this._openEQFilterDropdown)
+                this._eqFilterDropdownGroup.style.display = "";
         }
 
         setSelectedValue(this._rhythmSelect, this.doc.song.rhythm);
@@ -3302,18 +3337,22 @@ export class SongEditor {
                     this._noteFilterRow.style.display = "none";
                     this._noteFilterSimpleCutRow.style.display = "";
                     this._noteFilterSimplePeakRow.style.display = "";
+                    this._noteFilterDropdownGroup.style.display = "none";
                 } else {
                     this._noteFilterSimpleButton.classList.add("deactivated");
                     this._noteFilterAdvancedButton.classList.remove("deactivated");
                     this._noteFilterRow.style.display = "";
                     this._noteFilterSimpleCutRow.style.display = "none";
                     this._noteFilterSimplePeakRow.style.display = "none";
+                    if (this._openNoteFilterDropdown)
+                        this._noteFilterDropdownGroup.style.display = "";
                 }
             } else {
                 this._noteFilterRow.style.display = "none";
                 this._noteFilterSimpleCutRow.style.display = "none";
                 this._noteFilterSimplePeakRow.style.display = "none";
                 this._noteFilterTypeRow.style.display = "none";
+                this._noteFilterDropdownGroup.style.display = "none";
             }
 
             if (effectsIncludeDistortion(instrument.effects)) {
@@ -3566,6 +3605,8 @@ export class SongEditor {
             this.grainRangeNum.innerHTML = " (" + instrument.grainRange * Config.grainSizeStep + ")";
             this.colorizerPitchMaxFreqNum.innerHTML = " (" + colorizerValueToFreq(instrument.colorizerMaxFreq) + "Hz" + ")";
             this.colorizerPitchMinFreqNum.innerHTML = " (" + colorizerValueToFreq(instrument.colorizerMinFreq) + "Hz" + ")";
+            this.eqFilterCompensationNum.innerHTML = " (" + 5 * instrument.eqFilterCompensation + "%" + ")";
+            this.noteFilterCompensationNum.innerHTML = " (" + 5 * instrument.noteFilterCompensation + "%" + ")";
             this._instrumentVolumeSlider.updateValue(instrument.volume);
             this._instrumentVolumeSliderInputBox.value = "" + (instrument.volume);
             this._volumePitchCompensationSlider.updateValue(instrument.volumePitchCompensation);
@@ -3590,8 +3631,10 @@ export class SongEditor {
             this._strumSpeedDisplay.textContent = prettyNumber(instrument.strumParts / Config.partsPerBeat) + " beat" + (((instrument.strumParts / Config.partsPerBeat) != 1) ? "s" : "");
             this._eqFilterSimpleCutSlider.updateValue(instrument.eqFilterSimpleCut);
             this._eqFilterSimplePeakSlider.updateValue(instrument.eqFilterSimplePeak);
+            this._eqFilterCompensationSlider.updateValue(instrument.eqFilterCompensation);
             this._noteFilterSimpleCutSlider.updateValue(instrument.noteFilterSimpleCut);
             this._noteFilterSimplePeakSlider.updateValue(instrument.noteFilterSimplePeak);
+            this._noteFilterCompensationSlider.updateValue(instrument.noteFilterCompensation);
             this._envelopeSpeedSlider.updateValue(instrument.envelopeSpeed);
             this._envelopeSpeedSlider.input.title = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);
             this._envelopeSpeedDisplay.textContent = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);

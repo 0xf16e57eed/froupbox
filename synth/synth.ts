@@ -1627,14 +1627,19 @@ export class Instrument {
     public chipWaveStartOffset: number = 0;
     // advloop addition
     public chipNoise: number = 1;
+
     public eqFilter: FilterSettings = new FilterSettings();
     public eqFilterType: boolean = false;
     public eqFilterSimpleCut: number = Config.filterSimpleCutRange - 1;
     public eqFilterSimplePeak: number = 0;
+    public eqFilterCompensation: number = 20;
+
     public noteFilter: FilterSettings = new FilterSettings();
     public noteFilterType: boolean = false;
     public noteFilterSimpleCut: number = Config.filterSimpleCutRange - 1;
     public noteFilterSimplePeak: number = 0;
+    public noteFilterCompensation: number = 20;
+
     public eqSubFilters: (FilterSettings | null)[] = [];
     public noteSubFilters: (FilterSettings | null)[] = [];
     public tmpEqFilterStart: FilterSettings | null;
@@ -1849,6 +1854,7 @@ export class Instrument {
         this.eqFilterType = false;
         this.eqFilterSimpleCut = Config.filterSimpleCutRange - 1;
         this.eqFilterSimplePeak = 0;
+        this.eqFilterCompensation = 20;
         for (let i: number = 0; i < Config.filterMorphCount; i++) {
             this.eqSubFilters[i] = null;
             this.noteSubFilters[i] = null;
@@ -1857,6 +1863,7 @@ export class Instrument {
         this.noteFilterType = false;
         this.noteFilterSimpleCut = Config.filterSimpleCutRange - 1;
         this.noteFilterSimplePeak = 0;
+        this.noteFilterCompensation = 20;
         this.distortion = Math.floor((Config.distortionRange - 1) * 0.75);
         this.bitcrusherFreq = Math.floor((Config.bitcrusherFreqRange - 1) * 0.5)
         this.bitcrusherQuantization = Math.floor((Config.bitcrusherQuantizationRange - 1) * 0.5);
@@ -2153,6 +2160,7 @@ export class Instrument {
             "eqFilterType": this.eqFilterType,
             "eqSimpleCut": this.eqFilterSimpleCut,
             "eqSimplePeak": this.eqFilterSimplePeak,
+            "eqCompensation": this.eqFilterCompensation,
             "envelopeSpeed": this.envelopeSpeed
         };
 
@@ -2214,6 +2222,7 @@ export class Instrument {
             instrumentObject["noteFilterType"] = this.noteFilterType;
             instrumentObject["noteSimpleCut"] = this.noteFilterSimpleCut;
             instrumentObject["noteSimplePeak"] = this.noteFilterSimplePeak;
+            instrumentObject["noteFilterCompensation"] = this.noteFilterCompensation;
             instrumentObject["noteFilter"] = this.noteFilter.toJsonObject();
 
             for (let i: number = 0; i < Config.filterMorphCount; i++) {
@@ -3150,6 +3159,9 @@ export class Instrument {
             if (instrumentObject["noteSimplePeak"] != undefined) {
                 this.noteFilterSimplePeak = instrumentObject["noteSimplePeak"];
             }
+            if (instrumentObject["noteFilterCompensation"] != undefined) {
+                this.noteFilterCompensation = instrumentObject["noteFilterCompensation"];
+            }
             if (instrumentObject["noteFilter"] != undefined) {
                 this.noteFilter.fromJsonObject(instrumentObject["noteFilter"]);
             } else {
@@ -3169,6 +3181,9 @@ export class Instrument {
             }
             if (instrumentObject["eqSimplePeak"] != undefined) {
                 this.eqFilterSimplePeak = instrumentObject["eqSimplePeak"];
+            }
+            if (instrumentObject["eqCompensation"] != undefined) {
+                this.eqFilterCompensation = instrumentObject["eqCompensation"];
             }
             if (Array.isArray(instrumentObject["eqFilter"])) {
                 this.eqFilter.fromJsonObject(instrumentObject["eqFilter"]);
@@ -4000,6 +4015,7 @@ export class Song {
                             }
                         }
                     }
+                    buffer.push(base64IntToCharCode[instrument.eqFilterCompensation]);
                 }
 
                 // The list of enabled effects is represented as a 24-bit bitfield using four six-bit characters.
@@ -4045,6 +4061,7 @@ export class Song {
                                 }
                             }
                         }
+                        buffer.push(base64IntToCharCode[instrument.noteFilterCompensation]);
                     }
                 }
                 if (effectsIncludeTransition(instrument.effects)) {
@@ -5418,6 +5435,9 @@ export class Song {
                                 }
                             }
                         }
+                        if (!beforeNine) {
+                            instrument.eqFilterCompensation = clamp(0, Config.eqFilterCompensationRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                        }
                     }
                     else {
                         instrument.eqFilterType = true;
@@ -5999,6 +6019,9 @@ export class Song {
                                         }
                                     }
                                 }
+                            }
+                            if (!beforeNine) {
+                                instrument.noteFilterCompensation = clamp(0, Config.eqFilterCompensationRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                             }
                         } else {
                             instrument.noteFilterType = true;
@@ -9847,7 +9870,7 @@ class InstrumentState {
 
             }
 
-            eqFilterVolume *= startPoint.getVolumeCompensationMult();
+            eqFilterVolume *= (startPoint.getVolumeCompensationMult() - 1) * (instrument.eqFilterCompensation / 20) + 1;
 
             this.eqFilterCount = 1;
             eqFilterVolume = Math.min(3.0, eqFilterVolume);
@@ -9873,7 +9896,7 @@ class InstrumentState {
                 endPoint.toCoefficients(Synth.tempFilterEndCoefficients, samplesPerSecond, /*eqAllFreqsEnvelopeEnd   * eqFreqEnvelopeEnd*/   1.0, /*eqPeakEnvelopeEnd*/   1.0);
                 if (this.eqFilters.length <= i) this.eqFilters[i] = new DynamicBiquadFilter();
                 this.eqFilters[i].loadCoefficientsWithGradient(Synth.tempFilterStartCoefficients, Synth.tempFilterEndCoefficients, 1.0 / roundedSamplesPerTick, startPoint.type == FilterType.lowPass);
-                eqFilterVolume *= startPoint.getVolumeCompensationMult();
+                eqFilterVolume *= (startPoint.getVolumeCompensationMult() - 1) * (instrument.eqFilterCompensation / 20) + 1;
 
             }
             this.eqFilterCount = eqFilterSettings.controlPointCount;
@@ -13341,7 +13364,7 @@ export class Synth {
 
                 if (tone.noteFilters.length < 1) tone.noteFilters[0] = new DynamicBiquadFilter();
                 tone.noteFilters[0].loadCoefficientsWithGradient(Synth.tempFilterStartCoefficients, Synth.tempFilterEndCoefficients, 1.0 / roundedSamplesPerTick, startPoint!.type == FilterType.lowPass);
-                noteFilterExpression *= startPoint!.getVolumeCompensationMult();
+                noteFilterExpression *= (startPoint!.getVolumeCompensationMult() - 1) * (instrument.noteFilterCompensation / 20) + 1;
 
                 tone.noteFilterCount = 1;
             } else {
@@ -13364,7 +13387,7 @@ export class Synth {
                     endPoint.toCoefficients(Synth.tempFilterEndCoefficients, this.samplesPerSecond, noteAllFreqsEnvelopeEnd * noteFreqEnvelopeEnd, notePeakEnvelopeEnd);
                     if (tone.noteFilters.length <= i) tone.noteFilters[i] = new DynamicBiquadFilter();
                     tone.noteFilters[i].loadCoefficientsWithGradient(Synth.tempFilterStartCoefficients, Synth.tempFilterEndCoefficients, 1.0 / roundedSamplesPerTick, startPoint.type == FilterType.lowPass);
-                    noteFilterExpression *= startPoint.getVolumeCompensationMult();
+                    noteFilterExpression *= (startPoint!.getVolumeCompensationMult() - 1) * (instrument.noteFilterCompensation / 20) + 1;
                 }
                 tone.noteFilterCount = noteFilterSettings.controlPointCount;
             }

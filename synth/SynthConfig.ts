@@ -105,6 +105,8 @@ export const enum DropdownID {
     PitchShift = 11,
     InstrumentVolume = 12,
     ColorizerChannel = 13,
+    EQFilter = 14,
+    NoteFilter = 15,
 }
 
 export const enum EffectType {
@@ -1044,6 +1046,8 @@ export class Config {
     public static readonly reverbRange:                 number = 32;
     public static readonly reverbDelayBufferSize:       number = 16384; // TODO: Compute a buffer size based on sample rate.
     public static readonly reverbDelayBufferMask:       number = Config.reverbDelayBufferSize - 1; // TODO: Compute a buffer size based on sample rate.
+
+    public static readonly eqFilterCompensationRange:   number = 40; 
 
     public static readonly phaserMixRange:              number = 32; 
     public static readonly phaserFeedbackRange:         number = 32; 

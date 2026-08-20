@@ -3139,6 +3139,16 @@ export class ChangeEQFilterSimplePeak extends ChangeInstrumentSlider {
     }
 }
 
+export class ChangeEQFilterCompensation extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.eqFilterCompensation = newValue;
+        // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
 export class ChangeNoteFilterSimpleCut extends ChangeInstrumentSlider {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super(doc);
@@ -3154,6 +3164,16 @@ export class ChangeNoteFilterSimplePeak extends ChangeInstrumentSlider {
         super(doc);
         this._instrument.noteFilterSimplePeak = newValue;
         doc.synth.unsetMod(Config.modulators.dictionary["note filt peak"].index, doc.channel, doc.getCurrentInstrument());
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
+export class ChangeNoteFilterCompensation extends ChangeInstrumentSlider {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super(doc);
+        this._instrument.noteFilterCompensation = newValue;
+        // doc.synth.unsetMod(Config.modulators.dictionary["..."].index, doc.channel, doc.getCurrentInstrument());
         doc.notifier.changed();
         if (oldValue != newValue) this._didSomething();
     }

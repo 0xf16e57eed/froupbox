@@ -147,6 +147,12 @@ export class TipPrompt implements Prompt {
 					p("You can also enable a \"Note Filter\" as an effect. EQ and note filters are mostly the same, but have different purposes. EQ filters are for overall adjustments, whereas note filters are for dynamic control and can be moved with envelopes. Note filters also change how the distortion effect sounds."),
 				);
 			} break;
+			case "eqFilterCompensation": {
+				message = div(
+					h2("EQ Filter Volume Compensation"),
+					p("Controls how much the instrument volume is altered to compensate for the EQ filter."),
+				);
+			} break;
 			case "noteFilter": {
 				message = div(
 					h2("Note Filter"),
