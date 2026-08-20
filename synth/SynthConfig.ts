@@ -2782,7 +2782,7 @@ function validateNumber(num: string): boolean {
 }
 
 export function colorizerValueToFreq(value: number): number {
-    return Math.round((8 * Math.pow(1.13551976587355, value) - 8) * 100) / 100;
+    return Math.round((20 * Math.pow(1.11911803, value)) * 100) / 100;
 }
 
 export function rawChipToIntegrated(raw: DictionaryArray<ChipWave>): DictionaryArray<ChipWave> {

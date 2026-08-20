@@ -58,7 +58,7 @@ pub struct ColourizerInstance {
     mix_interp: Interpolator<f32>,
 }
 
-const FREQ_MIN: f32 = 40.0;
+const FREQ_MIN: f32 = 20.0;
 
 #[wasm_bindgen]
 impl ColourizerInstance {
