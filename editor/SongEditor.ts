@@ -818,6 +818,7 @@ export class SongEditor {
 	        option({ value: "customPresets" }, "Custom Presets..."),
         ), 
         optgroup({ label: "Appearance" },
+            option({ value: "showTonic" }, 'Highlight "Tonic" Note'),
             option({ value: "showFifth" }, 'Highlight "Fifth" Note'),
             option({ value: "notesFlashWhenPlayed" }, "Notes Flash When Played"),
             option({ value: "instrumentButtonsAtTop" }, "Instrument Buttons at Top"),
@@ -2801,6 +2802,7 @@ export class SongEditor {
             textSpacingIcon + "Note Recording...",
 	        textSpacingIcon + "Custom Presets...",
             textSpacingIcon + "Appearance",
+            (prefs.showTonic ? textOnIcon : textOffIcon) + 'Highlight "Tonic" Note',
             (prefs.showFifth ? textOnIcon : textOffIcon) + 'Highlight "Fifth" Note',
             (prefs.notesFlashWhenPlayed ? textOnIcon : textOffIcon) + "Notes Flash When Played",
             (prefs.instrumentButtonsAtTop ? textOnIcon : textOffIcon) + "Instrument Buttons at Top",
@@ -6271,6 +6273,9 @@ export class SongEditor {
                 break;
             case "showLetters":
                 this.doc.prefs.showLetters = !this.doc.prefs.showLetters;
+                break;
+            case "showTonic":
+                this.doc.prefs.showTonic = !this.doc.prefs.showTonic;
                 break;
             case "showFifth":
                 this.doc.prefs.showFifth = !this.doc.prefs.showFifth;
