@@ -4,13 +4,14 @@ import {Scale, Config} from "../synth/SynthConfig";
 import {ColorConfig} from "../editor/ColorConfig";
 
 export class Preferences {
-	public static readonly defaultVisibleOctaves: number = 4; //slarmoo's: 3
+	public static readonly defaultVisibleOctaves: number = 3;
 	
 	public customTheme: string | null;
 	public customTheme2: string | null;
 	public autoPlay: boolean;
 	public autoFollow: boolean;
 	public enableNotePreview: boolean;
+	public showTonic: boolean = true;
 	public showFifth: boolean = true;
 	public notesOutsideScale: boolean;
 	public notesOutsideBar: boolean;
@@ -58,6 +59,7 @@ export class Preferences {
 		this.autoPlay = window.localStorage.getItem("autoPlay") == "true";
 		this.autoFollow = window.localStorage.getItem("autoFollow") != "false";
 		this.enableNotePreview = window.localStorage.getItem("enableNotePreview") != "false";
+		this.showTonic = window.localStorage.getItem("showTonic") != "false";
 		this.showFifth = window.localStorage.getItem("showFifth") != "false";
 		this.notesOutsideScale = window.localStorage.getItem("notesOutsideScale") != "false";
 		this.notesOutsideBar = window.localStorage.getItem("notesOutsideBar") == "true";
@@ -115,6 +117,7 @@ export class Preferences {
 		window.localStorage.setItem("autoPlay", this.autoPlay ? "true" : "false");
 		window.localStorage.setItem("autoFollow", this.autoFollow ? "true" : "false");
 		window.localStorage.setItem("enableNotePreview", this.enableNotePreview ? "true" : "false");
+		window.localStorage.setItem("showTonic", this.showTonic ? "true" : "false");
 		window.localStorage.setItem("showFifth", this.showFifth ? "true" : "false");
 		window.localStorage.setItem("notesOutsideScale", this.notesOutsideScale ? "true" : "false");
 		window.localStorage.setItem("notesOutsideBar", this.notesOutsideBar ? "true" : "false");

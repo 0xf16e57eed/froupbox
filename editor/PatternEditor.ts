@@ -2950,7 +2950,7 @@ export class PatternEditor {
         for (let i: number = 0; i < divisions; i++) {
             const rectangle: SVGRectElement = SVG.rect();
             rectangle.setAttribute("x", "1");
-            rectangle.setAttribute("fill", (i == 0) ? ColorConfig.tonic : ColorConfig.pitchBackground);
+            rectangle.setAttribute("fill", (i == 0 && this._doc.prefs.showTonic) ? ColorConfig.tonic : ColorConfig.pitchBackground);
             this._svgNoteBackground.appendChild(rectangle);
             this._backgroundPitchRows[i] = rectangle;
         }
