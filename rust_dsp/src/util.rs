@@ -2,8 +2,8 @@ use std::simd::{f32x4, simd_swizzle};
 
 #[derive(Default, Clone, Debug)]
 pub struct Interpolator<T: Zippable> {
-    val: T,
-    diff: T,
+    pub val: T,
+    pub diff: T,
 }
 impl<T: Zippable> Interpolator<T> {
     pub fn next(&mut self) -> T {

@@ -1744,7 +1744,8 @@ export class Instrument {
     public colorizerChannel: number = 0;
     public colorizerMaxFreq: number = 63;
     public colorizerMinFreq: number = 0;
-    public colorizerFrequencies: number[] = [];
+    public colorizerFrequenciesStart: number[] = [];
+    public colorizerFrequenciesEnd: number[] = [];
 
     public invertWave: boolean = false;
 
@@ -9428,6 +9429,8 @@ class InstrumentState {
   
     public flanger: rustDspTypes.FlangerInstance | undefined;
 
+    public colorizer: rustDspTypes.ColourizerInstance | undefined;
+    
     public readonly spectrumWave: SpectrumWaveState = new SpectrumWaveState();
     public readonly harmonicsWave: HarmonicsWaveState = new HarmonicsWaveState();
     public readonly drumsetSpectrumWaves: SpectrumWaveState[] = [];
@@ -9563,6 +9566,10 @@ class InstrumentState {
           this.flanger.free();
           this.flanger = undefined;
         }
+        if (this.colorizer) {
+          this.colorizer.free();
+          this.colorizer = undefined;
+        }
         if (this.dspBuffer) {
           this.dspBuffer.free();
           this.dspBuffer = undefined;
@@ -9688,7 +9695,24 @@ class InstrumentState {
         const usesCompressor: boolean = effectsIncludeCompressor(this.effects);
         const usesFlanger: boolean = effectsIncludeFlanger(this.effects);
         const usesColorizer: boolean = effectsIncludeColorizer(this.effects);
-        
+
+        // this was added for flanger and then spread to the rest of the rust dsp.
+        // inconsistent with the js code? yes. makes my life easier? also yes.
+        // - cypher
+        function getModifiedValues(modulatorName: string, envelope: EnvelopeComputeIndex, defaultValue: number): [number, number] {
+          const modulatorIdx = Config.modulators.dictionary[modulatorName].index;
+
+          let start = defaultValue, end = defaultValue;
+          if (synth.isModActive(modulatorIdx, channelIndex, instrumentIndex)) {
+            start = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, false);
+            end = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, true);
+          }
+          return [
+            start * envelopeStarts[envelope],
+            end * envelopeEnds[envelope],
+          ];
+        }
+      
         let granularChance: number = 0;
         if (usesGranular) { //has to happen before buffer allocation
             granularChance = (instrument.grainAmounts + 1);
@@ -10222,6 +10246,7 @@ class InstrumentState {
             this.reverbShelfB0 = Synth.tempFilterStartCoefficients.b[0];
             this.reverbShelfB1 = Synth.tempFilterStartCoefficients.b[1];
         }
+
       
         if (usesCompressor) {
           if (!this.compressor && rustDsp)
@@ -10268,6 +10293,24 @@ class InstrumentState {
         this.compressor.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
       }
 
+      if (usesColorizer) {
+        if (!this.colorizer && rustDsp)
+          this.colorizer = new rustDsp.ColourizerInstance();
+      } else if (this.colorizer) {
+        this.colorizer.free();
+        this.colorizer = undefined;
+      }
+      if (usesColorizer && this.colorizer)
+      {
+        const start = new rustDsp!.ColourizerInstanceParams(), end = new rustDsp!.ColourizerInstanceParams();
+
+        [start.mix, end.mix] = getModifiedValues("colorizer mix", EnvelopeComputeIndex.colorizerMix, instrument.colorizerMix);
+        [start.voices, end.voices] = getModifiedValues("colorizer color", EnvelopeComputeIndex.colorizerColor, instrument.colorizerColor);
+
+        this.colorizer.freqs = new Float32Array(instrument.colorizerFrequenciesStart);
+        this.colorizer.begin(start, end, samplesPerSecond, roundedSamplesPerTick);
+      }
+      
         if (usesFlanger) {
           if (!this.flanger && rustDsp)
             this.flanger = new rustDsp.FlangerInstance();
@@ -10292,20 +10335,6 @@ class InstrumentState {
           
           start.panning = Math.max(-1.0, Math.min(1.0, (usePanStart - Config.panCenter) / Config.panCenter * panEnvelopeStart));
           end.panning = Math.max(-1.0, Math.min(1.0, (usePanEnd - Config.panCenter) / Config.panCenter * panEnvelopeEnd));
-
-          function getModifiedValues(modulatorName: string, envelope: EnvelopeComputeIndex, defaultValue: number): [number, number] {
-            const modulatorIdx = Config.modulators.dictionary[modulatorName].index;
-
-            let start = defaultValue, end = defaultValue;
-            if (synth.isModActive(modulatorIdx, channelIndex, instrumentIndex)) {
-              start = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, false);
-              end = synth.getModValue(modulatorIdx, channelIndex, instrumentIndex, true);
-            }
-            return [
-              start * envelopeStarts[envelope],
-              end * envelopeEnds[envelope],
-            ];
-          }
           
           [start.delay, end.delay] = getModifiedValues("flanger delay", EnvelopeComputeIndex.flangerDelay, instrument.flangerDelay);
           [start.mix, end.mix] = getModifiedValues("flanger mix", EnvelopeComputeIndex.flangerMix, instrument.flangerMix);
@@ -10387,6 +10416,11 @@ class InstrumentState {
             if (usesFlanger) {
               // copied from rust_dsp/src/flanger/mod.rs
               let delay = instrument.flangerDelay * 0.000024414063 * synth.samplesPerSecond;
+              totalDelaySamples += (delay | 0) + 328;
+            }
+            if (usesColorizer) {
+              let lowestFreq = Math.min(...instrument.colorizerFrequenciesStart.filter(freq => freq >= 20));
+              let delay = synth.samplesPerSecond / lowestFreq * Config.colorizerColorRange;
               totalDelaySamples += (delay | 0) + 328;
             }
 
@@ -11675,7 +11709,8 @@ export class Synth {
                     const currentPart: number = this.getCurrentPart();
 
                     let freqs: number[] = [];
-                    let slideOffset: number = 0;
+                    let slideOffsetStart = 0;
+                    let slideOffsetEnd = 0;
 
                     if (playSong && pattern != null) {
                         for (let i: number = 0; i < pattern.notes.length; i++) {
@@ -11694,38 +11729,52 @@ export class Synth {
                                 const pinRatioStart: number = Math.min(1.0, (tickTimeStart - pinStart) / (pinEnd - pinStart));
                                 const pinRatioEnd: number = Math.min(1.0, (tickTimeEnd - pinStart) / (pinEnd - pinStart));
 
-                                const noteOffsetStart = startPin.interval + (endPin.interval - startPin.interval) * pinRatioStart;
-                                const noteOffsetEnd = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
-
-                                slideOffset = (noteOffsetStart + noteOffsetEnd) / 2
+                                slideOffsetStart = startPin.interval + (endPin.interval - startPin.interval) * pinRatioStart;
+                                slideOffsetEnd = startPin.interval + (endPin.interval - startPin.interval) * pinRatioEnd;
                             }
                         }
                     }
 
-                    const twelveEdoOffset: number = (song.key - 9 + song.octave * 12) 
+                    let songDetune: number = 0;
+                    if (this.isModActive(Config.modulators.dictionary["song detune"].index)) {
+                        songDetune = 4 * this.getModValue(Config.modulators.dictionary["song detune"].index);
+                    }
+
+                    const twelveEdoOffset: number = (song.key - 9 + song.octave * 12 + songDetune / 100) 
                         * (sourceChannel.equaveDivisions / 12) 
                         * (Math.log(2 / 1) / Math.log(sourceChannel.equaveNumerator / sourceChannel.equaveDenominator)
                     );
 
-                    instrument.colorizerFrequencies = new Array(freqs.length);
+                    instrument.colorizerFrequenciesStart = new Array(freqs.length);
+                    instrument.colorizerFrequenciesEnd = new Array(freqs.length);
 
-                    for (let i: number = 0; i < instrument.colorizerFrequencies.length; i++) {
-                        const convertedFrequency = Instrument.frequencyFromPitch(
-                            freqs[i] + slideOffset - (sourceChannel.equaveDivisions * Config.pitchOctaves / 2) + twelveEdoOffset, 
+                    for (let i: number = 0; i < instrument.colorizerFrequenciesStart.length; i++) {
+                        const convertedFrequencyStart = Instrument.frequencyFromPitch(
+                            freqs[i] + slideOffsetStart - (sourceChannel.equaveDivisions * Config.pitchOctaves / 2) + twelveEdoOffset, 
+                            sourceChannel.equaveNumerator / sourceChannel.equaveDenominator, 
+                            sourceChannel.equaveDivisions
+                        ); 
+                        const convertedFrequencyEnd = Instrument.frequencyFromPitch(
+                            freqs[i] + slideOffsetEnd - (sourceChannel.equaveDivisions * Config.pitchOctaves / 2) + twelveEdoOffset, 
                             sourceChannel.equaveNumerator / sourceChannel.equaveDenominator, 
                             sourceChannel.equaveDivisions
                         ); 
 
-                        if ((convertedFrequency > colorizerValueToFreq(instrument.colorizerMinFreq))
-                            && (convertedFrequency < colorizerValueToFreq(instrument.colorizerMaxFreq))
+                        if ((convertedFrequencyStart > colorizerValueToFreq(instrument.colorizerMinFreq))
+                            && (convertedFrequencyStart < colorizerValueToFreq(instrument.colorizerMaxFreq))
+                            && (convertedFrequencyEnd > colorizerValueToFreq(instrument.colorizerMinFreq))
+                            && (convertedFrequencyEnd < colorizerValueToFreq(instrument.colorizerMaxFreq))
                         ) {
-                            instrument.colorizerFrequencies[i] = convertedFrequency;
+                            instrument.colorizerFrequenciesStart[i] = convertedFrequencyStart;
+                            instrument.colorizerFrequenciesEnd[i] = convertedFrequencyEnd;
                         } else {
-                            instrument.colorizerFrequencies[i] = -1;
+                            instrument.colorizerFrequenciesStart[i] = -1;
+                            instrument.colorizerFrequenciesEnd[i] = -1;
                         }
                     }
                 } else {
-                    instrument.colorizerFrequencies = [];
+                    instrument.colorizerFrequenciesStart = [];
+                    instrument.colorizerFrequenciesEnd = [];
                 }
             }
         }
@@ -14966,7 +15015,7 @@ export class Synth {
         signature = signature << 1; if (usesFlanger) signature = signature | 1;
         signature = signature << 1; if (usesColorizer) signature = signature | 1;
 
-        const usesRustDsp = usesCompressor || usesFlanger;
+        const usesRustDsp = usesFlanger || usesColorizer || usesCompressor;
         if (usesRustDsp) {
           if (rustDsp && !instrumentState.dspBuffer)
             instrumentState.dspBuffer = new rustDsp.DspBuffer(4096); // max frame size is currently 4096
@@ -15593,6 +15642,9 @@ export class Synth {
           
           if (usesFlanger) {
             effectsSource += "instrumentState.flanger?.process(instrumentState.dspBuffer);";
+          }
+          if (usesColorizer) {
+            effectsSource += "instrumentState.colorizer?.process(instrumentState.dspBuffer);";
           }
           if (usesCompressor) {
             effectsSource += "instrumentState.compressor?.process(instrumentState.dspBuffer);";

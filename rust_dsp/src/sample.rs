@@ -2,6 +2,9 @@
 
 use core::ops;
 
+mod multi;
+pub use multi::Multisample;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct SamplePair {
@@ -50,70 +53,53 @@ impl Default for SamplePair {
         Self::ZERO
     }
 }
-impl ops::Add for SamplePair {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            l: self.l + rhs.l,
-            r: self.r + rhs.r,
-        }
-    }
+
+macro_rules! sample_pair_arithmetic_impls {
+    ($((
+        $binop_name:ident::$binop_func:ident: $binop:tt,
+        $assign_name:ident::$assign_func:ident: $assign:tt)
+    )+) => {
+        $(
+            impl ops::$binop_name<Self> for SamplePair {
+                type Output = Self;
+                fn $binop_func(self, rhs: Self) -> Self {
+                    Self {
+                        l: self.l $binop rhs.l,
+                        r: self.r $binop rhs.r,
+                    }
+                }
+            }
+            impl ops::$binop_name<f32> for SamplePair {
+                type Output = Self;
+                fn $binop_func(self, rhs: f32) -> Self {
+                    self $binop Self::splat(rhs)
+                }
+            }
+            impl ops::$assign_name<Self> for SamplePair {
+                fn $assign_func(&mut self, rhs: Self) {
+                    self.l $assign rhs.l;
+                    self.r $assign rhs.r;
+                }
+            }
+            impl ops::$assign_name<f32> for SamplePair {
+                fn $assign_func(&mut self, rhs: f32) {
+                    *self $assign Self::splat(rhs);
+                }
+            }
+        )+
+    };
 }
-impl ops::Sub for SamplePair {
-    type Output = Self;
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            l: self.l - rhs.l,
-            r: self.r - rhs.r,
-        }
-    }
+sample_pair_arithmetic_impls! {
+    (Add::add: +, AddAssign::add_assign: +=)
+    (Sub::sub: -, SubAssign::sub_assign: -=)
+    (Mul::mul: *, MulAssign::mul_assign: *=)
+    (Div::div: /, DivAssign::div_assign: /=)
 }
-impl ops::Mul<f32> for SamplePair {
-    type Output = Self;
-    fn mul(self, rhs: f32) -> Self::Output {
-        Self {
-            l: self.l * rhs,
-            r: self.r * rhs,
-        }
-    }
-}
+
 impl ops::Mul<SamplePair> for f32 {
     type Output = SamplePair;
     fn mul(self, rhs: SamplePair) -> Self::Output {
         rhs * self
-    }
-}
-impl ops::Div<f32> for SamplePair {
-    type Output = Self;
-    fn div(self, rhs: f32) -> Self::Output {
-        Self {
-            l: self.l / rhs,
-            r: self.r / rhs,
-        }
-    }
-}
-impl ops::AddAssign for SamplePair {
-    fn add_assign(&mut self, rhs: Self) {
-        self.l += rhs.l;
-        self.r += rhs.r;
-    }
-}
-impl ops::SubAssign for SamplePair {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.l -= rhs.l;
-        self.r -= rhs.r;
-    }
-}
-impl ops::MulAssign<f32> for SamplePair {
-    fn mul_assign(&mut self, rhs: f32) {
-        self.l *= rhs;
-        self.r *= rhs;
-    }
-}
-impl ops::DivAssign<f32> for SamplePair {
-    fn div_assign(&mut self, rhs: f32) {
-        self.l /= rhs;
-        self.r /= rhs;
     }
 }
 
@@ -125,6 +111,10 @@ pub trait Sample:
     + ops::Sub<Self, Output = Self>
     + ops::Mul<f32, Output = Self>
     + ops::Div<f32, Output = Self>
+    + ops::AddAssign<Self>
+    + ops::SubAssign<Self>
+    + ops::MulAssign<f32>
+    + ops::DivAssign<f32>
 {
     #[allow(unused)]
     const ZERO: Self;

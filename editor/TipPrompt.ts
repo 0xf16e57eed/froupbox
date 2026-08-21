@@ -805,7 +805,7 @@ export class TipPrompt implements Prompt {
 				message = div(
 					h2("Colorizer Pitch Source Channel"),
 					p(`This setting controls which channel the pitches used for colorization are pulled from.`),
-					p(`Pitches pulled from other channels do not take into account effects such as instrument detune, song detune, vibrato, unison offset, or pitch shift.`),
+					p(`Pitches pulled from other channels do not take into account effects such as instrument detune, vibrato, unison offset, or pitch shift.`),
 				);
 			} break;
 			case "colorizerMaxFreq": {

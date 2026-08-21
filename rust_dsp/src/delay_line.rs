@@ -7,8 +7,6 @@ pub struct DelayLine<T: Sample = SamplePair> {
     pub buf: Box<[T]>,
 }
 
-pub const SILENCE_SAMPLE_THRESHOLD: f32 = 1e-4;
-
 impl<T: Sample> DelayLine<T> {
     pub fn new(length: usize) -> Self {
         Self {
@@ -42,5 +40,22 @@ impl<T: Sample> DelayLine<T> {
         let next_index = wrap_once(self.index + trunced + 1, self.len());
 
         self.buf[index].lerp(self.buf[next_index], samples - trunced as f32)
+    }
+
+    pub fn reserve_at_least(&mut self, n: usize) {
+        if self.len() >= n {
+            return;
+        }
+        let cur_len = self.len().max(1);
+
+        let new_len = n.div_ceil(cur_len).next_power_of_two() * cur_len;
+        let mut new_delay_line = Self::new(new_len);
+        if self.len() > 0 {
+            new_delay_line.buf[0..cur_len - self.index].copy_from_slice(&self.buf[self.index..]);
+            new_delay_line.buf[cur_len - self.index..cur_len]
+                .copy_from_slice(&self.buf[0..self.index]);
+        }
+
+        *self = new_delay_line;
     }
 }

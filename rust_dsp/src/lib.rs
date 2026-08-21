@@ -1,6 +1,7 @@
 #![feature(portable_simd)]
 
 mod buffer;
+mod colourizer;
 mod compressor;
 mod delay_line;
 mod filters;
