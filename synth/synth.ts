@@ -11735,7 +11735,12 @@ export class Synth {
                         }
                     }
 
-                    const twelveEdoOffset: number = (song.key - 9 + song.octave * 12) 
+                    let songDetune: number = 0;
+                    if (this.isModActive(Config.modulators.dictionary["song detune"].index)) {
+                        songDetune = 4 * this.getModValue(Config.modulators.dictionary["song detune"].index);
+                    }
+
+                    const twelveEdoOffset: number = (song.key - 9 + song.octave * 12 + songDetune / 100) 
                         * (sourceChannel.equaveDivisions / 12) 
                         * (Math.log(2 / 1) / Math.log(sourceChannel.equaveNumerator / sourceChannel.equaveDenominator)
                     );
